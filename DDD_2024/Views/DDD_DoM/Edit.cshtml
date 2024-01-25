@@ -1,0 +1,84 @@
+﻿@model DDD_2024.Models.DDD_DoM
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>DDD_DoM</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="DoID" />
+            <div class="form-group">
+                <label asp-for="VendorName" class="control-label"></label>
+                <input asp-for="VendorName" class="form-control" />
+                <span asp-validation-for="VendorName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PartNo" class="control-label"></label>
+                <input asp-for="PartNo" class="form-control" />
+                <span asp-validation-for="PartNo" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CusName_CN" class="control-label"></label>
+                <input asp-for="CusName_CN" class="form-control" />
+                <span asp-validation-for="CusName_CN" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CusName_EN" class="control-label"></label>
+                <input asp-for="CusName_EN" class="form-control" />
+                <span asp-validation-for="CusName_EN" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ProApplication" class="control-label"></label>
+                <input asp-for="ProApplication" class="form-control" />
+                <span asp-validation-for="ProApplication" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ProjectNoted" class="control-label"></label>
+                <input asp-for="ProjectNoted" class="form-control" />
+                <span asp-validation-for="ProjectNoted" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ProjectAction" class="control-label"></label>
+                <input asp-for="ProjectAction" class="form-control" />
+                <span asp-validation-for="ProjectAction" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CreateDate" class="control-label"></label>
+                <input asp-for="CreateDate" class="form-control" />
+                <span asp-validation-for="CreateDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Applicant" class="control-label"></label>
+                <input asp-for="Applicant" class="form-control" />
+                <span asp-validation-for="Applicant" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Approver" class="control-label"></label>
+                <input asp-for="Approver" class="form-control" />
+                <span asp-validation-for="Approver" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ApproveDate" class="control-label"></label>
+                <input asp-for="ApproveDate" class="form-control" />
+                <span asp-validation-for="ApproveDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
