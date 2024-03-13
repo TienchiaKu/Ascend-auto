@@ -1,4 +1,4 @@
-﻿@model DDD_2024.Models.DDD_Employee
+﻿@model DDD_2024.Models.EmployeeM
 @inject DDD_2024.Interfaces.IEmployeeService EmployeeService
 @{
     ViewData["Title"] = "Create";
@@ -22,30 +22,14 @@
                 <span asp-validation-for="EmpName" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="userPWD" class="control-label"></label>
+                <input asp-for="userPWD" class="form-control" />
+                <span asp-validation-for="userPWD" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="OnDuty" class="control-label"></label>
                 <select asp-for="OnDuty" asp-items="EmployeeService.YesNo" class="form-control"></select>
                 <span asp-validation-for="OnDuty" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PM" class="control-label"></label>
-                <select asp-for="PM" asp-items="EmployeeService.YesNo" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="Sales" class="control-label"></label>
-                <select asp-for="Sales" asp-items="EmployeeService.YesNo" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="FAE" class="control-label"></label>
-                <select asp-for="FAE" asp-items="EmployeeService.YesNo" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="RBU" class="control-label"></label>
-                <select asp-for="RBU" asp-items="EmployeeService.YesNo" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreateDate" class="control-label"></label>
-                <input asp-for="CreateDate" class="form-control" readonly />
-                <span asp-validation-for="CreateDate" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="確認建立" class="btn btn-primary" />

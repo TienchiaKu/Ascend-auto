@@ -1,0 +1,48 @@
+﻿@model DDD_2024.Models.DutyViewModel
+@inject DDD_2024.Interfaces.IEmployeeService EmployeeService
+@inject DDD_2024.Interfaces.IDutyService DutyService
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>編輯</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="duty.DutyID" />
+            <div class="form-group">
+                <label asp-for="VendorName" class="control-label"></label>
+                <input asp-for="VendorName" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="duty.EmpID" class="control-label"></label>
+                <select asp-for="duty.EmpID" disabled asp-items="EmployeeService.GetEmployeeNameList_Selected(Model.duty.EmpID)" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="duty.Duty" class="control-label"></label>
+                <select asp-for="duty.Duty" disabled asp-items="DutyService.GetDutyList" class="form-control"></select>
+                <span asp-validation-for="duty.Duty" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="duty.IsUse" class="control-label"></label>
+                <select asp-for="duty.IsUse" asp-items="EmployeeService.YesNo" class="form-control"></select>
+                <span asp-validation-for="duty.IsUse" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">返回清單</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

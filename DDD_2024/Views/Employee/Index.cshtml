@@ -1,0 +1,46 @@
+﻿@model IEnumerable<DDD_2024.Models.EmployeeViewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>員工資料列表</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">新增</a>
+</p>
+<table class="table table-striped table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.employee.EmpName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OnDuty_CN)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.employee)
+            </th>
+            <th>功能鍵</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.employee.EmpName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.OnDuty_CN)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.employee.UpdateDate)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.employee.EmpID" class="btn btn-dark btn-sm">編輯</a> |
+                <a asp-action="Details" asp-route-id="@item.employee.EmpID" class="btn btn-dark btn-sm">詳細資料</a> |
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

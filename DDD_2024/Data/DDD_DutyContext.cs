@@ -7,13 +7,13 @@ using DDD_2024.Models;
 
 namespace DDD_2024.Data
 {
-    public class DDD_DoMContext : DbContext
+    public class DDD_DutyContext : DbContext
     {
-        public DDD_DoMContext (DbContextOptions<DDD_DoMContext> options)
+        public DDD_DutyContext (DbContextOptions<DDD_DutyContext> options)
             : base(options)
         {
         }
 
-        public DbSet<DDD_2024.Models.DDD_DoM> DDD_DoM { get; set; } = default!;
+        public DbSet<DDD_2024.Models.DutyM> DutyM { get; set; } = default!;
     }
 }

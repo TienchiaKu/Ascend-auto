@@ -19,6 +19,14 @@
     "mssql5": {
       "type": "mssql.local",
       "connectionId": "ConnectionStrings:SystemUserContext"
+    },
+    "mssql6": {
+      "type": "mssql.local",
+      "connectionId": "ConnectionStrings:DDD_VendorContext"
+    },
+    "mssql7": {
+      "type": "mssql.local",
+      "connectionId": "ConnectionStrings:CusVendorContext"
     }
   }
 }

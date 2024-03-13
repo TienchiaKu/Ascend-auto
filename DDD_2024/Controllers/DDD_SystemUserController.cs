@@ -7,16 +7,21 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DDD_2024.Data;
 using DDD_2024.Models;
+using DDD_2024.Interfaces;
+using DDD_2024.Services;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 
 namespace DDD_2024.Controllers
 {
     public class DDD_SystemUserController : Controller
     {
         private readonly SystemUserContext _context;
+        private readonly ISystemUserService _SystemUserService;
 
-        public DDD_SystemUserController(SystemUserContext context)
+        public DDD_SystemUserController(SystemUserContext context, ISystemUserService systemUserService)
         {
             _context = context;
+            _SystemUserService = systemUserService;
         }
 
         // GET: DDD_SystemUser
@@ -48,7 +53,11 @@ namespace DDD_2024.Controllers
         // GET: DDD_SystemUser/Create
         public IActionResult Create()
         {
-            return View();
+            DDD_SystemUser dDD_SystemUser = new DDD_SystemUser();
+            dDD_SystemUser.UserID = _SystemUserService.NewUserID;
+            dDD_SystemUser.CreateDate = DateTime.Now;
+
+            return View(dDD_SystemUser);
         }
 
         // POST: DDD_SystemUser/Create
@@ -114,41 +123,26 @@ namespace DDD_2024.Controllers
             return View(dDD_SystemUser);
         }
 
-        // GET: DDD_SystemUser/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null || _context.DDD_SystemUser == null)
-            {
-                return NotFound();
-            }
-
-            var dDD_SystemUser = await _context.DDD_SystemUser
-                .FirstOrDefaultAsync(m => m.UserID == id);
-            if (dDD_SystemUser == null)
-            {
-                return NotFound();
-            }
-
-            return View(dDD_SystemUser);
+        // GET: DDD_SystemUser/LogIn
+        public IActionResult LogIn()
+        {           
+            return View();
         }
 
-        // POST: DDD_SystemUser/Delete/5
-        [HttpPost, ActionName("Delete")]
+        // POST: DDD_SystemUser/LogIn
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public ActionResult LogIn([Bind("UserID,UserName,UserPWD")] DDD_SystemUser dDD_SystemUser)
         {
-            if (_context.DDD_SystemUser == null)
+            if (!_SystemUserService.IsCorrect(dDD_SystemUser.UserID, dDD_SystemUser.UserPWD))
             {
-                return Problem("Entity set 'SystemUserContext.DDD_SystemUser'  is null.");
+                ModelState.AddModelError("ErrorReport", "密碼錯誤");
+                return View(dDD_SystemUser);
             }
-            var dDD_SystemUser = await _context.DDD_SystemUser.FindAsync(id);
-            if (dDD_SystemUser != null)
+            else
             {
-                _context.DDD_SystemUser.Remove(dDD_SystemUser);
+                return RedirectToAction("Index", "Home");
             }
-            
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
         }
 
         private bool DDD_SystemUserExists(int id)

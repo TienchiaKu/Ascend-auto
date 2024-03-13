@@ -7,7 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DDD_2024.Models
 {
-    public class DDD_Employee
+    public class EmployeeM
     {
         [Key]
         [Display(Name = "員工編號")]
@@ -20,12 +20,11 @@ namespace DDD_2024.Models
         [Display(Name = "在職與否")]
         public string OnDuty { get; set; }
 
-        public string? PM { get; set; }
-        public string? Sales { get; set; }
-        public string? FAE { get; set; }
-        public string? RBU { get; set; }
+        [StringLength(10)]
+        [Display(Name = "密碼")]
+        public string? userPWD { get; set; }
 
         [Display(Name = "建立時間")]
-        public DateTime CreateDate { get; set; }
+        public DateTime UpdateDate { get; set; }
     }
 }

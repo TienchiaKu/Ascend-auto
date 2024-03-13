@@ -1,0 +1,135 @@
+﻿@model IEnumerable<DDD_2024.Models.DoViewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Do查詢</h1>
+
+<p>
+    <a asp-action="Create">新增Do</a>
+</p>
+
+<div style="float: right; margin-top: 10px;">
+    <button id="btn_agree" class="btn btn-warning">全部同意</button>
+    <button id="btn_disagree" class="btn btn-warning">不同意</button>
+    <input type="text" placeholder="系統使用者" readonly />
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>勾選</th>
+            <th>
+                @Html.DisplayNameFor(model => model.vmCreateDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CusName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.VendorName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PartNo)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ApplicantName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StatusName)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+                <td>
+                    @if (item.DOStatus == "N")
+                    {
+                        <input type="checkbox" id="chk_@item.DoID" />
+                    }
+                </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.vmCreateDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CusName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.VendorName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PartNo)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ApplicantName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StatusName)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.DoID">編輯</a> |
+                <a asp-action="Details" asp-route-id="@item.DoID">詳細資料</a> |
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<script>
+    // 監聽全部同意按鈕的點擊事件
+    document.getElementById('btn_agree').addEventListener('click', function () {
+        var doIds = [];
+
+        // 找到所有被勾選的勾選框
+        var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+
+        // 將被勾選的 DoID 收集到 doIds 陣列中
+        checkboxes.forEach(function (checkbox) {
+            doIds.push(checkbox.id.replace('chk_', '')); // 假設 checkbox 的 id 格式為 chk_DoID
+        });
+
+        fetch('/Do/ConfirmDOs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(doIds) // 將 doIds 陣列轉換為 JSON 字串並傳遞給 controller
+        })
+            .then(response => {
+                // 處理回應，可能需要做一些錯誤處理或者確認操作成功
+                console.log('Status changed successfully');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+
+    // 監聽全部同意按鈕的點擊事件
+    document.getElementById('btn_disagree').addEventListener('click', function () {
+        var doIds = [];
+
+        var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+
+        // 將被勾選的 DoID 收集到 doIds 陣列中
+        checkboxes.forEach(function (checkbox) {
+            doIds.push(checkbox.id.replace('chk_', '')); // 假設 checkbox 的 id 格式為 chk_DoID
+        });
+
+        fetch('/Do/RejectDOs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(doIds) // 將 doIds 陣列轉換為 JSON 字串並傳遞給 controller
+        })
+            .then(response => {
+                console.log('Status changed successfully');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+
+</script>

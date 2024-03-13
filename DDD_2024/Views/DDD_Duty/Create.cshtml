@@ -1,0 +1,108 @@
+﻿@model DDD_2024.Models.DutyViewModel
+@inject DDD_2024.Interfaces.IEmployeeService EmployeeService
+@inject DDD_2024.Interfaces.IDutyService DutyService
+@inject DDD_2024.Interfaces.ICusVendoeService CusVendoeService
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>職務建立</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="duty.DutyID" class="control-label"></label>
+                <input asp-for="duty.DutyID" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="duty.DBSource" class="control-label"></label>
+                <select asp-for="duty.DBSource" asp-items="CusVendoeService.DBSource" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="duty.VendorID" class="control-label"></label>
+                <select id="vendorSelect" asp-for="duty.VendorID" class="form-control" asp-items="@(await CusVendoeService.Ascendvendor_SelectList())"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="EmpName" class="control-label"></label>
+                <select asp-for="EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="duty.Duty" class="control-label"></label>
+                <select asp-for="duty.Duty" asp-items="DutyService.GetDutyList" class="form-control"></select>
+                <span asp-validation-for="duty.Duty" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="duty.IsUse" class="control-label"></label>
+                <select asp-for="duty.IsUse" asp-items="EmployeeService.YesNo" class="form-control"></select>
+                <span asp-validation-for="duty.IsUse" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="職務建立" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">返回清單</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+<script>
+    $(document).ready(function () {
+        $('#duty_DBSource').change(function () {
+            var selectedDBSource = $(this).val();
+            fetchData(selectedDBSource);
+        });
+    });
+
+    function fetchData(selectedDBSource) {
+        var url = '';
+        switch (selectedDBSource) {
+            case 'ASCEND':
+                url = '/CusVendor/GetAscendvendor_SelectList';
+                break;
+            case 'ATI':
+                url = '/CusVendor/ATIvendor_SelectList';
+                break;
+            case 'INTERTEK':
+                url = '/CusVendor/INTERTEKvendor_SelectList';
+                break;
+            case 'KIR1N':
+                url = '/CusVendor/KIR1Nvendor_SelectList';
+                break;
+            case 'TEST-B':
+                url = '/CusVendor/TESTBvendor_SelectList';
+                break;
+            default: 
+                return;
+        }
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            data: { dbSource: selectedDBSource },
+            success: function (data) {
+                var vendorSelect = $('#vendorSelect');
+                //vendorSelect.empty();
+                $.each(data, function (index, item) {
+                    vendorSelect.append($('<option>', {
+                        value: item.Value,
+                        text: item.Text
+                    }));
+                });
+            },
+            error: function (error) {
+                console.error('Error fetching data:', error);
+            }
+        });
+    }
+</script>

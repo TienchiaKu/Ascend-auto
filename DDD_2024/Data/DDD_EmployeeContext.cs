@@ -14,6 +14,6 @@ namespace DDD_2024.Data
         {
         }
 
-        public DbSet<DDD_2024.Models.DDD_Employee> DDD_Employee { get; set; } = default!;
+        public DbSet<DDD_2024.Models.EmployeeM> DDD_Employee { get; set; } = default!;
     }
 }

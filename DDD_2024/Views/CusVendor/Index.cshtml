@@ -1,0 +1,122 @@
+﻿@model IEnumerable<DDD_2024.Models.WD2SU01>
+@inject DDD_2024.Interfaces.ICusVendoeService CusVendoeService
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>客供商查詢</h1>
+
+<label for="cusVendor">類型：</label>
+<select id="cusVendor" onchange="onDatabaseChange()">
+    @foreach (var item in CusVendoeService.cusVendor)
+    {
+        <option value="@item.Value">@item.Text</option>
+    }
+</select>
+<br />
+
+<label for="datasource">資料來源：</label>
+<select id="datasource" onchange="onDatabaseChange()">
+    @foreach (var item in CusVendoeService.DBSource)
+    {
+        <option value="@item.Value">@item.Text</option>
+    }
+</select>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.SU01001)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SU01003)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="tableBody">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SU01001)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SU01003)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<script>
+    // 處理select元素的更改事件
+    function onDatabaseChange() {
+        var selectedDatasource = document.getElementById("datasource").value;
+        var selectedCusVendor = document.getElementById("cusVendor").value;
+        if (selectedCusVendor === 'cus') {
+            switch (selectedDatasource) {
+                case 'ASCEND':
+                    fetchData('/CusVendor/GetASCENDcustomer', selectedDatasource);
+                    break;
+                case 'ATI':
+                    fetchData('/CusVendor/GetATIcustomer', selectedDatasource);
+                    break;
+                case 'INTERTEK':
+                    fetchData('/CusVendor/GetINTERTEKcustomer', selectedDatasource);
+                    break;
+                case 'KIR1N':
+                    fetchData('/CusVendor/GetKIR1NIcustomer', selectedDatasource);
+                    break;
+                case 'TEST-B':
+                    fetchData('/CusVendor/GetTESTBcustomer', selectedDatasource);
+                    break;
+                default:
+                    console.error('Invalid customer selected.');
+            }
+        }
+        else {
+            switch (selectedDatasource) {
+                case 'ASCEND':
+                    fetchData('/CusVendor/GetASCENDvendor', selectedDatasource);
+                    break;
+                case 'ATI':
+                    fetchData('/CusVendor/GetATIvendor', selectedDatasource);
+                    break;
+                case 'INTERTEK':
+                    fetchData('/CusVendor/GetINTERTEKvendor', selectedDatasource);
+                    break;
+                case 'KIR1N':
+                    fetchData('/CusVendor/GetKIR1Nvendor', selectedDatasource);
+                    break;
+                case 'TEST-B':
+                    fetchData('/CusVendor/GetTESTBvendor', selectedDatasource);
+                    break;
+                default:
+                    console.error('Invalid vendor selected.');
+            }
+        }      
+    }
+
+    // 發送 AJAX 請求並更新表格資料
+    function fetchData(url, datasource) {
+        $.ajax({
+            url: url,
+            type: 'GET',
+            data: { datasource: datasource },
+            success: function (data) {
+                $('#tableBody').html(data);
+            },
+            error: function (error) {
+                handleAjaxError(error);
+            }
+        });
+    }
+
+    // 處理 AJAX 請求錯誤
+    function handleAjaxError(error) {
+        console.error('Error fetching data:', error);
+    }
+</script>
+

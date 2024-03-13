@@ -12,54 +12,73 @@ using DDD_2024.Services;
 
 namespace DDD_2024.Controllers
 {
-    public class DDD_EmployeeController : Controller
+    public class EmployeeController : Controller
     {
-        private readonly DDD_EmployeeContext _context;
+        private readonly BizAutoContext _context;
         private readonly IEmployeeService _employeeService;
 
-        public DDD_EmployeeController(DDD_EmployeeContext context, IEmployeeService employeeService)
+        public EmployeeController(BizAutoContext context, IEmployeeService employeeService)
         {
             _context = context;
             _employeeService = employeeService;
         }
 
-        // GET: DDD_Employee
+        // GET: EmployeeM
         public async Task<IActionResult> Index()
         {
-            var Dutyemployees = await _context.DDD_Employee
+            var employees = await _context.employeeM
                 .Where(e => e.OnDuty == "Y")
                 .ToListAsync();
 
-            return Dutyemployees != null ? 
-                          View(Dutyemployees) :
-                          Problem("查無資料");
+            if (employees != null)
+            {
+                var employeeViewModels = employees.Select(employee => new EmployeeViewModel
+                {
+                    employee = employee,
+                    OnDuty_CN = _employeeService.GetYesNoName(employee.OnDuty)
+                }).ToList();
+
+                return View(employeeViewModels);
+            }
+            else
+            {
+                return Problem("Entity set EmployeeM is null.");
+            }
         }
 
         // GET: DDD_Employee/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.DDD_Employee == null)
+            if (id == null || _context.employeeM == null)
             {
                 return NotFound();
             }
 
-            var dDD_Employee = await _context.DDD_Employee
+            var dDD_Employee = await _context.employeeM
                 .FirstOrDefaultAsync(m => m.EmpID == id);
             if (dDD_Employee == null)
             {
                 return NotFound();
             }
+            else
+            {
+                EmployeeViewModel employeeViewModel = new EmployeeViewModel
+                {
+                    employee = dDD_Employee,
+                    OnDuty_CN = _employeeService.GetYesNoName(dDD_Employee.OnDuty)
+                };
 
-            return View(dDD_Employee);
+                return View(employeeViewModel);
+            }
         }
 
         // GET: DDD_Employee/Create
         public IActionResult Create()
         {
-            var model = new DDD_Employee();
+            var model = new EmployeeM();
 
-            model.EmpID = _employeeService.MaxEmployeeID;
-            model.CreateDate = DateTime.Now;
+            model.EmpID = _employeeService.NewEmployeeID                                                                                              ;
+            model.UpdateDate = DateTime.Now;
 
             return View(model);
         }
@@ -67,13 +86,22 @@ namespace DDD_2024.Controllers
         // POST: DDD_Employee/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("EmpID,EmpName,OnDuty,PM,Sales,FAE,RBU,CreateDate")] DDD_Employee dDD_Employee)
+        public async Task<IActionResult> Create([Bind("EmpID,EmpName,OnDuty")] EmployeeM dDD_Employee)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(dDD_Employee);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                //檢查名稱是否重複
+                if (_employeeService.CheckEmpName(dDD_Employee.EmpName))
+                {
+                    ModelState.AddModelError(string.Empty, "員工姓名重複");
+                }
+                else
+                {
+                    dDD_Employee.UpdateDate = DateTime.Now;
+                    _context.Add(dDD_Employee);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
             }
             return View(dDD_Employee);
         }
@@ -81,12 +109,12 @@ namespace DDD_2024.Controllers
         // GET: DDD_Employee/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.DDD_Employee == null)
+            if (id == null || _context.employeeM == null)
             {
                 return NotFound();
             }
 
-            var dDD_Employee = await _context.DDD_Employee.FindAsync(id);
+            var dDD_Employee = await _context.employeeM.FindAsync(id);
             if (dDD_Employee == null)
             {
                 return NotFound();
@@ -98,7 +126,7 @@ namespace DDD_2024.Controllers
         // POST: DDD_Employee/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("EmpID,EmpName,OnDuty,PM,Sales,FAE,RBU,CreateDate")] DDD_Employee dDD_Employee)
+        public async Task<IActionResult> Edit(int id, [Bind("EmpID,EmpName,OnDuty")] EmployeeM dDD_Employee)
         {
             if (id != dDD_Employee.EmpID)
             {
@@ -109,6 +137,8 @@ namespace DDD_2024.Controllers
             {
                 try
                 {
+                    dDD_Employee.UpdateDate = DateTime.Now;
+
                     _context.Update(dDD_Employee);
                     await _context.SaveChangesAsync();
                 }
@@ -130,7 +160,7 @@ namespace DDD_2024.Controllers
 
         private bool DDD_EmployeeExists(int id)
         {
-          return (_context.DDD_Employee?.Any(e => e.EmpID == id)).GetValueOrDefault();
+          return (_context.employeeM?.Any(e => e.EmpID == id)).GetValueOrDefault();
         }
     }
 }

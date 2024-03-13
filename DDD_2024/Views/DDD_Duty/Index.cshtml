@@ -1,0 +1,58 @@
+﻿@model IEnumerable<DDD_2024.Models.DutyViewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>職務設定清單</h1>
+
+<p>
+    <a asp-action="Create">新增</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.VendorName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EmpName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.duty.Duty)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.duty.IsUse)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.duty.UpdateDate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.VendorName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.EmpName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.duty.Duty)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.duty.IsUse)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.duty.UpdateDate)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.duty.DutyID">編輯</a> |
+                    <a asp-action="Details" asp-route-id="@item.duty.DutyID">詳細資料</a> |
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

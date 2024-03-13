@@ -1,0 +1,101 @@
+﻿@model DDD_2024.Models.DoViewModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>詳細資料</h1>
+
+<div style="float: right;">
+    @if (Model.DOStatus == "N")
+    {
+        <button id="btn_agree" class="btn btn-warning">審核同意</button>
+        <button id="btn_disagree" class="btn btn-warning">審核拒絕</button>
+    }
+    <input type="text" placeholder="系統使用者" readonly />
+</div>
+
+<div style="margin-top: 10px">
+    <hr />
+    <input type="hidden" id="str_doID" value="@Model.DoID" />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.vmCreateDate)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.vmCreateDate)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CusName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CusName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.VendorName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.VendorName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PartNo)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PartNo)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ProApp)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ProApp)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ApplicantName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ApplicantName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.StatusName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.StatusName)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.DoID">編輯</a> |
+    <a asp-action="Index">返回清單</a>
+</div>
+
+<script>
+    document.getElementById('btn_agree').addEventListener('click', function () {
+        var doId = document.getElementById("str_doID").value;
+
+        fetch('/Do/ConfirmDO', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(doId)
+        })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+
+    document.getElementById('btn_disagree').addEventListener('click', function () {
+        var doId = document.getElementById("str_doID").value;
+
+        fetch('/Do/RejectDO', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(doId)
+        })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+</script>

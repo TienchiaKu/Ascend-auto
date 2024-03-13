@@ -5,16 +5,34 @@ using DDD_2024.Interfaces;
 using DDD_2024.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<ASCENDContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ASCENDContext") ?? throw new InvalidOperationException("Connection string 'ASCENDContext' not found.")));
+builder.Services.AddDbContext<ATIContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ATIContext") ?? throw new InvalidOperationException("Connection string 'ATIContext' not found.")));
+builder.Services.AddDbContext<KIR1NContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("KIR1NContext") ?? throw new InvalidOperationException("Connection string 'KIR1NContext' not found.")));
+builder.Services.AddDbContext<INTERTEKContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("INTERTEKContext") ?? throw new InvalidOperationException("Connection string 'INTERTEKContext' not found.")));
+builder.Services.AddDbContext<TESTBContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("TESTBContext") ?? throw new InvalidOperationException("Connection string 'TESTBContext' not found.")));
+builder.Services.AddDbContext<BizAutoContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BizAutoContext") ?? throw new InvalidOperationException("Connection string 'BizAutoContext' not found.")));
+builder.Services.AddDbContext<DDD_DutyContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DDD_DutyContext") ?? throw new InvalidOperationException("Connection string 'DDD_DutyContext' not found.")));
 builder.Services.AddDbContext<SystemUserContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SystemUserContext") ?? throw new InvalidOperationException("Connection string 'SystemUserContext' not found.")));
-builder.Services.AddDbContext<DDD_DoMContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DDD_DoMContext") ?? throw new InvalidOperationException("Connection string 'DDD_DoMContext' not found.")));
+builder.Services.AddDbContext<DoContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DoContext") ?? throw new InvalidOperationException("Connection string 'DoContext' not found.")));
 builder.Services.AddDbContext<DDD_EmployeeContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DDD_EmployeeContext") ?? throw new InvalidOperationException("Connection string 'DDD_EmployeeContext' not found.")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddTransient<IEmployeeService, EmployeeService>();
+builder.Services.AddTransient<ISystemUserService, SystemUserService>();
+builder.Services.AddTransient<IDoService, DoService>();
+builder.Services.AddTransient<IDutyService, DutyService>();
+builder.Services.AddTransient<ICusVendoeService, CusVendorService>();
 
 //取得組態中資料庫連線設定
 //string connectionString =
