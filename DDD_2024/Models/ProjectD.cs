@@ -41,5 +41,9 @@ namespace DDD_2024.Models
 
         [Display(Name = "第三年單價")]
         public double UThirdYPrice { get; set; }
+
+        [StringLength(4)]
+        [Display(Name = "專案階段")]
+        public string? Stage { get; set; }
     }
 }

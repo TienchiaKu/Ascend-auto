@@ -25,7 +25,14 @@ builder.Services.AddDbContext<DoContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DoContext") ?? throw new InvalidOperationException("Connection string 'DoContext' not found.")));
 builder.Services.AddDbContext<DDD_EmployeeContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DDD_EmployeeContext") ?? throw new InvalidOperationException("Connection string 'DDD_EmployeeContext' not found.")));
-
+builder.Services.AddDbContext<ProjectMContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ProjectMContext") ?? throw new InvalidOperationException("Connection string 'ProjectMContext' not found.")));
+builder.Services.AddDbContext<ProjectDContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ProjectDContext") ?? throw new InvalidOperationException("Connection string 'ProjectDContext' not found.")));
+builder.Services.AddDbContext<Project_DIDWContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Project_DIDWContext") ?? throw new InvalidOperationException("Connection string 'Project_DIDWContext' not found.")));
+builder.Services.AddDbContext<Project_EmpContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Project_EmpContext") ?? throw new InvalidOperationException("Connection string 'Project_EmpContext' not found.")));
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddTransient<IEmployeeService, EmployeeService>();

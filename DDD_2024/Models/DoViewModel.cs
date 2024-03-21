@@ -55,5 +55,8 @@ namespace DDD_2024.Models
 
         [Display(Name = "Do狀態")]
         public string? DOStatus { get; set; }
+
+        [Display(Name = "Excel路徑")]
+        public string? ExcelPath { get; set; }
     }
 }

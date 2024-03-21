@@ -1,0 +1,86 @@
+﻿@model IEnumerable<DDD_2024.Models.DinViewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>DIN查詢</h1>
+
+<p>
+    <a asp-action="Create">DIn建立</a>
+</p>
+
+<div style="float: right; margin-top: 10px;">
+    <input type="text" placeholder="系統使用者" readonly />
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th class="hidden-column">
+                @Html.DisplayNameFor(model => model.ProjectID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DinDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StatusName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CusName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.VendorName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PartNo)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ProApp)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ProModel)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td style="display: none;">
+                @Html.DisplayFor(modelItem => item.ProjectID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DinDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StatusName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CusName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.VendorName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PartNo)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProApp)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProModel)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.ProjectID">編輯</a> |
+                <a asp-action="Details" asp-route-ProjectID="@item.ProjectID">詳細資料</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+<style>
+        .hidden-column {
+        display: none;
+    }
+</style>

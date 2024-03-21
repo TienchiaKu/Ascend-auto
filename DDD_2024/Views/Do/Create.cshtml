@@ -23,11 +23,12 @@
             </div>
             <div class="form-group">
                 <label asp-for="CusID" class="control-label"></label>
-                <input type="text" id="searchInput" class="form-control" placeholder="搜尋客戶..."><br />
+                <input type="text" id="searchCusInput" class="form-control" placeholder="搜尋客戶..."><br />
                 <select asp-for="CusID" asp-items="CusVendoeService.GetIntertekcusList()" class="form-control" id="cusSelect"></select>
             </div>
             <div class="form-group">
                 <label asp-for="VendorID" class="control-label"></label>
+                <input type="text" id="searchVendorInput" class="form-control" placeholder="搜尋原廠..."><br />
                 <select id="vendorSelect" asp-for="VendorID" class="form-control" asp-items="@(await CusVendoeService.Ascendvendor_SelectList())"></select>
             </div>
             <div class="form-group">
@@ -60,14 +61,24 @@
 }
 
 <script>
-    const searchInput = document.getElementById('searchInput');
+    const searchCusInput = document.getElementById('searchCusInput');
     const cusSelect = document.getElementById('cusSelect');
+    const searchVendorInput = document.getElementById('searchVendorInput');
+    const vendorSelect = document.getElementById('vendorSelect');
 
-    searchInput.addEventListener('input', function () {
-        const searchText = searchInput.value.toLowerCase();
+    searchCusInput.addEventListener('input', function () {
+        const searchCusText = searchCusInput.value.toLowerCase();
         Array.from(cusSelect.options).forEach(option => {
-            const optionText = option.text.toLowerCase();
-            option.style.display = optionText.includes(searchText) ? 'block' : 'none';
+            const optionCusText = option.text.toLowerCase();
+            option.style.display = optionCusText.includes(searchCusText) ? 'block' : 'none';
+        });
+    });
+
+    searchVendorInput.addEventListener('input', function () {
+        const searchVendorText = searchVendorInput.value.toLowerCase();
+        Array.from(vendorSelect.options).forEach(option => {
+            const optionVendorText = option.text.toLowerCase();
+            option.style.display = optionVendorText.includes(searchVendorText) ? 'block' : 'none';
         });
     });
 </script>

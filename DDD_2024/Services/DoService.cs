@@ -96,5 +96,34 @@ namespace DDD_2024.Services
                 }
             }
         }
+
+        public int NewProjectEmpSEQ
+        {
+            get
+            {
+                if (_context.Project_Emp.Count() == 0)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return _context.Project_Emp.Max(e => e.SEQ) + 1;
+                }
+            }
+        }
+
+        public bool chk_DoTransDin(string projectID)
+        {
+            var projectStatus = _context.ProjectM.FirstOrDefault(e => e.ProjectID == projectID)?.Status;
+
+            if (!string.IsNullOrEmpty(projectStatus) && projectStatus != "DO")
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }            
+        }
     }
 }

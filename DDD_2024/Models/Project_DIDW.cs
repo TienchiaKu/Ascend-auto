@@ -4,6 +4,9 @@ namespace DDD_2024.Models
 {
     public class Project_DIDW
     {
+        //[Key]
+        //public int DinID { get; set; }
+        [Key]
         [StringLength(12)]
         [Display(Name = "專案編號")]
         [Required]
@@ -15,7 +18,6 @@ namespace DDD_2024.Models
 
         [StringLength(10)]
         [Display(Name = "Din建立時間")]
-        [Required]
         public string? DinDate { get; set; }
 
         [StringLength(1)]
@@ -24,7 +26,6 @@ namespace DDD_2024.Models
 
         [StringLength(10)]
         [Display(Name = "Dwin建立時間")]
-        [Required]
         public string? DwinDate { get; set; }
 
         [StringLength(1)]

@@ -1,0 +1,51 @@
+﻿@model IEnumerable<DDD_2024.Models.DoViewModel>
+
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="file">選擇Excel：</label>
+        <input type="file" name="Excelfile" class="form-control-file" accept=".xlsx,.xls" />
+        <button type="submit" class="btn btn-primary">預覽資料</button>
+    </div>
+</form>
+
+@if (Model != null)
+{
+    <table>
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.vmCreateDate)</th>
+                <th>@Html.DisplayNameFor(model => model.CusName)</th>
+                <th>@Html.DisplayNameFor(model => model.VendorName)</th>
+                <th>@Html.DisplayNameFor(model => model.PartNo)</th>
+                <th>@Html.DisplayNameFor(model => model.ProApp)</th>
+                <th>@Html.DisplayNameFor(model => model.ApplicantName)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.vmCreateDate)</td>
+                    <td>@Html.DisplayFor(modelItem => item.CusName)</td>
+                    <td>@Html.DisplayFor(modelItem => item.VendorName)</td>
+                    <td>@Html.DisplayFor(modelItem => item.PartNo)</td>
+                    <td>@Html.DisplayFor(modelItem => item.ProApp)</td>
+                    <td>@Html.DisplayFor(modelItem => item.ApplicantName)</td>                       
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+    }
+</style>

@@ -10,21 +10,21 @@ namespace DDD_2024.Models
         [Required]
         [StringLength(20)]
         [Display(Name = "使用者")]
-        public string UserName { get; set; }
+        public string? UserName { get; set; }
 
         [Required]
         [StringLength(20)]
         [Display(Name = "密碼")]
-        public string UserPWD { get; set; }
+        public string? UserPWD { get; set; }
 
         [StringLength(15)]
         [Display(Name = "部門")]
-        public string Department { get; set; }
+        public string? Department { get; set; }
 
         [Required]
         [StringLength(1)]
         [Display(Name = "是否在職")]
-        public string IsActive { get; set; }
+        public string? IsActive { get; set; }
 
         [Required]
         [Display(Name = "建立日期")]

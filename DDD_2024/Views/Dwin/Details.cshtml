@@ -1,0 +1,156 @@
+﻿@model DDD_2024.Models.DwinViewModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>詳細資料</h1>
+
+<div>
+    <hr />
+    <input type="hidden" id="str_ProjectID" value="@Model.ProjectID" />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.vmCreateDate)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.vmCreateDate)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.StatusName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.StatusName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CusName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CusName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.EndCus)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.EndCus)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ProApp)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ProApp)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ProModel)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ProModel)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.IsInte)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.IsInte)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.EProduceYS)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.EProduceYS)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.VendorName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.VendorName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.PartNo)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.PartNo)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ELTR)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ELTR)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.EGP)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.EGP)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.EFirstYQty)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.EFirstYQty)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ESecondYQty)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ESecondYQty)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.EThirdYQty)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.EThirdYQty)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.UFirstYPrice)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.UFirstYPrice)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.USecondYPrice)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.USecondYPrice)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.UThirdYPrice)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.UThirdYPrice)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.PM_EmpName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.PM_EmpName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Sales_EmpName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Sales_EmpName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FAE1_EmpName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FAE1_EmpName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FAE2_EmpName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FAE2_EmpName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FAE3_EmpName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FAE3_EmpName)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.ProjectID">編輯</a> |
+    <a asp-action="Index">返回清單</a>
+</div>

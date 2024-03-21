@@ -1,0 +1,139 @@
+﻿@model IEnumerable<DDD_2024.Models.BonusCalViewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>獎金計算</h1>
+
+@if (ViewBag.Message != null)
+{
+    <script>alert('@ViewBag.Message');</script>
+}
+
+@if (ViewBag.Message == null)
+{
+    <table class="table">
+        <thead>            
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.ProjectID)
+                </th>
+                <th class="hidden-column">
+                    @Html.DisplayNameFor(model => model.Status)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PartNo)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.VendorName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.CusName)
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th colspan="2">Do</th>
+            </tr>
+            @foreach (var item in Model)
+            {
+                @if (item.Status == "DO")
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ProjectID)
+                        </td>
+                        <td style="display: none;">
+                            @Html.DisplayFor(modelItem => item.Status)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.PartNo)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.VendorName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CusName)
+                        </td>
+                        <td>
+                            <form asp-action="TransProjectDetail" asp-route-ProjectID="@item.ProjectID" asp-route-Status="@item.Status">
+                                <button type="submit" class="btn btn-dark">詳細資料</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+            <tr>
+                <th colspan="2">Din</th>
+            </tr>
+            @foreach (var item in Model)
+            {
+                @if (item.Status == "DIN")
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ProjectID)
+                        </td>
+                        <td style="display: none;">
+                            @Html.DisplayFor(modelItem => item.Status)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.PartNo)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.VendorName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CusName)
+                        </td>
+                        <td>
+                            <form asp-action="TransProjectDetail" asp-route-ProjectID="@item.ProjectID" asp-route-Status="@item.Status">
+                                <button type="submit" class="btn btn-dark">詳細資料</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+            <tr>
+                <th colspan="2">Dwin</th>
+            </tr>
+            @foreach (var item in Model)
+            {
+                @if (item.Status == "DWIN")
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ProjectID)
+                        </td>
+                        <td style="display: none;">
+                            @Html.DisplayFor(modelItem => item.Status)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.PartNo)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.VendorName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CusName)
+                        </td>
+                        <td>
+                            <form asp-action="TransProjectDetail" asp-route-ProjectID="@item.ProjectID" asp-route-Status="@item.Status">
+                                <button type="submit" class="btn btn-dark">詳細資料</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+<style>
+    .hidden-column {
+        display: none;
+    }
+</style>

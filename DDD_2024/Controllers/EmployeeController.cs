@@ -60,6 +60,10 @@ namespace DDD_2024.Controllers
             {
                 return NotFound();
             }
+            if (string.IsNullOrEmpty(dDD_Employee.OnDuty))
+            {
+                return NotFound("找不到職務資料");
+            }
             else
             {
                 EmployeeViewModel employeeViewModel = new EmployeeViewModel

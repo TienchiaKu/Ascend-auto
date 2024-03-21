@@ -1,0 +1,87 @@
+﻿@model IEnumerable<DDD_2024.Models.DwinViewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Dwin查詢</h1>
+
+@if (ViewBag.Message != null)
+{
+    <script>alert('@ViewBag.Message');</script>
+}
+
+<p>
+    <a asp-action="Create">新增Dwin</a>
+</p>
+
+@if (ViewBag.Message == null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.ProjectID)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.DwinDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.StatusName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.CusName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.VendorName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PartNo)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ProApp)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ProModel)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td style="display: none;">
+                        @Html.DisplayFor(modelItem => item.ProjectID)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.DwinDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StatusName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CusName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.VendorName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.PartNo)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ProApp)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ProModel)
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.ProjectID">編輯</a> |
+                        <a asp-action="Details" asp-route-id="@item.ProjectID">詳細資料</a> |
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+

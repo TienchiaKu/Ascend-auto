@@ -10,30 +10,40 @@ using DDD_2024.Models;
 using DDD_2024.Interfaces;
 using Microsoft.CodeAnalysis;
 using System.Net.NetworkInformation;
+using Microsoft.AspNetCore.Http.HttpResults;
+using MiniExcelLibs;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DDD_2024.Controllers
 {
     public class DoController : Controller
     {
-        private readonly DoContext _context;
+        private readonly DoContext _Docontext;
+        private readonly ProjectMContext _projectMContext;
+        private readonly ProjectDContext _projectDContext;
         private readonly IDoService _doService;
         private readonly ICusVendoeService _cusVendoeService;
         private readonly IEmployeeService _employeeService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public DoController(DoContext context, IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService)
+        public DoController(ProjectMContext projectMContext, ProjectDContext projectDContext, DoContext doContext, 
+            IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService, IWebHostEnvironment webHostEnvironment)
         {
-            _context = context;
+            _projectMContext = projectMContext;
+            _projectDContext = projectDContext;
+            _Docontext = doContext;
             _doService = doService;
             _cusVendoeService = cusVendoeService;
             _employeeService = employeeService;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Do
         public async Task<IActionResult> Index()
         {
-            var modelDO = await _context.Project_DO.ToListAsync();
-            var modelProjectM = await _context.ProjectM.ToListAsync();
-            var modelProjectD = await _context.ProjectD.ToListAsync();
+            var modelDO = await _Docontext.Project_DO.ToListAsync();
+            var modelProjectM = await _projectMContext.ProjectM.ToListAsync();
+            var modelProjectD = await _projectDContext.ProjectD.ToListAsync();
 
             //加入modelDO的資料
             List<DoViewModel> list_doViewModel = new List<DoViewModel>();
@@ -43,12 +53,15 @@ namespace DDD_2024.Controllers
                 {
                     DoID = item.DoID,
                     ProjectID = item.ProjectID,
-                    vmCreateDate = item.CreateDate.Substring(0, 4) + "/" + item.CreateDate.Substring(4, 2) + "/" + item.CreateDate.Substring(6, 2),
                     ApplicantName = _employeeService.GetEmployeeName(item.ApplicantID),
                     StatusName = _doService.GetStatusName(item.Status),
                     DOStatus = item.Status
-
                 };
+
+                if (!string.IsNullOrEmpty(item.CreateDate))
+                {
+                    model.vmCreateDate = item.CreateDate.Substring(0, 4) + "/" + item.CreateDate.Substring(4, 2) + "/" + item.CreateDate.Substring(6, 2);
+                }
 
                 list_doViewModel.Add(model);
             }
@@ -61,9 +74,17 @@ namespace DDD_2024.Controllers
 
                 if (matchingProjectM != null && matchingProjectD != null)
                 {
-                    // 將 matchingProjectM 的資料設定給 Cus_DB 屬性
-                    item.CusName = _cusVendoeService.GetvendorName(matchingProjectM.Cus_DB, matchingProjectM.CusID);
-                    item.VendorName = _cusVendoeService.GetvendorName("ASCEND", matchingProjectD.VendorID);
+                    if(!string.IsNullOrEmpty(matchingProjectM.Cus_DB) && !string.IsNullOrEmpty(matchingProjectM.CusID))
+                    {
+                        // 將 matchingProjectM 的資料設定給 Cus_DB 屬性
+                        item.CusName = _cusVendoeService.GetvendorName(matchingProjectM.Cus_DB, matchingProjectM.CusID);
+                    }
+
+                    if (!string.IsNullOrEmpty(matchingProjectD.VendorID))
+                    {
+                        item.VendorName = _cusVendoeService.GetvendorName("ASCEND", matchingProjectD.VendorID);
+                    }
+
                     item.PartNo = matchingProjectD.PartNo;
                 }
             }
@@ -74,45 +95,54 @@ namespace DDD_2024.Controllers
             }
             else
             {
-                return Problem("Entity set 'BizAutoContext.Project_DO'  is null.");
+                return Problem("Entity set 'Project_DO'  is null.");
             }
         }
 
         // GET: Do/Details/5
-        public async Task<IActionResult> Details(string id)
+        public async Task<IActionResult> Details(string ProjectID)
         {
-            if (id == null || _context.Project_DO == null)
+            if (ProjectID == null || _Docontext.Project_DO == null)
             {
                 return NotFound();
             }
 
-            var project_DO = await _context.Project_DO
-                .FirstOrDefaultAsync(m => m.DoID == id);
-            if (project_DO == null)
-            {
-                return NotFound();
-            }
-
-            var modelProjectM = await _context.ProjectM.ToListAsync();
-            var modelProjectD = await _context.ProjectD.ToListAsync();
-
-            var matchingProjectM = modelProjectM.FirstOrDefault(p => p.ProjectID == project_DO.ProjectID);
-            var matchingProjectD = modelProjectD.FirstOrDefault(k => k.ProjectID == project_DO.ProjectID);
+            var modelProjectM = await _projectMContext.ProjectM.Where(p => p.ProjectID == ProjectID).FirstOrDefaultAsync();
+            var modelProjectD = await _projectDContext.ProjectD.Where(p => p.ProjectID == ProjectID && (p.Stage == "DO" || p.Stage == "DIN")).FirstOrDefaultAsync();
+            var modelDo = await _Docontext.Project_DO.Where(p => p.ProjectID == ProjectID).FirstOrDefaultAsync();
 
             var model = new DoViewModel();
 
-            if (matchingProjectM != null && matchingProjectD != null)
+            if(modelDo != null)
             {
-                model.DoID = project_DO.DoID;
-                model.ProjectID = matchingProjectM.ProjectID;
-                model.DOStatus = project_DO.Status;
-                model.StatusName = _doService.GetStatusName(project_DO.Status);
-                model.vmCreateDate = project_DO.CreateDate.Substring(0, 4) + "/" + project_DO.CreateDate.Substring(4, 2) + "/" + project_DO.CreateDate.Substring(6, 2);
-                model.CusName = _cusVendoeService.GetvendorName(matchingProjectM.Cus_DB, matchingProjectM.CusID);
-                model.VendorName = _cusVendoeService.GetvendorName("ASCEND", matchingProjectD.VendorID);
-                model.PartNo = matchingProjectD.PartNo;
-                model.ProApp = matchingProjectM.ProApp;
-                model.ApplicantName = _employeeService.GetEmployeeName(project_DO.ApplicantID);
+                model.DoID = modelDo.DoID;
+                model.DOStatus = modelDo.Status;
+                model.StatusName = _doService.GetStatusName(modelDo.Status);
+
+                if (!string.IsNullOrEmpty(modelDo.CreateDate))
+                {
+                    model.vmCreateDate = modelDo.CreateDate.Substring(0, 4) + "/" + modelDo.CreateDate.Substring(4, 2) + "/" + modelDo.CreateDate.Substring(6, 2);
+                }
+
+                model.ApplicantName = _employeeService.GetEmployeeName(modelDo.ApplicantID);
+            }
+
+            if (modelProjectM != null && modelProjectD != null)
+            {
+                model.ProjectID = modelProjectM.ProjectID;
+
+                if(!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
+                {
+                    model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
+                }
+
+                if (!string.IsNullOrEmpty(modelProjectD.VendorID))
+                {
+                    model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
+                }
+
+                model.PartNo = modelProjectD.PartNo;
+                model.ProApp = modelProjectM.ProApp;
             }
             return View(model);
         }
@@ -146,14 +176,19 @@ namespace DDD_2024.Controllers
                     CusID = doViewModel.CusID,
                     ProApp = doViewModel.ProApp
                 };
+                _projectMContext.Add(modelprojectM);
+                await _projectMContext.SaveChangesAsync();
 
                 // Insert a record into ProjectD
                 var modelprojectD = new ProjectD
                 {
                     ProjectID = projectID,
                     VendorID = doViewModel.VendorID,
-                    PartNo = doViewModel.PartNo
+                    PartNo = doViewModel.PartNo,
+                    Stage = "DO"
                 };
+                _projectDContext.Add(modelprojectD);
+                await _projectDContext.SaveChangesAsync();
 
                 // Insert a record into Project_DO
                 var modelprojectDO = new Project_DO
@@ -164,12 +199,9 @@ namespace DDD_2024.Controllers
                     ApplicantID = Convert.ToInt32(doViewModel.ApplicantName),
                     Status = "N" // Status: 新單
                 };
+                _Docontext.Add(modelprojectDO);
+                await _Docontext.SaveChangesAsync();
 
-                _context.Add(modelprojectM);
-                _context.Add(modelprojectD);
-                _context.Add(modelprojectDO);
-
-                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View();
@@ -178,12 +210,12 @@ namespace DDD_2024.Controllers
         // GET: Do/Edit/5
         public async Task<IActionResult> Edit(string id)
         {
-            if (id == null || _context.Project_DO == null)
+            if (id == null || _Docontext.Project_DO == null)
             {
                 return NotFound();
             }
 
-            var project_DO = await _context.Project_DO.FindAsync(id);
+            var project_DO = await _Docontext.Project_DO.FindAsync(id);
             if (project_DO == null)
             {
                 return NotFound();
@@ -205,8 +237,8 @@ namespace DDD_2024.Controllers
             {
                 try
                 {
-                    _context.Update(project_DO);
-                    await _context.SaveChangesAsync();
+                    _projectDContext.Update(project_DO);
+                    await _projectDContext.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -233,7 +265,7 @@ namespace DDD_2024.Controllers
                 return View();
             }
             
-            var allProjectDOs = _context.Project_DO.ToList();
+            var allProjectDOs = _Docontext.Project_DO.ToList();
 
             foreach (var doId in DoIDs)
             {
@@ -242,10 +274,10 @@ namespace DDD_2024.Controllers
                 if (modelToUpdate != null)
                 {
                     modelToUpdate.Status = "C";  // 狀態改為審核通過
-                    _context.Update(modelToUpdate); 
+                    _Docontext.Update(modelToUpdate); 
                 }
             }
-            _context.SaveChanges();
+            _Docontext.SaveChanges();
 
             return RedirectToAction("Index");
         }
@@ -259,7 +291,7 @@ namespace DDD_2024.Controllers
                 return View();
             }
 
-            var allProjectDOs = _context.Project_DO.ToList();
+            var allProjectDOs = _Docontext.Project_DO.ToList();
 
             foreach (var doId in DoIDs)
             {
@@ -268,10 +300,10 @@ namespace DDD_2024.Controllers
                 if (modelToUpdate != null)
                 {
                     modelToUpdate.Status = "R";  // 狀態改為審核拒絕
-                    _context.Update(modelToUpdate);
+                    _Docontext.Update(modelToUpdate);
                 }
             }
-            _context.SaveChanges();
+            _Docontext.SaveChanges();
 
             return RedirectToAction("Index");
         }
@@ -285,15 +317,15 @@ namespace DDD_2024.Controllers
                 return View();
             }
 
-            var allProjectDOs = _context.Project_DO.ToList();
+            var allProjectDOs = _Docontext.Project_DO.ToList();
 
             var modelToUpdate = allProjectDOs.FirstOrDefault(d => d.DoID == DoID);
             if (modelToUpdate != null)
             {
                 modelToUpdate.Status = "C";  // 狀態改為審核通過
-                _context.Update(modelToUpdate);
+                _Docontext.Update(modelToUpdate);
             }
-            _context.SaveChanges();
+            _Docontext.SaveChanges();
 
             return RedirectToAction("Index");
         }
@@ -307,22 +339,106 @@ namespace DDD_2024.Controllers
                 return View();
             }
 
-            var allProjectDOs = _context.Project_DO.ToList();
+            var allProjectDOs = _Docontext.Project_DO.ToList();
 
             var modelToUpdate = allProjectDOs.FirstOrDefault(d => d.DoID == DoID);
             if (modelToUpdate != null)
             {
                 modelToUpdate.Status = "R";  // 狀態改為審核拒絕
-                _context.Update(modelToUpdate);
+                _Docontext.Update(modelToUpdate);
             }
-            _context.SaveChanges();
+            _Docontext.SaveChanges();
 
             return RedirectToAction("Index");
         }
 
+        [HttpPost]
+        public IActionResult TransDin([FromBody] string DoID)
+        {            
+            return RedirectToAction("Create", "Din", new { projectID = DoID });
+        }
+
+        // GET: Do/Upload
+        public IActionResult Upload()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Upload(IFormFile Excelfile)
+        {
+            var stream = new MemoryStream();
+            Excelfile.CopyTo(stream);
+
+            // 讀取stream中的所有資料
+            var streamData = MiniExcel.Query(stream, true, sheetName: "DO", startCell: "A2").ToList();
+
+            // 检查是否有数据
+            if (streamData.Count > 0)
+            {
+                List< DoViewModel > list_doViewModels = new List< DoViewModel >();
+                
+                for(int i = 0; i < streamData.Count; i++)
+                {
+                    var rowData = streamData[i];
+
+                    //檢查是否有資料
+                    bool hasData = false;
+
+                    foreach (var cellValue in rowData)
+                    {
+                        if (cellValue.Value != null)
+                        {
+                            hasData = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasData)
+                    {
+                        continue;
+                    }
+
+                    var DoViewModel = new DoViewModel();
+
+                    foreach (var cellValue in rowData)
+                    {
+                        if (cellValue.Key == "Date")
+                        {
+                            DoViewModel.vmCreateDate = Convert.ToDateTime(cellValue.Value).ToString("yyyy/MM/dd");
+                        }
+                        if (cellValue.Key == "Customer(中文)")
+                        {
+                            DoViewModel.CusName = cellValue.Value.ToString();
+                        }
+                        if (cellValue.Key == "Product")
+                        {
+                            DoViewModel.VendorName = cellValue.Value.ToString();
+                        }
+                        if (cellValue.Key == "Part number")
+                        {
+                            DoViewModel.PartNo = cellValue.Value.ToString();
+                        }
+                        if (cellValue.Key == "Application")
+                        {
+                            DoViewModel.ProApp = cellValue.Value.ToString();
+                        }
+                        if (cellValue.Key == "Owner")
+                        {
+                            DoViewModel.ApplicantName = cellValue.Value.ToString();
+                        }
+                    }
+                    list_doViewModels.Add(DoViewModel);
+                }
+                return View(list_doViewModels);
+            }
+            return View();
+
+        }
+
         private bool Project_DOExists(string id)
         {
-          return (_context.Project_DO?.Any(e => e.DoID == id)).GetValueOrDefault();
+          return (_Docontext.Project_DO?.Any(e => e.DoID == id)).GetValueOrDefault();
         }
     }
 }

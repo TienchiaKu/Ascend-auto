@@ -30,6 +30,15 @@ namespace DDD_2024.Services
             get
             {
                 var employees = _context.employeeM.Where(e => e.OnDuty == "Y").ToList();
+
+                // 添加一個空值的 SelectListItem
+                var emptyItem = new EmployeeM()
+                {
+                    EmpID = 999,
+                    EmpName = string.Empty
+                };
+                employees.Insert(0, emptyItem);
+
                 return employees.Select(e => new SelectListItem
                 {
                     Value = e.EmpID.ToString(),

@@ -15,10 +15,10 @@ namespace DDD_2024.Models
 
         [StringLength(20)]
         [Display(Name = "姓名")]
-        public string EmpName { get; set; }
+        public string? EmpName { get; set; }
 
         [Display(Name = "在職與否")]
-        public string OnDuty { get; set; }
+        public string? OnDuty { get; set; }
 
         [StringLength(10)]
         [Display(Name = "密碼")]

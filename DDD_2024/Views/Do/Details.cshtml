@@ -12,6 +12,10 @@
         <button id="btn_agree" class="btn btn-warning">審核同意</button>
         <button id="btn_disagree" class="btn btn-warning">審核拒絕</button>
     }
+    @if (Model.DOStatus == "C" || Model.DOStatus == "X" || Model.DOStatus == "F")
+    {
+        <a asp-controller="Din" asp-action="Create" asp-route-projectID="@Model?.ProjectID" class="btn btn-warning">轉Din</a>
+    }
     <input type="text" placeholder="系統使用者" readonly />
 </div>
 
@@ -69,33 +73,56 @@
 </div>
 
 <script>
-    document.getElementById('btn_agree').addEventListener('click', function () {
-        var doId = document.getElementById("str_doID").value;
+    var btn_agree = document.getElementById('btn_agree');
+    var btn_disagree = document.getElementById('btn_disagree');
+    var btn_transDin = document.getElementById('btn_transDin');
 
-        fetch('/Do/ConfirmDO', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(doId)
-        })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-    });
+    if (btn_agree) {
+        btn_agree.addEventListener('click', function () {
+            var doId = document.getElementById("str_doID").value;
 
-    document.getElementById('btn_disagree').addEventListener('click', function () {
-        var doId = document.getElementById("str_doID").value;
+            fetch('/Do/ConfirmDO', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(doId)
+            })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    }
+    if (btn_disagree) {
+        document.getElementById('btn_disagree').addEventListener('click', function () {
+            var doId = document.getElementById("str_doID").value;
 
-        fetch('/Do/RejectDO', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(doId)
-        })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-    });
+            fetch('/Do/RejectDO', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(doId)
+            })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    }
+    if (btn_transDin) {
+        document.getElementById('btn_transDin').addEventListener('click', function () {
+            var doId = document.getElementById("str_doID").value;
+
+            fetch('/Do/TransDin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(doId)
+            })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    }
 </script>

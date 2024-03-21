@@ -12,7 +12,8 @@
 
 <div style="float: right; margin-top: 10px;">
     <button id="btn_agree" class="btn btn-warning">全部同意</button>
-    <button id="btn_disagree" class="btn btn-warning">不同意</button>
+    <button id="btn_disagree" class="btn btn-warning">全部不同意</button>
+    <a asp-action="Upload" >上傳Do</a>
     <input type="text" placeholder="系統使用者" readonly />
 </div>
 
@@ -44,12 +45,12 @@
     <tbody>
 @foreach (var item in Model) {
         <tr>
-                <td>
-                    @if (item.DOStatus == "N")
-                    {
-                        <input type="checkbox" id="chk_@item.DoID" />
-                    }
-                </td>
+            <td>
+                @if (item.DOStatus == "N")
+                {
+                    <input type="checkbox" id="chk_@item.DoID" />
+                }
+            </td>
             <td>
                 @Html.DisplayFor(modelItem => item.vmCreateDate)
             </td>
@@ -70,7 +71,7 @@
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.DoID">編輯</a> |
-                <a asp-action="Details" asp-route-id="@item.DoID">詳細資料</a> |
+                <a asp-action="Details" asp-route-ProjectID="@item.ProjectID">詳細資料</a> |
             </td>
         </tr>
 }

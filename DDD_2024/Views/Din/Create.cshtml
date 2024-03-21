@@ -1,0 +1,174 @@
+﻿@model DDD_2024.Models.DinViewModel
+@inject DDD_2024.Interfaces.IEmployeeService EmployeeService
+@inject DDD_2024.Interfaces.ICusVendoeService CusVendoeService
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Din建立</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <input asp-for="ProjectID" class="form-control" hidden />
+                <input asp-for="DoID" class="form-control" hidden />
+                <input asp-for="VendorID" class="form-control" hidden />
+                <input asp-for="vmCreateDate" class="form-control" hidden />
+                <input asp-for="Cus_DB" class="form-control" hidden />
+                <input asp-for="CusID" class="form-control" hidden />
+                <input asp-for="ProApp" class="form-control" hidden />
+            </div>
+            <div class="form-group">
+                <label asp-for="VendorName" class="control-label"></label>
+                <input asp-for="VendorName" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="PartNo" class="control-label"></label>
+                <input asp-for="PartNo" class="form-control" />
+                <span asp-validation-for="PartNo" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CusName" class="control-label"></label>
+                <input asp-for="CusName" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="EndCus" class="control-label"></label>
+                <input asp-for="EndCus" class="form-control" />
+                <span asp-validation-for="EndCus" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ProApp" class="control-label"></label>
+                <input asp-for="ProApp" class="form-control" />
+                <span asp-validation-for="ProApp" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ProModel" class="control-label"></label>
+                <input asp-for="ProModel" class="form-control" />
+                <span asp-validation-for="ProModel" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="EProduceYS" class="control-label"></label>
+                <input asp-for="EProduceYS" class="form-control" />
+                <span asp-validation-for="EProduceYS" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ELTR" class="control-label"></label>
+                <input asp-for="ELTR" class="form-control" />
+                <span asp-validation-for="ELTR" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="EGP" class="control-label"></label>
+                <input asp-for="EGP" class="form-control" />
+                <span asp-validation-for="EGP" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="EFirstYQty" class="control-label"></label>
+                <input asp-for="EFirstYQty" class="form-control" />
+                <span asp-validation-for="EFirstYQty" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ESecondYQty" class="control-label"></label>
+                <input asp-for="ESecondYQty" class="form-control" />
+                <span asp-validation-for="ESecondYQty" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="EThirdYQty" class="control-label"></label>
+                <input asp-for="EThirdYQty" class="form-control" />
+                <span asp-validation-for="EThirdYQty" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UFirstYPrice" class="control-label"></label>
+                <input asp-for="UFirstYPrice" class="form-control" />
+                <span asp-validation-for="UFirstYPrice" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="USecondYPrice" class="control-label"></label>
+                <input asp-for="USecondYPrice" class="form-control" />
+                <span asp-validation-for="USecondYPrice" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UThirdYPrice" class="control-label"></label>
+                <input asp-for="UThirdYPrice" class="form-control" />
+                <span asp-validation-for="UThirdYPrice" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PM_EmpName" class="control-label"></label>
+                <select asp-for="PM_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
+                <span asp-validation-for="PM_EmpName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sales_EmpName" class="control-label"></label>
+                <select asp-for="Sales_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
+                <span asp-validation-for="Sales_EmpName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FAE1_EmpName" class="control-label"></label>
+                <select asp-for="FAE1_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
+                <span asp-validation-for="FAE1_EmpName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FAE1_Bonus" class="control-label"></label>
+                <input type="range" asp-for="FAE1_Bonus" min="0" max="1" step="0.05" class="form-control-range" id="fae1-bonus-range" />
+                <span id="fae1-bonus-value">0</span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FAE2_EmpName" class="control-label"></label>
+                <select asp-for="FAE2_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
+                <span asp-validation-for="FAE2_EmpName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FAE2_Bonus" class="control-label"></label>
+                <input type="range" asp-for="FAE2_Bonus" min="0" max="1" step="0.05" class="form-control-range" id="fae2-bonus-range" />
+                <span id="fae2-bonus-value">0</span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FAE3_EmpName" class="control-label"></label>
+                <select asp-for="FAE3_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
+                <span asp-validation-for="FAE3_EmpName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FAE3_Bonus" class="control-label"></label>
+                <input type="range" asp-for="FAE3_Bonus" min="0" max="1" step="0.05" class="form-control-range" id="fae3-bonus-range" />
+                <span id="fae3-bonus-value">0</span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">返回清單</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+<script>
+    var FAE1_Bar = document.getElementById('fae1-bonus-range');
+    var FAE2_Bar = document.getElementById('fae2-bonus-range');
+    var FAE3_Bar = document.getElementById('fae3-bonus-range');
+
+    function addEventListenerToRangeBar(barId, valueId) {
+        var bar = document.getElementById(barId);
+        if (bar) {
+            bar.addEventListener('input', function () {
+                var value = this.value;
+                document.getElementById(valueId).textContent = value;
+            });
+        }
+    }
+
+    addEventListenerToRangeBar('fae1-bonus-range', 'fae1-bonus-value');
+    addEventListenerToRangeBar('fae2-bonus-range', 'fae2-bonus-value');
+    addEventListenerToRangeBar('fae3-bonus-range', 'fae3-bonus-value');
+
+</script>
