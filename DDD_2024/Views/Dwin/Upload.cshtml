@@ -1,15 +1,15 @@
-﻿@model IEnumerable<DDD_2024.Models.DoViewModel>
+﻿@model IEnumerable<DDD_2024.Models.DwinViewModel>
 
 <form id="dataForm" method="post" enctype="multipart/form-data">
     <div class="form-group">
         <label for="file">選擇Excel：</label>
         <input type="file" name="Excelfile" class="form-control-file" accept=".xlsx,.xls" />
-        <button type="submit" class="btn btn-warning">匯入Do</button>
+        <button type="submit" class="btn btn-warning">匯入Dwin</button>
     </div>
 </form>
 
 @functions {
-    bool AnyFieldIsNull(DoViewModel item)
+    bool AnyFieldIsNull(DwinViewModel item)
     {
         return string.IsNullOrEmpty(item.vmCreateDate)
             || string.IsNullOrEmpty(item.CusName)
@@ -19,8 +19,10 @@
             || string.IsNullOrEmpty(item.VendorID)
             || string.IsNullOrEmpty(item.PartNo)
             || string.IsNullOrEmpty(item.ProApp)
-            || string.IsNullOrEmpty(item.ApplicantName)
-            || item.ApplicantID == 0;
+            || string.IsNullOrEmpty(item.PM_EmpName)
+            || item.PMID == 0
+            || string.IsNullOrEmpty(item.Sales_EmpName)
+            || item.SalesID == 0;
     }
 }
 
@@ -37,9 +39,10 @@
                 <th>@Html.DisplayNameFor(model => model.VendorID)</th>
                 <th>@Html.DisplayNameFor(model => model.PartNo)</th>
                 <th>@Html.DisplayNameFor(model => model.ProApp)</th>
-                <th>@Html.DisplayNameFor(model => model.ApplicantName)</th>
-                <th>@Html.DisplayNameFor(model => model.ApplicantID)</th>
-                <th>@Html.DisplayNameFor(model => model.TradeStatus)</th>
+                <th>@Html.DisplayNameFor(model => model.PM_EmpName)</th>
+                <th>@Html.DisplayNameFor(model => model.PMID)</th>
+                <th>@Html.DisplayNameFor(model => model.Sales_EmpName)</th>
+                <th>@Html.DisplayNameFor(model => model.SalesID)</th>
                 <th>@Html.DisplayNameFor(model => model.UploadStatus)</th>
             </tr>
         </thead>
@@ -57,9 +60,10 @@
                     <td>@Html.DisplayFor(modelItem => item.VendorID)</td>
                     <td>@Html.DisplayFor(modelItem => item.PartNo)</td>
                     <td>@Html.DisplayFor(modelItem => item.ProApp)</td>
-                    <td>@Html.DisplayFor(modelItem => item.ApplicantName)</td>
-                    <td>@Html.DisplayFor(modelItem => item.ApplicantID)</td>
-                    <td>@Html.DisplayFor(modelItem => item.TradeStatus)</td>
+                    <td>@Html.DisplayFor(modelItem => item.PM_EmpName)</td>
+                    <td>@Html.DisplayFor(modelItem => item.PMID)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Sales_EmpName)</td>
+                    <td>@Html.DisplayFor(modelItem => item.SalesID)</td>
                     <td>@Html.DisplayFor(modelItem => item.UploadStatus)</td>
                 </tr>
             }

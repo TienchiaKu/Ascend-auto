@@ -8,8 +8,13 @@ namespace DDD_2024.Interfaces
     {
         int NewEmployeeID { get; }
         string GetEmployeeName(int? empID);
+        string GetEmployeeName_Onduty(int? empID);
         string GetYesNoName(string yesNo);
         bool CheckEmpName(string empName);
+        int GetEmployeeID(string EmpName);
+        bool Check_Login(EmployeeM employeeM);
+        string GetEmpRegion(int EmpID);
+        bool CheckOnDuty(int empID, string empName);
 
         List<SelectListItem> YesNo { get; set; }
         List<SelectListItem> GetEmployeeNameList { get; }

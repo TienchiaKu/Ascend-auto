@@ -11,6 +11,10 @@ using Microsoft.DotNet.Scaffolding.Shared.ProjectModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.IdentityModel.Tokens;
 using DDD_2024.Interfaces;
+using MiniExcelLibs;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Build.Evaluation;
+using DDD_2024.Services;
 
 namespace DDD_2024.Controllers
 {
@@ -18,123 +22,42 @@ namespace DDD_2024.Controllers
     {
         private readonly ProjectMContext _projectMContext;
         private readonly ProjectDContext _projectDContext;
+        private readonly ProjectDOontext _projectDOontext;
         private readonly DoContext _Docontext;
         private readonly Project_DIDWContext _project_DIDWContext;
+        private readonly Project_EmpContext _empContext;
         private readonly IDoService _doService;
         private readonly ICusVendoeService _cusVendoeService;
         private readonly IEmployeeService _employeeService;
+        private readonly IBounsCalService _bounsCalService;
+        private readonly IWebHostEnvironment _env;
 
-        public BonusCalController(ProjectMContext projectMContext, ProjectDContext projectDContext, Project_DIDWContext project_DIDWContext, DoContext doContext,
-            IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService)
+        public BonusCalController(ProjectMContext projectMContext, ProjectDContext projectDContext, Project_DIDWContext project_DIDWContext, 
+            DoContext doContext, ProjectDOontext projectDOontext, Project_EmpContext project_EmpContext,
+            IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService,
+            IBounsCalService bounsCalService, IWebHostEnvironment env)
         {
             _projectMContext = projectMContext;
             _projectDContext = projectDContext;
+            _projectDOontext = projectDOontext;
             _Docontext = doContext;
             _project_DIDWContext = project_DIDWContext;
+            _empContext = project_EmpContext;
             _doService = doService;
             _cusVendoeService = cusVendoeService;
             _employeeService = employeeService;
+            _bounsCalService = bounsCalService;
+            _env = env;
         }
 
         // GET: BonusCal
         public async Task<IActionResult> Index()
         {
-            var modelDo = await _Docontext.Project_DO.Where(p => p.Status == "C").ToListAsync();
-            var modelDIn = await _project_DIDWContext.Project_DIDW.Where(p => p.DinStatus == "C").ToListAsync();
-            var modelDWin = await _project_DIDWContext.Project_DIDW.Where(p => p.DwinStatus == "C").ToListAsync();
+            var model = await _bounsCalService.GetProjects();
 
-            var modelProjectMs = await _projectMContext.ProjectM.ToListAsync();
-            var modelProjectDs = await _projectDContext.ProjectD.ToListAsync();
-
-            List<BonusCalViewModel> list_BonusCal = new List<BonusCalViewModel>();
-            //加入DO資料
-            foreach (var item in modelDo)
+            if (model != null)
             {
-                var modelProjectM = modelProjectMs.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
-                var modelProjectD = modelProjectDs.Where(p => p.ProjectID == item.ProjectID && (p.Stage == "Do" || p.Stage == "DIN") ).FirstOrDefault();
-
-                if(modelProjectM != null && modelProjectD != null)
-                {
-                    var model = new BonusCalViewModel
-                    {
-                        ProjectID = item.ProjectID,
-                        PartNo = modelProjectD.PartNo,
-                        Status = "DO"
-                    };
-
-                    if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
-                    {
-                        model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
-                    }
-
-                    if (!string.IsNullOrEmpty(modelProjectD.VendorID))
-                    {
-                        model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
-                    }
-
-                    list_BonusCal.Add(model);
-                }
-            }
-            //加入DIN資料
-            foreach (var item in modelDIn)
-            {
-                var modelProjectM = modelProjectMs.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
-                var modelProjectD = modelProjectDs.Where(p => p.ProjectID == item.ProjectID && p.Stage == "DIN").FirstOrDefault();
-
-                if (modelProjectM != null && modelProjectD != null)
-                {
-                    var model = new BonusCalViewModel
-                    {
-                        ProjectID = item.ProjectID,
-                        PartNo = modelProjectD.PartNo,
-                        Status = "DIN"
-                    };
-
-                    if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
-                    {
-                        model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
-                    }
-
-                    if (!string.IsNullOrEmpty(modelProjectD.VendorID))
-                    {
-                        model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
-                    }
-
-                    list_BonusCal.Add(model);
-                }
-            }
-            //加入DWIN資料
-            foreach (var item in modelDIn)
-            {
-                var modelProjectM = modelProjectMs.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
-                var modelProjectD = modelProjectDs.Where(p => p.ProjectID == item.ProjectID && p.Stage == "DWIN").FirstOrDefault();
-
-                if (modelProjectM != null && modelProjectD != null)
-                {
-                    var model = new BonusCalViewModel
-                    {
-                        ProjectID = item.ProjectID,
-                        PartNo = modelProjectD.PartNo,
-                        Status = "DWIN"
-                    };
-
-                    if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
-                    {
-                        model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
-                    }
-
-                    if (!string.IsNullOrEmpty(modelProjectD.VendorID))
-                    {
-                        model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
-                    }
-
-                    list_BonusCal.Add(model);
-                }
-            }
-
-            if (list_BonusCal.Count > 0)
-            {
-                return View(list_BonusCal);
+                return View(model);
             }
             else
             {
@@ -210,6 +133,95 @@ namespace DDD_2024.Controllers
             else
             {
                 return View();
+            }
+        }
+
+        // GET: BonusCal
+        public IActionResult ProjectIndex()
+        {
+            List<ProjectBonusViewModel> list_PBonusVM = new List<ProjectBonusViewModel>();
+
+            //list_PBonusVM = _bounsCalService.GetBonusbyProject();
+
+            return View(list_PBonusVM);
+        }
+
+        //public IActionResult ExportExcel_BonusbyProjects()
+        //{
+        //    var modelProjects = _bounsCalService.GetBonusbyProject();
+        //
+        //    var valuesProjects = modelProjects.Select(item => new {
+        //        ProjectID = item.ProjectID,
+        //        Status = item.Status,
+        //        ApplicantName = item.ApplicantName,
+        //        TradeStatus = item.TradeStatus,
+        //        Applicant_Bonus = item.Applicant_Bonus
+        //    }).ToArray();
+        //
+        //    var modelEmp = _bounsCalService.GetBonusbyEmployee();
+        //
+        //    var valuesEmp = modelEmp.Select(item => new {
+        //        EmployeeName = item.EmployeeName,
+        //        Bonus = item.Bonus
+        //    }).ToArray();
+        //
+        //    var sheets = new Dictionary<string, object>
+        //    {
+        //        ["byProjects"] = valuesProjects,
+        //        ["byEmployees"] = valuesEmp
+        //    };
+        //
+        //    string path = @"D:\獎金計算by專案_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx";
+        //
+        //    if (!System.IO.File.Exists(path))
+        //    {
+        //        MiniExcel.SaveAs(path, sheets);
+        //
+        //        ViewBag.Message = "Excel匯出完成！";
+        //    }      
+        //
+        //    //var memoryStream = new MemoryStream();
+        //    //memoryStream.SaveAs(values);
+        //    ////memoryStream.SaveAs(valuesTTL,true,"Sheet2");
+        //    //memoryStream.Seek(0, SeekOrigin.Begin);
+        //    //return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        //    //{
+        //    //    FileDownloadName = "獎金計算by專案_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx"
+        //    //};
+        //    return RedirectToAction("ProjectIndex");
+        //}
+
+        [HttpPost]
+        public ActionResult BonusConfirm([FromBody] string[] projectIds)
+        {
+            var model = _bounsCalService.BonusConfirm(projectIds);
+
+            if (model != null)
+            {
+                var empDIDWBonusModel = _bounsCalService.GetDIDWBonusbyEmployee(model);
+                var empDOBonusModel = _bounsCalService.GetDOBonusbyEmployee(model);
+
+                var sheets = new Dictionary<string, object>
+                {
+                    ["各專案獎金"] = model,
+                    ["員工Do獎金"] = empDOBonusModel,
+                    ["員工DIDW獎金"] = empDIDWBonusModel
+                };
+
+                string path = @"D:\獎金報表_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx";
+
+                if (!System.IO.File.Exists(path))
+                {
+                    MiniExcel.SaveAs(path, sheets);
+
+                    ViewBag.Message = "Excel匯出完成！";
+                }
+
+                return View("Index", model);
+            }
+            else
+            {
+                return Content("匯出錯誤");
             }
         }
 

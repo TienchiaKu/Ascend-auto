@@ -20,14 +20,6 @@
                 <input asp-for="duty.DutyID" class="form-control" readonly />
             </div>
             <div class="form-group">
-                <label asp-for="duty.DBSource" class="control-label"></label>
-                <select asp-for="duty.DBSource" asp-items="CusVendoeService.DBSource" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="duty.VendorID" class="control-label"></label>
-                <select id="vendorSelect" asp-for="duty.VendorID" class="form-control" asp-items="@(await CusVendoeService.Ascendvendor_SelectList())"></select>
-            </div>
-            <div class="form-group">
                 <label asp-for="EmpName" class="control-label"></label>
                 <select asp-for="EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
             </div>

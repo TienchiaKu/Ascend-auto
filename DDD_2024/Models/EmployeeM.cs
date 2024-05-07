@@ -26,5 +26,8 @@ namespace DDD_2024.Models
 
         [Display(Name = "建立時間")]
         public DateTime UpdateDate { get; set; }
+
+        [Display(Name = "區域")]
+        public string? Region { get; set; }
     }
 }

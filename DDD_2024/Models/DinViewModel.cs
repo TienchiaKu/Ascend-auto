@@ -88,6 +88,8 @@ namespace DDD_2024.Models
         [Required]
         public string? PM_EmpName { get; set; }
 
+        public int PMID { get; set; }
+
         public double PM_Bonus { get; set; }
 
         [StringLength(5)]
@@ -95,11 +97,15 @@ namespace DDD_2024.Models
         [Required]
         public string? Sales_EmpName { get; set; }
 
+        public int SalesID { get; set; }
+
         public double Sales_Bonus { get; set; }
 
         [StringLength(5)]
         [Display(Name = "FAE1")]
         public string? FAE1_EmpName { get; set; }
+
+        public int FAE1ID { get; set; }
 
         public double FAE1_Bonus { get; set; }
 
@@ -107,11 +113,15 @@ namespace DDD_2024.Models
         [Display(Name = "FAE2")]
         public string? FAE2_EmpName { get; set; }
 
+        public int FAE2ID { get; set; }
+
         public double FAE2_Bonus { get; set; }
 
         [StringLength(5)]
         [Display(Name = "FAE3")]
         public string? FAE3_EmpName { get; set; }
+
+        public int FAE3ID { get; set; }
 
         public double FAE3_Bonus { get; set; }
 
@@ -127,5 +137,8 @@ namespace DDD_2024.Models
 
         [Display(Name = "客戶")]
         public string? CusName { get; set; }
+
+        [Display(Name = "上傳狀態")]
+        public string? UploadStatus { get; set; }
     }
 }

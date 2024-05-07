@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using DDD_2024.Data;
 using DDD_2024.Models;
 using DDD_2024.Interfaces;
-
 namespace DDD_2024.Controllers
 {
     public class CusVendorController : Controller
@@ -179,7 +178,7 @@ namespace DDD_2024.Controllers
         [HttpGet]
         public List<SelectListItem> GetAscendvendor_SelectList()
         {
-            var vendors = _cusVendoeService.GetAscendvendorList();
+            var vendors = _cusVendoeService.GetCusItem_Ascend();
 
             return vendors;
         }

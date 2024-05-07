@@ -16,5 +16,9 @@ namespace DDD_2024.Models
         [StringLength(1)]
         [Display(Name = "客供商名稱")]
         public string? SU01003 { get; set; }
+
+        [StringLength(25)]
+        [Display(Name = "客供商全名")]
+        public string? SU01004 { get; set; }
     }
 }

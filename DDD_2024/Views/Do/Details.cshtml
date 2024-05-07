@@ -1,4 +1,5 @@
 ﻿@model DDD_2024.Models.DoViewModel
+@inject IHttpContextAccessor contxt;
 
 @{
     ViewData["Title"] = "Details";
@@ -6,23 +7,68 @@
 
 <h1>詳細資料</h1>
 
-<div style="float: right;">
-    @if (Model.DOStatus == "N")
-    {
-        <button id="btn_agree" class="btn btn-warning">審核同意</button>
-        <button id="btn_disagree" class="btn btn-warning">審核拒絕</button>
-    }
-    @if (Model.DOStatus == "C" || Model.DOStatus == "X" || Model.DOStatus == "F")
-    {
-        <a asp-controller="Din" asp-action="Create" asp-route-projectID="@Model?.ProjectID" class="btn btn-warning">轉Din</a>
-    }
-    <input type="text" placeholder="系統使用者" readonly />
+<div class="accordion" id="accordionFunction">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFunOne" aria-expanded="true" aria-controls="collapseOne">
+                功能鍵
+            </button>
+        </h2>
+        <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
+            <div class="accordion-body">
+                @if (Model.DOStatus == "N")
+                {
+                    <div class="row">
+                        <div class="col-md-8">
+                        </div>
+                        <div class="col-md-2">
+                            <button id="btn_agree" class="btn btn-warning">審核同意</button>
+                        </div>
+                        <div class="col-md-2">
+                            <button id="btn_disagree" class="btn btn-warning">審核不同意</button>
+                        </div>
+                    </div>
+                }
+                @if (Model.DOStatus == "C" || Model.DOStatus == "X" || Model.DOStatus == "F")
+                {
+                    <div class="row">
+                        <div class="col-md-8">
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="Din" asp-action="Create" asp-route-projectID="@Model?.ProjectID" class="btn btn-warning">轉Din</a>
+                        </div>
+                    </div>
+                }
+
+                @if (contxt.HttpContext != null)
+                {
+                    var empName = contxt.HttpContext.Session.GetString("EmpName");
+                    if (!string.IsNullOrEmpty(empName))
+                    {
+                        <div class="row" style="margin-top: 6px">
+                            <div class="col-md-8">
+                            </div>
+                            <div class="col-md-4">
+                                <label>login User: </label>
+                                <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
 </div>
 
 <div style="margin-top: 10px">
-    <hr />
     <input type="hidden" id="str_doID" value="@Model.DoID" />
     <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ProjectID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ProjectID)
+        </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.vmCreateDate)
         </dt>
@@ -60,6 +106,12 @@
             @Html.DisplayFor(model => model.ApplicantName)
         </dd>
         <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.TradeStatus)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.TradeStatus)
+        </dd>
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.StatusName)
         </dt>
         <dd class="col-sm-10">
@@ -68,7 +120,7 @@
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.DoID">編輯</a> |
+    <a asp-action="Edit" asp-route-id="@Model?.ProjectID">編輯</a> |
     <a asp-action="Index">返回清單</a>
 </div>
 
@@ -109,6 +161,7 @@
                 });
         });
     }
+
     if (btn_transDin) {
         document.getElementById('btn_transDin').addEventListener('click', function () {
             var doId = document.getElementById("str_doID").value;

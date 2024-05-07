@@ -1,4 +1,5 @@
 ﻿@model DDD_2024.Models.DwinViewModel
+@inject IHttpContextAccessor contxt;
 
 @{
     ViewData["Title"] = "Details";
@@ -6,15 +7,60 @@
 
 <h1>詳細資料</h1>
 
+<div class="accordion" id="accordionFunction">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFunOne" aria-expanded="true" aria-controls="collapseOne">
+                功能鍵
+            </button>
+        </h2>
+        <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
+            <div class="accordion-body">
+                <div class="row" style="margin-top:6px">
+                    <div class="col-md-8">
+                    </div>
+                    <div class="col-md-2">
+                        @if (Model.DwinStatus == "N")
+                        {
+                            <button id="btn_agree" class="btn btn-warning">審核同意</button>
+                        }
+                    </div>
+                    <div class="col-md-2">
+                        @if (Model.DwinStatus == "N")
+                        {
+                            <button id="btn_disagree" class="btn btn-warning">審核拒絕</button>
+                        }
+                    </div>
+                </div>
+                @if (contxt.HttpContext != null)
+                {
+                    var empName = contxt.HttpContext.Session.GetString("EmpName");
+                    if (!string.IsNullOrEmpty(empName))
+                    {
+                        <div class="row" style="margin-top: 6px">
+                            <div class="col-md-8">
+                            </div>
+                            <div class="col-md-4">
+                                <label>login User: </label>
+                                <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
 <div>
     <hr />
     <input type="hidden" id="str_ProjectID" value="@Model.ProjectID" />
     <dl class="row">
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.vmCreateDate)
+            @Html.DisplayNameFor(model => model.DwinDate)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.vmCreateDate)
+            @Html.DisplayFor(model => model.DwinDate)
         </dd>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.StatusName)
@@ -154,3 +200,42 @@
     <a asp-action="Edit" asp-route-id="@Model?.ProjectID">編輯</a> |
     <a asp-action="Index">返回清單</a>
 </div>
+
+<script>
+    var btn_agree = document.getElementById('btn_agree');
+    var btn_disagree = document.getElementById('btn_disagree');
+
+    if (btn_agree) {
+        btn_agree.addEventListener('click', function () {
+            var projectID = document.getElementById("str_ProjectID").value;
+
+            fetch('/Dwin/ConfirmDwin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(projectID)
+            })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    }
+    if (btn_disagree) {
+        document.getElementById('btn_disagree').addEventListener('click', function () {
+            var projectID = document.getElementById("str_ProjectID").value;
+
+            fetch('/Dwin/RejectDwin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(projectID)
+            })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    }
+
+</script>

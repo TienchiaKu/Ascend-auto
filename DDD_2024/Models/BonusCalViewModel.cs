@@ -35,4 +35,85 @@ namespace DDD_2024.Models
         [Display(Name = "客戶")]
         public string? CusName { get; set; }
     }
+
+    public class ProjectBonusViewModel
+    {
+        [StringLength(12)]
+        [Display(Name = "專案編號")]
+        public string? ProjectID { get; set; }
+
+        [StringLength(4)]
+        [Display(Name = "專案階段")]
+        public string? Stage { get; set; }
+
+        [Display(Name = "申請者")]
+        public string? ApplicantName { get; set; }
+
+        [Display(Name = "申請者ID")]
+        public int ApplicantID { get; set; }
+
+        [Display(Name = "區域")]
+        public string? Region { get; set; }
+
+        [StringLength(1)]
+        [Display(Name = "交易狀態")]
+        public string? TradeStatus { get; set; }
+
+        [Display(Name = "Do獎金")]
+        public double DOBonus { get; set; }
+
+        [StringLength(5)]
+        [Display(Name = "PM")]
+        [Required]
+        public string? PM_EmpName { get; set; }
+
+        public int PM_EmpID { get; set; }
+
+        public double PM_Bonus { get; set; }
+
+        [StringLength(5)]
+        [Display(Name = "Sales")]
+        [Required]
+        public string? Sales_EmpName { get; set; }
+
+        public int Sales_EmpID { get; set; }
+
+        public double Sales_Bonus { get; set; }
+
+        [StringLength(5)]
+        [Display(Name = "FAE1")]
+        public string? FAE1_EmpName { get; set; }
+
+        public int FAE1_EmpID { get; set; }
+
+        public double FAE1_Bonus { get; set; }
+
+        [StringLength(5)]
+        [Display(Name = "FAE2")]
+        public string? FAE2_EmpName { get; set; }
+
+        public int FAE2_EmpID { get; set; }
+
+        public double FAE2_Bonus { get; set; }
+
+        [StringLength(5)]
+        [Display(Name = "FAE3")]
+        public string? FAE3_EmpName { get; set; }
+
+        public int FAE3_EmpID { get; set; }
+
+        public double FAE3_Bonus { get; set; }
+    }
+
+    public class EmployeeBonusViewMode
+    {
+        [Display(Name = "申請者")]
+        public string? EmployeeName { get; set; }
+
+        [Display(Name = "申請者ID")]
+        public int EmployeeID { get; set; }
+
+        [Display(Name = "獎金")]
+        public double Bonus { get; set; }
+    }
 }

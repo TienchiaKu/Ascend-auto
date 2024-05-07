@@ -1,0 +1,42 @@
+﻿@model IEnumerable<DDD_2024.Models.DoViewModel>
+
+<table class="table" id="tableCusVendor">
+    <tbody id="tableBody">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @if (item.DOStatus == "N")
+                    {
+                        <input type="checkbox" id="chk_@item.DoID" />
+                    }
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.vmCreateDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CusName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.VendorName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PartNo)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ApplicantName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TradeStatus)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StatusName)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.DoID">編輯</a> |
+                    <a asp-action="Details" asp-route-ProjectID="@item.ProjectID">詳細資料</a> |
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

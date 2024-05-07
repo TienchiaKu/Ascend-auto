@@ -66,4 +66,14 @@ namespace DDD_2024.Data
         public DbSet<DDD_2024.Models.EmployeeM> employeeM { get; set; } = default!;
         public DbSet<DDD_2024.Models.DutyM> DutyM { get; set; } = default!;
     }
+
+    public class CusVendorContext: DbContext
+    {
+        public CusVendorContext(DbContextOptions<CusVendorContext> options)
+            : base(options)
+        {
+        }
+
+        public DbSet<DDD_2024.Models.CusVendor> CusVendor { get; set; } = default!;
+    }
 }

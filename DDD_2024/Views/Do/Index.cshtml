@@ -1,4 +1,9 @@
 ﻿@model IEnumerable<DDD_2024.Models.DoViewModel>
+@inject IHttpContextAccessor contxt;
+@inject DDD_2024.Interfaces.IDoService DoService;
+@inject DDD_2024.Interfaces.IEmployeeService EmployeeService;
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 @{
     ViewData["Title"] = "Index";
@@ -10,11 +15,83 @@
     <a asp-action="Create">新增Do</a>
 </p>
 
-<div style="float: right; margin-top: 10px;">
-    <button id="btn_agree" class="btn btn-warning">全部同意</button>
-    <button id="btn_disagree" class="btn btn-warning">全部不同意</button>
-    <a asp-action="Upload" >上傳Do</a>
-    <input type="text" placeholder="系統使用者" readonly />
+<div class="accordion" id="accordionConditon">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConOne" aria-expanded="true" aria-controls="collapseOne">
+                篩選條件
+            </button>
+        </h2>
+        <div id="collapseConOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConditon">
+            <div class="accordion-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>專案狀態</label>
+                        <select id="projectStatus" onchange="onDatabaseChange()" class="form-control" asp-items="@(DoService.GetStatus)"></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>申請者</label>
+                        <select id="applicant" onchange="onDatabaseChange()" class="form-control" asp-items="@(EmployeeService.GetEmployeeNameList)"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="accordion" id="accordionFunction">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFunOne" aria-expanded="true" aria-controls="collapseOne">
+                功能鍵
+            </button>
+        </h2>
+        <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
+            <div class="accordion-body">
+                <div class="row">
+                     <div class="col-md-2">
+                        <button id="btn_check_all" class="btn btn-warning">全選</button>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="btn_uncheck_all" class="btn btn-warning">取消全選</button>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="btn_agree" class="btn btn-warning">全部同意</button>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="btn_disagree" class="btn btn-warning">全部不同意</button>
+                    </div>
+                    <div class="col-md-4">
+                    </div>
+                </div>
+                <div class="row" style="margin-top:6px">
+                    <div class="col-md-8">
+                    </div>
+                    <div class="col-md-2">
+                        <a asp-action="Upload" class="btn btn-warning">上傳Do</a>
+                    </div>
+                    <div class="col-md-2">
+                        <a asp-action="ExportExcel" class="btn btn-warning">匯出至Excel</a>
+                    </div>
+                </div>
+                @if (contxt.HttpContext != null)
+                {
+                    var empName = contxt.HttpContext.Session.GetString("EmpName");
+                    if (!string.IsNullOrEmpty(empName))
+                    {
+                        <div class="row" style="margin-top: 6px">
+                            <div class="col-md-8">
+                            </div>
+                            <div class="col-md-4">
+                                <label>login User: </label>
+                                <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                            </div>
+                        </div>                       
+                    }
+                }
+            </div>
+        </div>
+    </div>
 </div>
 
 <table class="table">
@@ -37,46 +114,54 @@
                 @Html.DisplayNameFor(model => model.ApplicantName)
             </th>
             <th>
+                @Html.DisplayNameFor(model => model.TradeStatus)
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.StatusName)
             </th>
             <th></th>
         </tr>
     </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @if (item.DOStatus == "N")
-                {
-                    <input type="checkbox" id="chk_@item.DoID" />
-                }
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.vmCreateDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CusName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.VendorName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PartNo)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ApplicantName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StatusName)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.DoID">編輯</a> |
-                <a asp-action="Details" asp-route-ProjectID="@item.ProjectID">詳細資料</a> |
-            </td>
-        </tr>
-}
+    <tbody id="tableBody">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @if (item.DOStatus == "N")
+                    {
+                        <input type="checkbox" id="chk_@item.DoID" />
+                    }
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.vmCreateDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CusName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.VendorName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PartNo)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ApplicantName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TradeStatus)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StatusName)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-ProjectID="@item.ProjectID">編輯</a> |
+                    <a asp-action="Details" asp-route-ProjectID="@item.ProjectID">詳細資料</a> |
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
 
 <script>
     // 監聽全部同意按鈕的點擊事件
@@ -132,5 +217,62 @@
                 console.error('Error:', error);
             });
     });
+
+    document.getElementById("btn_check_all").addEventListener("click", function () {
+        var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function (checkbox) {
+            checkbox.checked = true;
+        });
+    });
+
+    document.getElementById("btn_uncheck_all").addEventListener("click", function () {
+        var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function (checkbox) {
+            checkbox.checked = false;
+        });
+    });
+
+    // 處理select元素的更改事件
+    function onDatabaseChange() {
+        var selectedprojectStatus = document.getElementById("projectStatus").value;
+        var selectedapplicant = document.getElementById("applicant").value;
+
+        // 清除当前表格的所有数据
+        clearTable();
+
+        fetchData('/Do/IndexFilter', selectedprojectStatus, selectedapplicant);
+    }
+
+    // 清除当前表格的所有数据
+    function clearTable() {
+        // 找到表格
+        var table = document.querySelector('table');
+
+        // 找到表格主体
+        var tbody = table.querySelector('tbody');
+
+        // 清空表格主体的内容
+        tbody.innerHTML = '';
+    }
+
+    // 發送 AJAX 請求並更新表格資料
+    function fetchData(url, projectStatus, applicant) {
+        $.ajax({
+            url: url,
+            type: 'GET',
+            data: { projectStatus: projectStatus, applicant: applicant },
+            success: function (data) {
+                $('#tableBody').html(data);
+            },
+            error: function (error) {
+                handleAjaxError(error);
+            }
+        });
+    }
+
+    // 處理 AJAX 請求錯誤
+    function handleAjaxError(error) {
+        console.error('Error fetching data:', error);
+    }
 
 </script>

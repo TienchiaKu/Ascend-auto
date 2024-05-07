@@ -8,15 +8,6 @@ namespace DDD_2024.Models
         [Key]
         public int DutyID { get; set; }
 
-        [Display(Name = "資料來源")]
-        [Required]
-        public string? DBSource { get; set; }
-
-        [StringLength(5)]
-        [Display(Name = "產品線")]
-        [Required]
-        public string? VendorID { get; set; }
-
         [Display(Name = "員工編號")]
         public int EmpID { get; set; }
 

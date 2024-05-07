@@ -23,7 +23,7 @@ namespace DDD_2024.Models
         public string? VendorID { get; set; }
 
         [StringLength(25)]
-        [Display(Name = "料號")]
+        [Display(Name = "產品代號")]
         public string? PartNo { get; set; }
 
         //Project_DO
@@ -31,9 +31,16 @@ namespace DDD_2024.Models
         [Display(Name = "建立時間")]
         public DateTime CreateDate { get; set; }
 
+        [StringLength(1)]
+        [Display(Name = "交易狀態")]
+        public string? TradeStatus { get; set; }
+
         //公用
         [Display(Name = "申請者")]
         public string? ApplicantName { get; set; }
+
+        [Display(Name = "申請者ID")]
+        public int ApplicantID { get; set; }
 
         //讀取資料用
         public string? DoID { get; set; }
@@ -58,5 +65,8 @@ namespace DDD_2024.Models
 
         [Display(Name = "Excel路徑")]
         public string? ExcelPath { get; set; }
+
+        [Display(Name = "上傳狀態")]
+        public string? UploadStatus { get; set; }
     }
 }

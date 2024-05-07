@@ -1,47 +1,68 @@
-﻿@model DDD_2024.Models.Project_DO
+﻿@model DDD_2024.Models.DoViewModel
+@inject IHttpContextAccessor contxt;
+@inject DDD_2024.Interfaces.IEmployeeService EmployeeService
+@inject DDD_2024.Interfaces.ICusVendoeService CusVendoeService
+@inject DDD_2024.Interfaces.IDoService DoService
 
 @{
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
+<h1>編輯</h1>
 
-<h4>Project_DO</h4>
-<hr />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="DoID" />
+            <input type="hidden" asp-for="DOStatus" />
             <div class="form-group">
                 <label asp-for="ProjectID" class="control-label"></label>
                 <input asp-for="ProjectID" class="form-control" readonly />
-                <span asp-validation-for="ProjectID" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CreateDate" class="control-label"></label>
-                <input asp-for="CreateDate" class="form-control" readonly/>
+                <label class="control-label">申請日期</label>
+                <input asp-for="CreateDate" class="form-control" type="date" value="@Model.CreateDate.ToString("yyyy-MM-dd")" />
                 <span asp-validation-for="CreateDate" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ApplicantID" class="control-label"></label>
-                <input asp-for="ApplicantID" class="form-control" />
+                <label asp-for="CusName" class="control-label"></label>
+                <input asp-for="CusName" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="VendorName" class="control-label"></label>
+                <input asp-for="VendorName" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="PartNo" class="control-label"></label>
+                <input asp-for="PartNo" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <label asp-for="ProApp" class="control-label"></label>
+                <input asp-for="ProApp" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+                <label class="control-label">申請者</label>
+                <select asp-for="ApplicantID"
+                        asp-items="EmployeeService.GetEmployeeNameList_Selected(Model.ApplicantID)"
+                        class="form-control">
+                </select>
                 <span asp-validation-for="ApplicantID" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" readonly/>
-                <span asp-validation-for="Status" class="text-danger"></span>
+                <label asp-for="TradeStatus" class="control-label"></label>
+                <select asp-for="TradeStatus" asp-items="DoService.GetTradingStatus()" class="form-control"></select>
+                <span asp-validation-for="TradeStatus" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <input type="submit" value="確認送出" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index">返回清單</a>
 </div>
 
 @section Scripts {

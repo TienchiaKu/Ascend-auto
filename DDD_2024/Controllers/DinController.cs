@@ -24,11 +24,12 @@ namespace DDD_2024.Controllers
         private readonly Project_DIDWContext _project_DIDWContext;
         private readonly Project_EmpContext _project_EmpContext;
         private readonly IDoService _doService;
+        private readonly IDinService _dinService;
         private readonly ICusVendoeService _cusVendoeService;
         private readonly IEmployeeService _employeeService;
 
         public DinController(DoContext context, ProjectMContext projectMContext, ProjectDContext projectDContext, Project_DIDWContext project_DIDWContext, Project_EmpContext project_EmpContext,
-            IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService)
+            IDoService doService, IDinService dinService, ICusVendoeService cusVendoeService, IEmployeeService employeeService)
         {
             _context = context;
             _projectMContext = projectMContext;
@@ -38,54 +39,17 @@ namespace DDD_2024.Controllers
             _doService = doService;
             _cusVendoeService = cusVendoeService;
             _employeeService = employeeService;
+            _dinService = dinService;
         }
 
         // GET: Din
         public async Task<IActionResult> Index()
         {
-            var modelProjectM = await _projectMContext.ProjectM.Where(p => p.Status == "DIN").ToListAsync();
-            var modelProjectD = await _projectDContext.ProjectD.Where(p => p.Stage == "DIN").ToListAsync();
-            var modelDIn = await _project_DIDWContext.Project_DIDW.ToListAsync();
+            var model = await _dinService.GetDinsAsync();
 
-            //加入modelDin的資料
-            List<DinViewModel> list_dinViewModel = new List<DinViewModel>();
-            foreach (var item in modelDIn)
+            if (model != null)
             {
-                var model = new DinViewModel
-                {
-                    DoID = item.DoID,
-                    ProjectID = item.ProjectID,
-                    StatusName = _doService.GetStatusName(item.DinStatus),
-                    DinStatus = item.DinStatus,
-                    PartNo = modelProjectD.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.PartNo,
-                    ProApp = modelProjectM.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.ProApp,
-                    ProModel = modelProjectM.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.ProModel,
-                    VendorID = modelProjectD.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.VendorID,
-                    Cus_DB = modelProjectM.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.Cus_DB,
-                    CusID = modelProjectM.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.CusID
-                };
-
-                if (!string.IsNullOrEmpty(item.DinDate))
-                {
-                    model.DinDate = item.DinDate.Substring(0, 4) + "/" + item.DinDate.Substring(4, 2) + "/" + item.DinDate.Substring(6, 2);
-                }
-
-                if (!string.IsNullOrEmpty(model.VendorID))
-                {
-                    model.VendorName = _cusVendoeService.GetvendorName("ASCEND", model.VendorID);
-                }
-
-                if (!string.IsNullOrEmpty(model.Cus_DB) && !string.IsNullOrEmpty(model.CusID))
-                {
-                    model.VendorName = _cusVendoeService.GetvendorName(model.Cus_DB, model.CusID);
-                }
-
-                list_dinViewModel.Add(model);
-            }
-
-            if (list_dinViewModel != null)
-            {
-                return View(list_dinViewModel);
+                return View(model);
             }
             else
             {
@@ -96,92 +60,7 @@ namespace DDD_2024.Controllers
         // GET: Din/Details/5
         public async Task<IActionResult> Details(string? ProjectID)
         {
-            var modelProjectM = await _projectMContext.ProjectM.ToListAsync();
-            var modelProjectD = await _projectDContext.ProjectD.ToListAsync();
-            var modelDIn = await _project_DIDWContext.Project_DIDW.ToListAsync();
-            var modelPEmp = await _project_EmpContext.Project_Emp.ToListAsync();
-            int empNo = 0; //紀錄員工編號用
-
-            if (ProjectID == null || _projectMContext.ProjectM == null || _projectDContext.ProjectD == null || _project_DIDWContext.Project_DIDW == null)
-            {
-                return NotFound();
-            }
-
-            var model = new DinViewModel();
-            model.DinDate = modelDIn.FirstOrDefault(d => d.ProjectID == ProjectID)?.DinDate;
-
-            if (!string.IsNullOrEmpty(model.DinDate))
-            {
-                model.vmCreateDate = model.DinDate.Substring(0, 4) + "/" + model.DinDate.Substring(4, 2) + "/" + model.DinDate.Substring(6, 2);
-            }
-
-            model.ProjectID = ProjectID;
-            model.DinStatus = modelDIn.FirstOrDefault(d => d.ProjectID == ProjectID)?.DinStatus;
-            model.StatusName = _doService.GetStatusName(model.DinStatus);
-            model.Cus_DB = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.Cus_DB;
-            model.CusID = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.CusID;
-
-            if (!string.IsNullOrEmpty(model.Cus_DB) && !string.IsNullOrEmpty(model.CusID))
-            {
-                model.CusName = _cusVendoeService.GetvendorName(model.Cus_DB, model.CusID);
-            }
-
-            model.EndCus = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.EndCus;
-            model.ProApp = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.ProApp;
-            model.ProModel = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.ProModel;
-            model.EProduceYS = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.EProduceYS;
-            model.VendorID = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DIN")?.VendorID;
-
-            if (!string.IsNullOrEmpty(model.VendorID))
-            {
-                model.VendorName = _cusVendoeService.GetvendorName("ASCEND", model.VendorID);
-            }
-
-            model.PartNo = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DIN")?.PartNo;
-
-            model.ELTR = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DIN")?.ELTR ?? 0;
-            model.EGP = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DIN")?.EGP ?? 0;
-            model.EFirstYQty = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DIN")?.EFirstYQty ?? 0;
-            model.ESecondYQty = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DIN")?.ESecondYQty ?? 0;
-            model.EThirdYQty = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DIN")?.EThirdYQty ?? 0;
-            model.UFirstYPrice = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DIN")?.UFirstYPrice ?? 0;
-            model.USecondYPrice = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DIN")?.USecondYPrice ?? 0;
-            model.UThirdYPrice = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DIN")?.UThirdYPrice ?? 0;
-
-            empNo = modelPEmp.FirstOrDefault(d => d.ProjectID == ProjectID && d.Duty == "PM")?.EmpID ?? 0;
-
-            if(empNo != 0)
-            {
-                model.PM_EmpName = _employeeService.GetEmployeeName(empNo);
-            }
-
-            empNo = modelPEmp.FirstOrDefault(d => d.ProjectID == ProjectID && d.Duty == "SALES")?.EmpID ?? 0;
-
-            if (empNo != 0)
-            {
-                model.Sales_EmpName = _employeeService.GetEmployeeName(empNo);
-            }
-
-            empNo = modelPEmp.FirstOrDefault(d => d.ProjectID == ProjectID && d.Duty == "FAE1")?.EmpID ?? 0;
-
-            if (empNo != 0)
-            {
-                model.FAE1_EmpName = _employeeService.GetEmployeeName(empNo);
-            }
-
-            empNo = modelPEmp.FirstOrDefault(d => d.ProjectID == ProjectID && d.Duty == "FAE2")?.EmpID ?? 0;
-
-            if (empNo != 0)
-            {
-                model.FAE2_EmpName = _employeeService.GetEmployeeName(empNo);
-            }
-
-            empNo = modelPEmp.FirstOrDefault(d => d.ProjectID == ProjectID && d.Duty == "FAE3")?.EmpID ?? 0;
-
-            if (empNo != 0)
-            {
-                model.FAE3_EmpName = _employeeService.GetEmployeeName(empNo);
-            }
+            var model = await _dinService.GetDinAsync(ProjectID);
 
             if (model == null)
             {
@@ -201,13 +80,9 @@ namespace DDD_2024.Controllers
                     return Content("此專案已生成Din或已結案");
                 }
 
-                var modelDOs = _context.Project_DO.ToList();
-                var modelProjectMs = _context.ProjectM.ToList();
-                var modelProjectDs = _context.ProjectD.ToList();
-                
-                var modelDO = modelDOs.FirstOrDefault(d => d.ProjectID == projectID);
-                var modelProjectM = modelProjectMs.FirstOrDefault(d => d.ProjectID == projectID);
-                var modelProjectD = modelProjectDs.FirstOrDefault(d => d.ProjectID == projectID);
+                var modelDO = _context.Project_DO.Where(e =>e.ProjectID == projectID).ToList().FirstOrDefault();
+                var modelProjectM = _context.ProjectM.Where(e => e.ProjectID == projectID).ToList().FirstOrDefault();
+                var modelProjectD = _context.ProjectD.Where(e => e.ProjectID == projectID).ToList().FirstOrDefault();
                 
                 var model = new DinViewModel();
                 
@@ -239,13 +114,13 @@ namespace DDD_2024.Controllers
             else
             {
                 return View(new DinViewModel());
-            }         
+            } 
         }
 
         // POST: Din/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProjectID,DoID,VendorID,VendorName,PartNo,CusName,EndCus,ProApp,ProModel,EProduceYS,ELTR,EGP,EFirstYQty,ESecondYQty,EThirdYQty,UFirstYPrice,USecondYPrice,UThirdYPrice,PM_EmpName,Sales_EmpName,FAE1_EmpName,FAE1_Bonus,FAE2_EmpName,FAE2_Bonus,FAE3_EmpName,FAE3_Bonus")] DinViewModel dinViewModel)
+        public async Task<IActionResult> Create([Bind("ProjectID,DoID,VendorID,VendorName,PartNo,Cus_DB,CusID,CusName,EndCus,ProApp,ProModel,EProduceYS,ELTR,EGP,EFirstYQty,ESecondYQty,EThirdYQty,UFirstYPrice,USecondYPrice,UThirdYPrice,PM_EmpName,Sales_EmpName,FAE1_EmpName,FAE1_Bonus,FAE2_EmpName,FAE2_Bonus,FAE3_EmpName,FAE3_Bonus")] DinViewModel dinViewModel)
         {
             if (ModelState.IsValid)
             {
@@ -281,6 +156,8 @@ namespace DDD_2024.Controllers
                     {
                         ProjectID = dinViewModel.ProjectID,
                         Status = "DIN", // Status: DIN
+                        Cus_DB = dinViewModel.Cus_DB,
+                        CusID = dinViewModel.CusID,
                         EndCus = dinViewModel.EndCus,
                         ProModel = dinViewModel.ProModel,
                         EProduceYS = dinViewModel.EProduceYS,
@@ -451,20 +328,7 @@ namespace DDD_2024.Controllers
         [HttpPost]
         public IActionResult ConfirmDin([FromBody] string ProjectID)
         {
-            if (string.IsNullOrEmpty(ProjectID))
-            {
-                return View();
-            }
-
-            var allProjectDins = _project_DIDWContext.Project_DIDW.ToList();
-
-            var modelToUpdate = allProjectDins.FirstOrDefault(d => d.ProjectID == ProjectID);
-            if (modelToUpdate != null)
-            {
-                modelToUpdate.DinStatus = "C";  // 狀態改為審核通過
-                _project_DIDWContext.Update(modelToUpdate);
-            }
-            _project_DIDWContext.SaveChanges();
+            string msg = _dinService.ConfirmDin(ProjectID);
 
             return RedirectToAction("Index");
         }
@@ -473,23 +337,26 @@ namespace DDD_2024.Controllers
         [HttpPost]
         public IActionResult RejectDin([FromBody] string ProjectID)
         {
-            if (string.IsNullOrEmpty(ProjectID))
-            {
-                return View();
-            }
-
-            var allProjectDins = _project_DIDWContext.Project_DIDW.ToList();
-
-            var modelToUpdate = allProjectDins.FirstOrDefault(d => d.ProjectID == ProjectID);
-            if (modelToUpdate != null)
-            {
-                modelToUpdate.DinStatus = "R";  // 狀態改為審核拒絕
-                _project_DIDWContext.Update(modelToUpdate);
-            }
-            _project_DIDWContext.SaveChanges();
+            string msg = _dinService.RejectDin(ProjectID);
 
             return RedirectToAction("Index");
         }
+
+        [HttpGet]
+        public IActionResult Upload()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Upload(IFormFile Excelfile)
+        {
+            List<DinViewModel> list = _dinService.ReadExcel(Excelfile);
+
+            return View(list);
+        }
+
+
 
         private bool DinViewModelExists(string ProjectID)
         {

@@ -1,8 +1,42 @@
-﻿@{
+﻿@inject IHttpContextAccessor contxt;
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">獎金系統</h1>
+
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-3">
+
+        </div>
+        <div class="col-md-6">
+            <a asp-controller="Do" asp-action="Index" class="btn btn-outline-primary">Do查詢</a>
+            <a asp-controller="Din" asp-action="Index" class="btn btn-outline-primary">Din查詢</a>
+            <a asp-controller="Dwin" asp-action="Index" class="btn btn-outline-primary">Dwin查詢</a>
+            <a asp-controller="BonusCal" asp-action="Index" class="btn btn-outline-primary">獎金計算</a>
+        </div>
+        <div class="col-md-3">
+
+        </div>
+    </div>
+
+    @if (contxt.HttpContext != null)
+    {
+        var empName = contxt.HttpContext.Session.GetString("EmpName");
+        if (!string.IsNullOrEmpty(empName))
+        {
+            <div class="row" style="margin-top: 6px">
+                <div class="col-md-4">
+                </div>
+                <div class="col-md-4">
+                    <label>login User: </label>
+                    <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                </div>
+                <div class="col-md-4">
+                </div>
+            </div>
+        }
+    }
 </div>

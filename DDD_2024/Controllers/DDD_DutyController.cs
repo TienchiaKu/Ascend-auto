@@ -37,7 +37,6 @@ namespace DDD_2024.Controllers
                 var dutyViewModels = model.Select(dutymodel => new DutyViewModel
                 {
                     duty = dutymodel,
-                    VendorName = _cusVendoeService.GetvendorName(dutymodel.DBSource,dutymodel.VendorID),
                     EmpName = _employeeService.GetEmployeeName(dutymodel.EmpID),
                     IsUseName = _employeeService.GetYesNoName(dutymodel.IsUse)
                 }).ToList();
@@ -67,7 +66,6 @@ namespace DDD_2024.Controllers
             else
             {
                 var model = new DutyViewModel();
-                model.VendorName = _cusVendoeService.GetvendorName(Duty.DBSource, Duty.VendorID);
                 model.duty = Duty;
                 model.EmpName = _employeeService.GetEmployeeName(Duty.EmpID);
                 model.IsUseName = _employeeService.GetYesNoName(Duty.IsUse);
@@ -94,8 +92,6 @@ namespace DDD_2024.Controllers
                 DutyM dDD_Duty = new DutyM();
                 dDD_Duty.DutyID = dutyViewModel.duty.DutyID;
                 dDD_Duty.EmpID = Convert.ToInt32(dutyViewModel.EmpName);
-                dDD_Duty.DBSource = dutyViewModel.duty.DBSource;
-                dDD_Duty.VendorID = dutyViewModel.duty.VendorID;
                 dDD_Duty.Duty = dutyViewModel.duty.Duty;
                 dDD_Duty.IsUse = dutyViewModel.duty.IsUse;
                 dDD_Duty.UpdateDate = DateTime.Now;
@@ -124,7 +120,6 @@ namespace DDD_2024.Controllers
             {
                 var model = new DutyViewModel();
                 model.duty = Duty;
-                model.VendorName = _cusVendoeService.GetvendorName(Duty.DBSource, Duty.VendorID);
 
                 return View(model);
             }

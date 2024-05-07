@@ -23,8 +23,9 @@
                 <input asp-for="ProApp" class="form-control" hidden />
             </div>
             <div class="form-group">
-                <label asp-for="VendorName" class="control-label"></label>
-                <input asp-for="VendorName" class="form-control" readonly />
+                <label asp-for="VendorID" class="control-label"></label>
+                <input type="text" id="searchVendorInput" class="form-control" placeholder="搜尋原廠..."><br />
+                <select id="vendorSelect" asp-for="VendorID" class="form-control" asp-items="@(await CusVendoeService.Ascendvendor_SelectList())"></select>
             </div>
             <div class="form-group">
                 <label asp-for="PartNo" class="control-label"></label>
@@ -32,8 +33,16 @@
                 <span asp-validation-for="PartNo" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CusName" class="control-label"></label>
-                <input asp-for="CusName" class="form-control" readonly />
+                <label asp-for="Cus_DB" class="control-label"></label>
+                <select id="CusDBselector" asp-for="Cus_DB" asp-items="CusVendoeService.DBSource" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="CusID" class="control-label"></label>
+                <select id="CusIDselectorAti" asp-for="CusID" asp-items="CusVendoeService.GetCusItem_Amico()" class="form-control"></select>
+                <select id="CusIDselectorAsc" asp-for="CusID" asp-items="CusVendoeService.GetCusItem_Ascend()" class="form-control"></select>
+                <select id="CusIDselectorInt" asp-for="CusID" asp-items="CusVendoeService.GetCusItem_Intetek()" class="form-control"></select>
+                <select id="CusIDselectorK1n" asp-for="CusID" asp-items="CusVendoeService.GetCusItem_Kir1n()" class="form-control"></select>
+                <select id="CusIDselectorTestB" asp-for="CusID" asp-items="CusVendoeService.GetCusItem_TestB()" class="form-control"></select>
             </div>
             <div class="form-group">
                 <label asp-for="EndCus" class="control-label"></label>
@@ -170,5 +179,59 @@
     addEventListenerToRangeBar('fae1-bonus-range', 'fae1-bonus-value');
     addEventListenerToRangeBar('fae2-bonus-range', 'fae2-bonus-value');
     addEventListenerToRangeBar('fae3-bonus-range', 'fae3-bonus-value');
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var cusDBSelect = document.getElementById("CusDBselector");
+        var cusIDATI = document.getElementById("CusIDselectorAti");
+        var cusIDAsc = document.getElementById("CusIDselectorAsc");
+        var cusIDInt = document.getElementById("CusIDselectorInt");
+        var cusIDK1n = document.getElementById("CusIDselectorK1n");
+        var cusIDTest = document.getElementById("CusIDselectorTestB");
+
+        cusDBSelect.addEventListener("change", function () {
+            if (cusDBSelect.value === "ATI") {
+                cusIDATI.style.display = "block"; 
+                cusIDAsc.style.display = "none";
+                cusIDInt.style.display = "none";
+                cusIDK1n.style.display = "none";
+                cusIDTest.style.display = "none"; 
+            }
+            else if (cusDBSelect.value === "ASCEND") {
+                cusIDATI.style.display = "none";
+                cusIDAsc.style.display = "block";
+                cusIDInt.style.display = "none";
+                cusIDK1n.style.display = "none";
+                cusIDTest.style.display = "none";
+            }
+            else if (cusDBSelect.value === "INTERTEK") {
+                cusIDATI.style.display = "none";
+                cusIDAsc.style.display = "none";
+                cusIDInt.style.display = "block";
+                cusIDK1n.style.display = "none";
+                cusIDTest.style.display = "none";
+            }
+            else if (cusDBSelect.value === "KIR1N") {
+                cusIDATI.style.display = "none";
+                cusIDAsc.style.display = "none";
+                cusIDInt.style.display = "none";
+                cusIDK1n.style.display = "block";
+                cusIDTest.style.display = "none";
+            }
+            else {
+                cusIDATI.style.display = "none";
+                cusIDAsc.style.display = "none";
+                cusIDInt.style.display = "none";
+                cusIDK1n.style.display = "none";
+                cusIDTest.style.display = "block";
+            }
+        });
+            if (cusDBSelect.value === "ASCEND") {
+            cusIDATI.style.display = "none";
+            cusIDAsc.style.display = "block";
+            cusIDInt.style.display = "none";
+            cusIDK1n.style.display = "none";
+            cusIDTest.style.display = "none";
+        }
+    });
 
 </script>

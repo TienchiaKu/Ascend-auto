@@ -20,7 +20,7 @@ namespace DDD_2024.Models
         [Required]
         public string? CreateDate { get; set; }
 
-        [Display(Name = "提出者")]
+        [Display(Name = "申請者")]
         [Required]
         public int ApplicantID { get; set; }
 
@@ -28,5 +28,9 @@ namespace DDD_2024.Models
         [Display(Name = "Do狀態")]
         [Required]
         public string? Status { get; set; }
+
+        [StringLength(1)]
+        [Display(Name = "交易狀態")]
+        public string? TradeStatus { get; set; }
     }
 }

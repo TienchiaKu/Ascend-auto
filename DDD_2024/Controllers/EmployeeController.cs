@@ -9,6 +9,7 @@ using DDD_2024.Data;
 using DDD_2024.Models;
 using DDD_2024.Interfaces;
 using DDD_2024.Services;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DDD_2024.Controllers
 {
@@ -16,11 +17,13 @@ namespace DDD_2024.Controllers
     {
         private readonly BizAutoContext _context;
         private readonly IEmployeeService _employeeService;
+        private readonly IHttpContextAccessor _contxt;
 
-        public EmployeeController(BizAutoContext context, IEmployeeService employeeService)
+        public EmployeeController(BizAutoContext context, IEmployeeService employeeService, IHttpContextAccessor contxt)
         {
             _context = context;
             _employeeService = employeeService;
+            _contxt = contxt;
         }
 
         // GET: EmployeeM
@@ -127,7 +130,7 @@ namespace DDD_2024.Controllers
             return View(dDD_Employee);
         }
 
-        // POST: DDD_Employee/Edit/5
+        // POST: EmployeeM/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("EmpID,EmpName,OnDuty")] EmployeeM dDD_Employee)
@@ -160,6 +163,42 @@ namespace DDD_2024.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(dDD_Employee);
+        }
+
+        // GET: EmployeeM/LogIn
+        public IActionResult LogIn()
+        {
+            return View();
+        }
+
+        // POST: EmployeeM/LogIn
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult LogIn([Bind("EmpID,EmpName,OnDuty,userPWD")] EmployeeM employeeM)
+        {
+            if (_employeeService.Check_Login(employeeM))
+            {
+                // 儲存EmpID到Session
+                if (_contxt.HttpContext != null)
+                {
+                    employeeM.EmpName = _employeeService.GetEmployeeName(employeeM.EmpID);
+                    _contxt.HttpContext.Session.SetString("EmpName", employeeM.EmpName);
+                    _contxt.HttpContext.Session.SetInt32("EmpID", employeeM.EmpID);
+                }
+
+                ModelState.AddModelError("ErrorReport", "密碼錯誤");
+                return RedirectToAction("Index", "Home");
+            }
+            else
+            {
+                // 儲存EmpID到Session
+                //if(contxt.HttpContext != null && !string.IsNullOrEmpty(employeeM.EmpName))
+                //{
+                //    contxt.HttpContext.Session.SetString("EmpName", employeeM.EmpName);
+                //    contxt.HttpContext.Session.SetInt32("EmpID", employeeM.EmpID);
+                //}            
+                return View(employeeM);
+            }
         }
 
         private bool DDD_EmployeeExists(int id)

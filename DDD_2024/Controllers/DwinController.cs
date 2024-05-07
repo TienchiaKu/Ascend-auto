@@ -21,17 +21,19 @@ namespace DDD_2024.Controllers
         private readonly Project_DIDWContext _project_DIDWContext;
         private readonly Project_EmpContext _project_EmpContext;
         private readonly IDoService _doService;
+        private readonly IDwinService _dwinService;
         private readonly ICusVendoeService _cusVendoeService;
         private readonly IEmployeeService _employeeService;
 
         public DwinController(ProjectMContext projectMContext, ProjectDContext projectDContext, Project_DIDWContext project_DIDWContext, Project_EmpContext project_EmpContext,
-            IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService)
+            IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService, IDwinService dwinService)
         {
             _projectMContext = projectMContext;
             _projectDContext = projectDContext;
             _project_DIDWContext = project_DIDWContext;
             _project_EmpContext = project_EmpContext;
             _doService = doService;
+            _dwinService = dwinService;
             _cusVendoeService = cusVendoeService;
             _employeeService = employeeService;
         }
@@ -39,48 +41,11 @@ namespace DDD_2024.Controllers
         // GET: DwinViewModels
         public async Task<IActionResult> Index()
         {
-            var modelProjectM = await _projectMContext.ProjectM.Where(p => p.Status == "DWIN").ToListAsync();
-            var modelProjectD = await _projectDContext.ProjectD.Where(p => p.Stage == "DWIN").ToListAsync();
-            var modelDWin = await _project_DIDWContext.Project_DIDW.Where(d => d.DwinDate != null).ToListAsync();
+            var model = await _dwinService.GetDwinsAsync();
 
-            //加入modelDwin的資料
-            List<DwinViewModel> list_dwinViewModel = new List<DwinViewModel>();
-            foreach (var item in modelDWin)
+            if (model != null)
             {
-                var model = new DwinViewModel
-                {
-                    ProjectID = item.ProjectID,
-                    StatusName = _doService.GetStatusName(item.DwinStatus),
-                    DwinStatus = item.DwinStatus,
-                    PartNo = modelProjectD.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.PartNo,
-                    ProApp = modelProjectM.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.ProApp,
-                    ProModel = modelProjectM.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.ProModel,
-                    VendorID = modelProjectD.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.VendorID,
-                    Cus_DB = modelProjectM.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.Cus_DB,
-                    CusID = modelProjectM.FirstOrDefault(d => d.ProjectID == item.ProjectID)?.CusID
-                };
-
-                if (!string.IsNullOrEmpty(item.DwinDate))
-                {
-                    model.DwinDate = item.DwinDate.Substring(0, 4) + "/" + item.DwinDate.Substring(4, 2) + "/" + item.DwinDate.Substring(6, 2);
-                }
-
-                if (!string.IsNullOrEmpty(model.VendorID))
-                {
-                    model.VendorName = _cusVendoeService.GetvendorName("ASCEND", model.VendorID);
-                }
-
-                if (!string.IsNullOrEmpty(model.Cus_DB) && !string.IsNullOrEmpty(model.CusID))
-                {
-                    model.VendorName = _cusVendoeService.GetvendorName(model.Cus_DB, model.CusID);
-                }
-
-                list_dwinViewModel.Add(model);
-            }
-
-            if (list_dwinViewModel.Count > 0)
-            {
-                return View(list_dwinViewModel);
+                return View(model);
             }
             else
             {
@@ -92,92 +57,7 @@ namespace DDD_2024.Controllers
         // GET: DwinViewModels/Details/5
         public async Task<IActionResult> Details(string? ProjectID)
         {
-            var modelProjectM = await _projectMContext.ProjectM.ToListAsync();
-            var modelProjectD = await _projectDContext.ProjectD.ToListAsync();
-            var modelDWin = await _project_DIDWContext.Project_DIDW.ToListAsync();
-            var modelPEmp = await _project_EmpContext.Project_Emp.ToListAsync();
-            int empNo = 0; //紀錄員工編號用
-
-            if (ProjectID == null || _projectMContext.ProjectM == null || _projectDContext.ProjectD == null || _project_DIDWContext.Project_DIDW == null)
-            {
-                return NotFound();
-            }
-
-            var model = new DwinViewModel();
-            model.DwinDate = modelDWin.FirstOrDefault(d => d.ProjectID == ProjectID)?.DwinDate;
-
-            if (!string.IsNullOrEmpty(model.DwinDate))
-            {
-                model.vmCreateDate = model.DwinDate.Substring(0, 4) + "/" + model.DwinDate.Substring(4, 2) + "/" + model.DwinDate.Substring(6, 2);
-            }
-
-            model.ProjectID = ProjectID;
-            model.DwinStatus = modelDWin.FirstOrDefault(d => d.ProjectID == ProjectID)?.DinStatus;
-            model.StatusName = _doService.GetStatusName(model.DwinStatus);
-            model.Cus_DB = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.Cus_DB;
-            model.CusID = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.CusID;
-
-            if (!string.IsNullOrEmpty(model.Cus_DB) && !string.IsNullOrEmpty(model.CusID))
-            {
-                model.CusName = _cusVendoeService.GetvendorName(model.Cus_DB, model.CusID);
-            }
-
-            model.EndCus = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.EndCus;
-            model.ProApp = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.ProApp;
-            model.ProModel = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.ProModel;
-            model.EProduceYS = modelProjectM.FirstOrDefault(d => d.ProjectID == ProjectID)?.EProduceYS;
-            model.VendorID = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DWIN")?.VendorID;
-
-            if (!string.IsNullOrEmpty(model.VendorID))
-            {
-                model.VendorName = _cusVendoeService.GetvendorName("ASCEND", model.VendorID);
-            }
-
-            model.PartNo = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DWIN")?.PartNo;
-
-            model.ELTR = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DWIN")?.ELTR ?? 0;
-            model.EGP = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DWIN")?.EGP ?? 0;
-            model.EFirstYQty = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DWIN")?.EFirstYQty ?? 0;
-            model.ESecondYQty = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DWIN")?.ESecondYQty ?? 0;
-            model.EThirdYQty = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DWIN")?.EThirdYQty ?? 0;
-            model.UFirstYPrice = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DWIN")?.UFirstYPrice ?? 0;
-            model.USecondYPrice = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DWIN")?.USecondYPrice ?? 0;
-            model.UThirdYPrice = modelProjectD.FirstOrDefault(d => d.ProjectID == ProjectID && d.Stage == "DWIN")?.UThirdYPrice ?? 0;
-
-            empNo = modelPEmp.FirstOrDefault(d => d.ProjectID == ProjectID && d.Duty == "PM")?.EmpID ?? 0;
-
-            if (empNo != 0)
-            {
-                model.PM_EmpName = _employeeService.GetEmployeeName(empNo);
-            }
-
-            empNo = modelPEmp.FirstOrDefault(d => d.ProjectID == ProjectID && d.Duty == "SALES")?.EmpID ?? 0;
-
-            if (empNo != 0)
-            {
-                model.Sales_EmpName = _employeeService.GetEmployeeName(empNo);
-            }
-
-            empNo = modelPEmp.FirstOrDefault(d => d.ProjectID == ProjectID && d.Duty == "FAE1")?.EmpID ?? 0;
-
-            if (empNo != 0)
-            {
-                model.FAE1_EmpName = _employeeService.GetEmployeeName(empNo);
-            }
-
-            empNo = modelPEmp.FirstOrDefault(d => d.ProjectID == ProjectID && d.Duty == "FAE2")?.EmpID ?? 0;
-
-            if (empNo != 0)
-            {
-                model.FAE2_EmpName = _employeeService.GetEmployeeName(empNo);
-            }
-
-            empNo = modelPEmp.FirstOrDefault(d => d.ProjectID == ProjectID && d.Duty == "FAE3")?.EmpID ?? 0;
-
-            if (empNo != 0)
-            {
-                model.FAE3_EmpName = _employeeService.GetEmployeeName(empNo);
-            }
+            var model = await _dwinService.GetDwinAsync(ProjectID);
 
             if (model == null)
             {
@@ -205,7 +85,7 @@ namespace DDD_2024.Controllers
                 var modelProjectM = modelProjectMs.FirstOrDefault(d => d.ProjectID == projectID);
                 var modelProjectD = modelProjectDs.FirstOrDefault(d => d.ProjectID == projectID & d.Stage == "DIN");
                 var modelProjectDin = modelProjectDins.FirstOrDefault(d => d.ProjectID == projectID);
-                var Emp_PM = modelProjectEmps.FirstOrDefault(d => d.ProjectID == projectID  && d.Duty == "PM");
+                var Emp_PM = modelProjectEmps.FirstOrDefault(d => d.ProjectID == projectID && d.Duty == "PM");
                 var Emp_SALES = modelProjectEmps.FirstOrDefault(d => d.ProjectID == projectID && d.Duty == "SALES");
                 var Emp_FAE1 = modelProjectEmps.FirstOrDefault(d => d.ProjectID == projectID && d.Duty == "FAE1");
                 var Emp_FAE2 = modelProjectEmps.FirstOrDefault(d => d.ProjectID == projectID && d.Duty == "FAE2");
@@ -253,7 +133,7 @@ namespace DDD_2024.Controllers
                         model.PM_EmpName = _employeeService.GetEmployeeName(Emp_PM.EmpID);
                     }
 
-                    if (Emp_SALES != null) 
+                    if (Emp_SALES != null)
                     {
                         model.Sales_EmpName = _employeeService.GetEmployeeName(Emp_SALES.EmpID);
                     }
@@ -281,7 +161,7 @@ namespace DDD_2024.Controllers
             }
         }
 
-        // POST: DwinViewModels/Create
+        // POST: DwinViewModels/Create 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ProjectID,DwinDate,DwinStatus,Cus_DB,CusID,EndCus,ProApp,ProModel,IsInte,EProduceYS,VendorID,PartNo,ELTR,EGP,EFirstYQty,ESecondYQty,EThirdYQty,UFirstYPrice,USecondYPrice,UThirdYPrice,PM_EmpName,PM_Bonus,Sales_EmpName,Sales_Bonus,FAE1_EmpName,FAE1_Bonus,FAE2_EmpName,FAE2_Bonus,FAE3_EmpName,FAE3_Bonus,vmCreateDate,StatusName,VendorName,CusName")] DwinViewModel dwinViewModel)
@@ -317,7 +197,7 @@ namespace DDD_2024.Controllers
                     // Update ProjectM
                     var modelProjectM = _projectMContext.ProjectM.FirstOrDefault(p => p.ProjectID == dwinViewModel.ProjectID);
 
-                    if(modelProjectM != null)
+                    if (modelProjectM != null)
                     {
                         modelProjectM.Status = "DIN";
                         modelProjectM.UpdateDate = updateDate;
@@ -358,21 +238,53 @@ namespace DDD_2024.Controllers
             return View();
         }
 
-        // GET: DwinViewModels/Edit/5
-        public async Task<IActionResult> Edit(string id)
+        [HttpGet]
+        public IActionResult Upload()
         {
-            if (id == null || _project_DIDWContext.DwinViewModel == null)
-            {
-                return NotFound();
-            }
-
-            var dwinViewModel = await _project_DIDWContext.DwinViewModel.FindAsync(id);
-            if (dwinViewModel == null)
-            {
-                return NotFound();
-            }
-            return View(dwinViewModel);
+            return View();
         }
+
+        [HttpPost]
+        public IActionResult Upload(IFormFile Excelfile)
+        {
+            List<DwinViewModel> list = _dwinService.ReadExcel(Excelfile);
+
+            return View(list);
+        }
+
+        // POST: /ConfirmDin
+        [HttpPost]
+        public IActionResult ConfirmDwin([FromBody] string ProjectID)
+        {
+            string msg = _dwinService.ConfirmDwin(ProjectID);
+
+            return RedirectToAction("Index");
+        }
+
+        // POST: /RejectDin
+        [HttpPost]
+        public IActionResult RejectDwin([FromBody] string ProjectID)
+        {
+            string msg = _dwinService.RejectDwin(ProjectID);
+
+            return RedirectToAction("Index");
+        }
+
+        //GET: DwinViewModels/Edit/5
+        //public async Task<IActionResult> Edit(string id)
+        //{
+        //    //if (id == null || _project_DIDWContext.DwinViewModel == null)
+        //    //{
+        //    //    return NotFound();
+        //    //}
+        //    //
+        //    //var dwinViewModel = await _project_DIDWContext.DwinViewModel.FindAsync(id);
+        //    //if (dwinViewModel == null)
+        //    //{
+        //    //    return NotFound();
+        //    //}
+        //    //return View(dwinViewModel);
+        //}
 
         // POST: DwinViewModels/Edit/5
         [HttpPost]
@@ -383,7 +295,7 @@ namespace DDD_2024.Controllers
             {
                 return NotFound();
             }
-
+        
             if (ModelState.IsValid)
             {
                 try
@@ -409,7 +321,8 @@ namespace DDD_2024.Controllers
 
         private bool DwinViewModelExists(string id)
         {
-          return (_project_DIDWContext.DwinViewModel?.Any(e => e.ProjectID == id)).GetValueOrDefault();
+          return (_project_DIDWContext.Project_DIDW?.Any(e => e.ProjectID == id)).GetValueOrDefault();
         }
+
     }
 }

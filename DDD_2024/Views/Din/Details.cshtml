@@ -1,4 +1,5 @@
 ﻿@model DDD_2024.Models.DinViewModel
+@inject IHttpContextAccessor contxt;
 
 @{
     ViewData["Title"] = "Details";
@@ -6,17 +7,49 @@
 
 <h1>詳細資料</h1>
 
-<div style="float: right;">
-    @if (Model.DinStatus == "N")
-    {
-        <button id="btn_agree" class="btn btn-warning">審核同意</button>
-        <button id="btn_disagree" class="btn btn-warning">審核拒絕</button>
-    }
-    @if (Model.DinStatus == "C" || Model.DinStatus == "X" || Model.DinStatus == "F")
-    {
-        <a asp-controller="Dwin" asp-action="Create" asp-route-projectID="@Model?.ProjectID" class="btn btn-warning">轉DWin</a>
-    }
-    <input type="text" placeholder="系統使用者" readonly />
+<div class="accordion" id="accordionFunction">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFunOne" aria-expanded="true" aria-controls="collapseOne">
+                功能鍵
+            </button>
+        </h2>
+        <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
+            <div class="accordion-body">
+                <div class="row" style="margin-top:6px">
+                    <div class="col-md-8">
+                    </div>
+                    <div class="col-md-2">
+                        @if (Model.DinStatus == "N")
+                        {
+                            <button id="btn_agree" class="btn btn-warning">審核同意</button>
+                        }
+                    </div>
+                    <div class="col-md-2">
+                        @if (Model.DinStatus == "N")
+                        {
+                            <button id="btn_disagree" class="btn btn-warning">審核拒絕</button>
+                        }
+                    </div>
+                </div>
+                @if (contxt.HttpContext != null)
+                {
+                    var empName = contxt.HttpContext.Session.GetString("EmpName");
+                    if (!string.IsNullOrEmpty(empName))
+                    {
+                        <div class="row" style="margin-top: 6px">
+                            <div class="col-md-8">
+                            </div>
+                            <div class="col-md-4">
+                                <label>login User: </label>
+                                <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
 </div>
 
 <div>
@@ -24,10 +57,10 @@
     <input type="hidden" id="str_ProjectID" value="@Model.ProjectID" />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.vmCreateDate)
+            @Html.DisplayNameFor(model => model.DinDate)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.vmCreateDate)
+            @Html.DisplayFor(model => model.DinDate)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.StatusName)

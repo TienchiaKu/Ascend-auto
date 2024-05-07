@@ -42,6 +42,16 @@ namespace DDD_2024.Data
         public DbSet<DDD_2024.Models.ProjectD> ProjectD { get; set; } = default!;
     }
 
+    public class ProjectDOontext : DbContext
+    {
+        public ProjectDOontext(DbContextOptions<ProjectDOontext> options)
+            : base(options)
+        {
+        }
+
+        public DbSet<DDD_2024.Models.Project_DO> Project_DO { get; set; } = default!;
+    }
+
     public class Project_DIDWContext : DbContext
     {
         public Project_DIDWContext(DbContextOptions<Project_DIDWContext> options)
@@ -50,8 +60,6 @@ namespace DDD_2024.Data
         }
 
         public DbSet<DDD_2024.Models.Project_DIDW> Project_DIDW { get; set; } = default!;
-
-        public DbSet<DDD_2024.Models.DwinViewModel> DwinViewModel { get; set; } = default!;
     }
 
     public class Project_EmpContext : DbContext
