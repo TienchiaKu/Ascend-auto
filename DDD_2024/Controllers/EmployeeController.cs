@@ -29,23 +29,37 @@ namespace DDD_2024.Controllers
         // GET: EmployeeM
         public async Task<IActionResult> Index()
         {
-            var employees = await _context.employeeM
-                .Where(e => e.OnDuty == "Y")
-                .ToListAsync();
+            var model = await _employeeService.GetEmployees();
 
-            if (employees != null)
+            if(model != null)
             {
-                var employeeViewModels = employees.Select(employee => new EmployeeViewModel
-                {
-                    employee = employee,
-                    OnDuty_CN = _employeeService.GetYesNoName(employee.OnDuty)
-                }).ToList();
-
-                return View(employeeViewModels);
+                return View(model);
             }
             else
             {
                 return Problem("Entity set EmployeeM is null.");
+            }
+        }
+
+        // GET: EmployeeM/IndexFilter
+        public async Task<IActionResult> IndexFilter([FromQuery] string IsNameFilter)
+        {
+            var modelFilter = new EmployeeFilterViewModel();
+
+            if (!string.IsNullOrEmpty(IsNameFilter))
+            {
+                modelFilter.IsName = IsNameFilter;
+            }
+            
+            var model = await _employeeService.GetEmployeesFilter(modelFilter);
+
+            if (model != null)
+            {
+                return PartialView("_EmployeePartial", model);
+            }
+            else
+            {
+                return Problem("Entity set 'Employee's' is null.");
             }
         }
 
@@ -93,22 +107,25 @@ namespace DDD_2024.Controllers
         // POST: DDD_Employee/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("EmpID,EmpName,OnDuty")] EmployeeM dDD_Employee)
+        public async Task<IActionResult> Create([Bind("EmpID,EmpName,OnDuty,Region")] EmployeeM dDD_Employee)
         {
             if (ModelState.IsValid)
             {
-                //檢查名稱是否重複
-                if (_employeeService.CheckEmpName(dDD_Employee.EmpName))
+                if (!string.IsNullOrEmpty(dDD_Employee.EmpName))
                 {
-                    ModelState.AddModelError(string.Empty, "員工姓名重複");
-                }
-                else
-                {
-                    dDD_Employee.UpdateDate = DateTime.Now;
-                    _context.Add(dDD_Employee);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
+                    //檢查名稱是否重複
+                    if (_employeeService.CheckEmpName(dDD_Employee.EmpName))
+                    {
+                        ModelState.AddModelError(string.Empty, "員工姓名重複");
+                    }
+                    else
+                    {
+                        dDD_Employee.UpdateDate = DateTime.Now;
+                        _context.Add(dDD_Employee);
+                        await _context.SaveChangesAsync();
+                        return RedirectToAction(nameof(Index));
+                    }
+                }               
             }
             return View(dDD_Employee);
         }
@@ -133,7 +150,7 @@ namespace DDD_2024.Controllers
         // POST: EmployeeM/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("EmpID,EmpName,OnDuty")] EmployeeM dDD_Employee)
+        public async Task<IActionResult> Edit(int id, [Bind("EmpID,EmpName,OnDuty,Region")] EmployeeM dDD_Employee)
         {
             if (id != dDD_Employee.EmpID)
             {

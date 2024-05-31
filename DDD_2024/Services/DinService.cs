@@ -11,7 +11,7 @@ namespace DDD_2024.Services
 {
     public class DinService: IDinService
     {
-        private readonly ProjectDOontext _projectDOontext;
+        private readonly ProjectDOContext _projectDOContext;
         private readonly ProjectMContext _projectMContext;
         private readonly ProjectDContext _projectDContext;
         private readonly Project_EmpContext _projectEmpContext;
@@ -26,7 +26,7 @@ namespace DDD_2024.Services
         private readonly IProjectEmpService _projectEmpService;
         private readonly IDoService _doService;
 
-        public DinService(ProjectMContext projectMContext, ProjectDContext projectDContext, ProjectDOontext projectDOontext,
+        public DinService(ProjectMContext projectMContext, ProjectDContext projectDContext, ProjectDOContext projectDOContext,
             Project_DIDWContext project_DIDWContext,
             Project_EmpContext project_EmpContext, ASCENDContext aSCENDContext, ATIContext aTIContext, KIR1NContext kIR1NContext,
             INTERTEKContext iNTERTEKContext, TESTBContext tESTBContext, IEmployeeService employeeService, ICusVendoeService cusVendoeService,
@@ -34,7 +34,7 @@ namespace DDD_2024.Services
         {
             _projectMContext = projectMContext;
             _projectDContext = projectDContext;
-            _projectDOontext = projectDOontext;
+            _projectDOContext = projectDOContext;
             _projectEmpContext = project_EmpContext;
             _projectDIDWContext = project_DIDWContext;
             _AscendContext = aSCENDContext;

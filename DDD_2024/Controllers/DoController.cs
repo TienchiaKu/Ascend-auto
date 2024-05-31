@@ -22,7 +22,7 @@ namespace DDD_2024.Controllers
     public class DoController : Controller
     {
         private readonly DoContext _Docontext;
-        private readonly ProjectDOontext _projectDOontext;
+        private readonly ProjectDOContext _projectDOContext;
         private readonly ProjectMContext _projectMContext;
         private readonly ProjectDContext _projectDContext;
         private readonly Project_DIDWContext _projectDIDWContext;
@@ -31,14 +31,14 @@ namespace DDD_2024.Controllers
         private readonly IEmployeeService _employeeService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public DoController(ProjectMContext projectMContext, ProjectDContext projectDContext, DoContext doContext, ProjectDOontext projectDOontext,
+        public DoController(ProjectMContext projectMContext, ProjectDContext projectDContext, DoContext doContext, ProjectDOContext projectDOContext,
             Project_DIDWContext project_DIDWContext, 
             IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService, 
             IWebHostEnvironment webHostEnvironment)
         {
             _projectMContext = projectMContext;
             _projectDContext = projectDContext;
-            _projectDOontext = projectDOontext;
+            _projectDOContext = projectDOContext;
             _projectDIDWContext = project_DIDWContext;
             _Docontext = doContext;
             _doService = doService;
@@ -99,58 +99,27 @@ namespace DDD_2024.Controllers
         }
 
         // GET: Do/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             var model = new DoViewModel();
-           
+
+            var selectListItems_Cus = await _cusVendoeService.GetAllCus_Selector();
+            ViewBag.CustomerList = selectListItems_Cus;
+
+            var selectListItems_Ven = await _cusVendoeService.GetAllVendor_Selector();
+            ViewBag.VendorList = selectListItems_Ven;
+
             return View();
         }
 
         // POST: Do/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CreateDate,Cus_DB,CusID,ProApp,VendorID,PartNo,ApplicantName")] DoViewModel doViewModel)
+        public async Task<IActionResult> Create([Bind("CreateDate,CusID,VendorID,PartNo,ProApp,ApplicantID,ApproverID,TradeStatus,DoUAction,DoUStatus")] DoViewModel doViewModel)
         {
             if (ModelState.IsValid)
             {
-                string projectID = _doService.GetProjectID(DateTime.Now.ToString("yyyyMMdd"));
-                string createDate = doViewModel.CreateDate.ToString("yyyyMMdd"); 
-
-                // Insert a record into ProjectM
-                var modelprojectM = new ProjectM
-                {
-                    ProjectID = projectID,
-                    Status = "DO", // Status: DO
-                    CreateDate = createDate,
-                    Cus_DB = doViewModel.Cus_DB,
-                    CusID = doViewModel.CusID,
-                    ProApp = doViewModel.ProApp
-                };
-                _projectMContext.Add(modelprojectM);
-                await _projectMContext.SaveChangesAsync();
-
-                // Insert a record into ProjectD
-                var modelprojectD = new ProjectD
-                {
-                    ProjectID = projectID,
-                    VendorID = doViewModel.VendorID,
-                    PartNo = doViewModel.PartNo,
-                    Stage = "DO"
-                };
-                _projectDContext.Add(modelprojectD);
-                await _projectDContext.SaveChangesAsync();
-
-                // Insert a record into Project_DO
-                var modelprojectDO = new Project_DO
-                {
-                    DoID = _doService.GetDOID(DateTime.Now.ToString("yyyyMMdd")),
-                    ProjectID = projectID,
-                    CreateDate = createDate,
-                    ApplicantID = Convert.ToInt32(doViewModel.ApplicantName),
-                    Status = "N" // Status: 新單
-                };
-                _Docontext.Add(modelprojectDO);
-                await _Docontext.SaveChangesAsync();
+                await _doService.CreateDO(doViewModel);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -180,7 +149,7 @@ namespace DDD_2024.Controllers
         // POST: Do/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string DoID, [Bind("DoID,ProjectID,CreateDate,ApplicantID,DOStatus,TradeStatus")] DoViewModel doViewModel)
+        public async Task<IActionResult> Edit(string DoID, [Bind("DoID,DOStatus,ProjectID,CusID,VendorID,PartNo,ProApp,CreateDate,ApplicantID,ApproverID,DOStatus,TradeStatus")] DoViewModel doViewModel)
         {
             if (DoID != doViewModel.DoID)
             {
@@ -189,30 +158,8 @@ namespace DDD_2024.Controllers
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    var model = new Project_DO();
-                    model.DoID = doViewModel.DoID;
-                    model.ProjectID = doViewModel.ProjectID;
-                    model.CreateDate = doViewModel.CreateDate.ToString("yyyyMMdd");
-                    model.ApplicantID = doViewModel.ApplicantID;
-                    model.Status = doViewModel.DOStatus;
-                    model.TradeStatus = doViewModel.TradeStatus;
+                await _doService.EditDo(doViewModel);
 
-                    _projectDContext.Update(model);
-                    await _projectDContext.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!Project_DOExists(doViewModel.DoID))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
                 return RedirectToAction(nameof(Index));
             }
             return View(doViewModel);
@@ -267,7 +214,7 @@ namespace DDD_2024.Controllers
         }
 
         [HttpPost]
-        public IActionResult Upload(IFormFile Excelfile)
+        public IActionResult Upload(IFormFile Excelfile) 
         {
             var stream = new MemoryStream();
             if(Excelfile != null)
@@ -286,69 +233,144 @@ namespace DDD_2024.Controllers
                     {
                         var rowData = streamData[i];
 
-                        //檢查是否有資料
-                        bool hasData = false;
-
-                        foreach (var cellValue in rowData)
-                        {
-                            if (cellValue.Value != null)
-                            {
-                                hasData = true;
-                                break;
-                            }
-                        }
-
-                        if (!hasData)
-                        {
-                            continue;
-                        }
-
                         var DoViewModel = new DoViewModel();
 
                         foreach (var cellValue in rowData)
                         {
                             if (cellValue.Key == "Date")
-                            {
-                                DoViewModel.vmCreateDate = Convert.ToDateTime(cellValue.Value).ToString("yyyy/MM/dd");
+                            {                                                               
+                                if(cellValue.Value == null)
+                                {
+                                    DoViewModel.UploadStatus += "申請日期無資料;\n";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DoViewModel.vmCreateDate = Convert.ToDateTime(cellValue.Value).ToString("yyyy/MM/dd");
+                                }
                             }
                             if (cellValue.Key == "Customer(中文)")
                             {
+                                if (cellValue.Value == null)
+                                {
+                                    DoViewModel.UploadStatus += "客戶名稱無資料;\n";
+                                    continue;
+                                }
+
                                 DoViewModel.CusName = cellValue.Value.ToString();
+
+                                if(DoViewModel.CusName.Length > 25)
+                                {
+                                    DoViewModel.UploadStatus += "客戶名稱長度超過25;\n";
+                                    continue;
+                                }
 
                                 if (!string.IsNullOrEmpty(DoViewModel.CusName))
                                 {
                                     (DoViewModel.Cus_DB, DoViewModel.CusID) = _cusVendoeService.GetCusID(DoViewModel.CusName);
+
+                                    if (string.IsNullOrEmpty(DoViewModel.Cus_DB) || string.IsNullOrEmpty(DoViewModel.CusID))
+                                    {
+                                        DoViewModel.UploadStatus += "找無相符合客戶資料;\n";
+                                    }
                                 }
                             }
-                            if (cellValue.Key == "Product")
+                            if (cellValue.Key == "Product") 
                             {
+                                if (cellValue.Value == null)
+                                {
+                                    DoViewModel.UploadStatus += "原廠名稱無資料;\n";
+                                    continue;
+                                }
+
                                 DoViewModel.VendorName = cellValue.Value.ToString();
+
+                                if(DoViewModel.VendorName.Length > 25)
+                                {
+                                    DoViewModel.UploadStatus += "原廠名稱長度超過25;\n";
+                                    continue;
+                                }
 
                                 if (!string.IsNullOrEmpty(DoViewModel.VendorName))
                                 {
                                     DoViewModel.VendorID = _cusVendoeService.GetVenID(DoViewModel.VendorName);
                                 }
+
+                                if (string.IsNullOrEmpty(DoViewModel.Cus_DB) || string.IsNullOrEmpty(DoViewModel.CusID))
+                                {
+                                    DoViewModel.UploadStatus += "找無相符合原廠資料;\n";
+                                }
                             }
                             if (cellValue.Key == "Part number")
                             {
+                                if (cellValue.Value == null)
+                                {
+                                    DoViewModel.UploadStatus += "品號無資料;\n";
+                                    continue;
+                                } 
+
                                 DoViewModel.PartNo = cellValue.Value.ToString();
+
+                                if(DoViewModel.PartNo.Length > 50)
+                                {
+                                    DoViewModel.UploadStatus += "品號長度超過50;\n";
+                                    continue;
+                                }
                             }
                             if (cellValue.Key == "Application")
                             {
+                                if (cellValue.Value == null)
+                                {
+                                    DoViewModel.UploadStatus += "產品應用無資料;\n";
+                                    continue;
+                                }
+
                                 DoViewModel.ProApp = cellValue.Value.ToString();
+
+                                if(DoViewModel.ProApp.Length > 40)
+                                {
+                                    DoViewModel.UploadStatus += "產品應用長度超過40;\n";
+                                    continue;
+                                }
                             }
                             if (cellValue.Key == "Owner")
                             {
-                                DoViewModel.ApplicantName = cellValue.Value.ToString();
-
-                                if (!string.IsNullOrEmpty(DoViewModel.ApplicantName))
+                                if (cellValue.Value == null)
                                 {
-                                    DoViewModel.ApplicantID = _employeeService.GetEmployeeID(DoViewModel.ApplicantName);
+                                    DoViewModel.UploadStatus += "申請者無資料;\n";
+                                    continue;
+                                }
+
+                                DoViewModel.Applicant = cellValue.Value.ToString();
+
+                                if (!string.IsNullOrEmpty(DoViewModel.Applicant))
+                                {
+                                    DoViewModel.ApplicantID = _employeeService.GetEmployeeID(DoViewModel.Applicant);
+                                }
+                            }
+                            if (cellValue.Key == "Approved By")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    continue;
+                                }
+
+                                DoViewModel.Approver = cellValue.Value.ToString();
+
+                                if (!string.IsNullOrEmpty(DoViewModel.Approver))
+                                {
+                                    DoViewModel.ApproverID = _employeeService.GetEmployeeID(DoViewModel.Approver);
                                 }
                             }
                             if (cellValue.Key == "New/Active")
                             {
-                                if(cellValue.Value.ToString() == "Active")
+                                if (cellValue.Value == null)
+                                {
+                                    DoViewModel.UploadStatus += "New/Active無資料;\n";
+                                    continue;
+                                }
+
+                                if (cellValue.Value.ToString() == "Active")
                                 {
                                     DoViewModel.TradeStatus = "A";
                                 }
@@ -359,8 +381,7 @@ namespace DDD_2024.Controllers
                                 else
                                 {
                                     DoViewModel.TradeStatus = string.Empty;
-                                }
-                                
+                                }                                
                             }
                         }
                         list_doViewModels.Add(DoViewModel);
@@ -400,7 +421,7 @@ namespace DDD_2024.Controllers
                 {
                     DoID = item.DoID,
                     ProjectID = item.ProjectID,
-                    ApplicantName = _employeeService.GetEmployeeName(item.ApplicantID),
+                    Applicant = _employeeService.GetEmployeeName(item.ApplicantID),
                     StatusName = _doService.GetStatusName(item.Status),
                     TradeStatus = item.TradeStatus,
                     DOStatus = item.Status
@@ -449,27 +470,41 @@ namespace DDD_2024.Controllers
             }
         }
 
-        public async Task<IActionResult> ExportExcel()
+        // GET: Do/DoReport
+        public IActionResult DoReport()
         {
-            var DosModel = await _doService.GetDOsAsync();
+            return View();
+        }
 
-            if (DosModel != null)
+        public async Task<IActionResult> DoReport_Excel(DoReportFilterViewModel model)
+        {
+            var DosModel = await _doService.GetDosReport(model);
+
+            if (DosModel != null && DosModel.Count > 0)
             {
                 var sheets = new Dictionary<string, object>
                 {
                     ["DO"] = DosModel
                 };
 
-                string path = @"D:\Do報表_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx";
-
-                if (!System.IO.File.Exists(path))
+                var memoryStream = new MemoryStream();
+                memoryStream.SaveAs(DosModel);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 {
-                    MiniExcel.SaveAs(path, sheets);
+                    FileDownloadName = "Do報表_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx"
+                };
 
-                    ViewBag.Message = "Excel匯出完成！";
-                }
+                //string path = @"D:\Do報表_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx";
+                //
+                //if (!System.IO.File.Exists(path))
+                //{
+                //    MiniExcel.SaveAs(path, sheets);
+                //
+                //    ViewBag.Message = "Excel匯出完成！";
+                //}
 
-                return View("Index", DosModel);
+                //return View("Index", DosModel);
             }
             else
             {
@@ -484,7 +519,14 @@ namespace DDD_2024.Controllers
             {
                 foreach(var item in list_doViewModels)
                 {
-                    item.UploadStatus = CheckDOInsert(item);
+                    if (!string.IsNullOrEmpty(item.UploadStatus))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        item.UploadStatus = CheckDOInsert(item);
+                    }
 
                     if (string.IsNullOrEmpty(item.UploadStatus))
                     {                       
@@ -527,6 +569,7 @@ namespace DDD_2024.Controllers
                             ProjectID = projectID,
                             CreateDate = createDate,
                             ApplicantID = item.ApplicantID,
+                            ApproverID = item.ApproverID,
                             TradeStatus = item.TradeStatus,
                             Status = "N" // Status: 新單
                         };
@@ -540,59 +583,57 @@ namespace DDD_2024.Controllers
             return list_doViewModels;
         }
 
+        // GET: Do
+        public async Task<IActionResult> DoASIndex(string DoID)
+        {
+            var model = await _doService.GetDOASUsAsync(DoID);
+
+            if (model != null)
+            {
+                return View(model);
+            }
+            else
+            {
+                return Problem("Entity set 'DOAS' is null.");
+            }
+        }
+
+        // GET: Do/DoASCreate
+        public IActionResult DoASCreate(string DoID)
+        {
+            var model = new DOASUViewModel();
+            model.DoID = DoID;
+
+            return View();
+        }
+
+        // POST: Do/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DoASCreate([Bind("DoID,vmDoUDate,DoUAction,DoUStatus")] DOASUViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                await _doService.CreateDoAS(model);
+
+                return RedirectToAction("DoASIndex","Do",model.DoID);
+            }
+            return View();
+        }
+
         private string CheckDOInsert(DoViewModel doViewModel)
         {
             string Message = string.Empty;
-
-            if (string.IsNullOrEmpty(doViewModel.Cus_DB) || string.IsNullOrEmpty(doViewModel.CusID))
-            {
-                Message += "找無相符合客戶資料;\n";
-            }
-
-            if (string.IsNullOrEmpty(doViewModel.ProApp))
-            {
-                Message += "產品應用無資料;\n";
-            }
-
-            if(!string.IsNullOrEmpty(doViewModel.ProApp) && doViewModel.ProApp.Length > 20)
-            {
-                Message += "產品應用文字長度大於20個字;\n";
-            }
-
-            if (string.IsNullOrEmpty(doViewModel.PartNo))
-            {
-                Message += "產品編號無資料;\n";
-            }
-
-            if (!string.IsNullOrEmpty(doViewModel.PartNo) && doViewModel.PartNo.Length > 25)
-            {
-                Message += "產品編號長度大於25個字;\n";
-            }
-
-            if (doViewModel.ApplicantID == 0)
-            {
-                Message += "申請者資料未建立;\n";
-            }
-
-            if (string.IsNullOrEmpty(doViewModel.VendorID))
-            {
-                Message += "供應商無資料;\n";
-            }
-
-            if (!string.IsNullOrEmpty(doViewModel.vmCreateDate) && doViewModel.vmCreateDate.Length > 10)
-            {
-                Message += "申請時間無資料或格式錯誤;\n";
-            }
 
             //檢查是否有重複Do資料
             if (!string.IsNullOrEmpty(doViewModel.Cus_DB) && !string.IsNullOrEmpty(doViewModel.CusID))
             {
                 var ProjectID = _projectMContext.ProjectM.Where(e => e.Cus_DB == doViewModel.Cus_DB && e.CusID == doViewModel.CusID && e.ProApp == doViewModel.ProApp).Select(e => e.ProjectID).FirstOrDefault();
-
+            
                 if(ProjectID != null)
                 {
                     var ProjectD = _projectDContext.ProjectD.Where(e => e.ProjectID == ProjectID && e.VendorID == doViewModel.VendorID && e.PartNo == doViewModel.PartNo).ToList();
-
+            
                     if (ProjectD.Count > 0)
                     {
                         Message += "Do資料重複;\n";
@@ -604,7 +645,93 @@ namespace DDD_2024.Controllers
 
         private bool Project_DOExists(string id)
         {
-          return (_projectDOontext.Project_DO?.Any(e => e.DoID == id)).GetValueOrDefault();
+          return (_projectDOContext.Project_DO?.Any(e => e.DoID == id)).GetValueOrDefault();
+        }
+
+        // GET: Do/Upload
+        public IActionResult UploadDOAS()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult UploadDOAS(IFormFile Excelfile)
+        {
+            //此功能在使用前參數都要改，包含ViewModel和月份都是人工定義的
+            
+            var stream = new MemoryStream();
+            if (Excelfile != null)
+            {
+                Excelfile.CopyTo(stream);
+
+                // 讀取stream中的所有資料
+                var streamData = MiniExcel.Query(stream, true, startCell: "A1").ToList();
+
+                // 檢查是否有資料
+                if (streamData.Count > 0)
+                {
+                    List<DOASU_Upload_ViewModel> list_upload = new List<DOASU_Upload_ViewModel>();
+
+                    for (int i = 0; i < streamData.Count; i++)
+                    {
+                        var rowData = streamData[i];
+
+                        var UploadViewModel = new DOASU_Upload_ViewModel();
+
+                        foreach (var cellValue in rowData)
+                        {
+                            if (cellValue.Key == "專案編號")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    UploadViewModel.UploadStatus += "無專案編號;\n";
+                                    continue;
+                                }
+                                else
+                                {
+                                    UploadViewModel.ProjectID = cellValue.Value.ToString();
+                                }
+                            }
+                            if (cellValue.Key == "Status")
+                            {
+                                if (cellValue.Value != null)
+                                {
+                                    UploadViewModel.DoUStatus2 = cellValue.Value.ToString();
+                                }
+                            }
+                            if (cellValue.Key == "Status Update-(3月更新)")
+                            {
+                                if (cellValue.Value != null)
+                                {
+                                    UploadViewModel.DoUStatus3 = cellValue.Value.ToString();
+                                }
+                            }
+                            if (cellValue.Key == "Status Update-(4月更新)")
+                            {
+                                if (cellValue.Value != null)
+                                {
+                                    UploadViewModel.DoUStatus4 = cellValue.Value.ToString();
+                                }
+                            }
+                            if (cellValue.Key == "Action")
+                            {
+                                if (cellValue.Value != null)
+                                {
+                                    UploadViewModel.DoUAction = cellValue.Value.ToString();
+                                }
+                            }                         
+                        }
+                        if (string.IsNullOrEmpty(UploadViewModel.UploadStatus))
+                        {
+                            list_upload.Add(UploadViewModel);
+                        }
+                    }
+                    var model = _doService.ImportDOASU(list_upload);
+
+                    return View(model);
+                }
+            }
+            return View(nameof(Index));
         }
     }
 }

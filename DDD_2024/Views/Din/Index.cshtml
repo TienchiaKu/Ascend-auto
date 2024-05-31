@@ -7,10 +7,6 @@
 
 <h1>DIN查詢</h1>
 
-<p>
-    <a asp-action="Create">新增DIn</a>
-</p>
-
 <div class="accordion" id="accordionConditon">
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingOne">
@@ -36,7 +32,10 @@
         <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
             <div class="accordion-body">
                 <div class="row" style="margin-top:6px">
-                    <div class="col-md-8">
+                    <div class="col-md-2">
+                        <a asp-action="Create" class="btn btn-warning">新增DIn</a>
+                    </div>
+                    <div class="col-md-6">
                     </div>
                     <div class="col-md-2">
                         <a asp-action="Upload" class="btn btn-warning">上傳Din</a>

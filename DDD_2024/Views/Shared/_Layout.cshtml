@@ -23,8 +23,17 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">首頁</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Do" asp-action="Index">Do管理</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Do管理
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Do" asp-action="Index">Do查詢</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Do" asp-action="DoReport">Do報表</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Do" asp-action="Create">Do新增</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Do" asp-action="Upload">匯入Do</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Do" asp-action="UploadDOAS">匯入Do進度</a></li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Din" asp-action="Index">Din管理</a>
@@ -32,8 +41,14 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Dwin" asp-action="Index">Dwin管理</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="BonusCal" asp-action="Index">獎金計算</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                獎金管理
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" asp-area="" asp-controller="BonusCal" asp-action="DoIndex">Do獎金</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="BonusCal" asp-action="DInWinIndex">Dinwin獎金</a></li>
+                            </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -59,7 +74,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2024 - DDD_2024 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; Ascend-tek 2024 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

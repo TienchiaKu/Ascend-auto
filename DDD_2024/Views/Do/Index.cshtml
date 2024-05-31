@@ -71,7 +71,7 @@
                         <a asp-action="Upload" class="btn btn-warning">上傳Do</a>
                     </div>
                     <div class="col-md-2">
-                        <a asp-action="ExportExcel" class="btn btn-warning">匯出至Excel</a>
+                        <a asp-action="DoReport" class="btn btn-warning">Do報表</a>
                     </div>
                 </div>
                 @if (contxt.HttpContext != null)
@@ -99,6 +99,9 @@
         <tr>
             <th>勾選</th>
             <th>
+                @Html.DisplayNameFor(model => model.ProjectID)
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.vmCreateDate)
             </th>
             <th>
@@ -111,10 +114,7 @@
                 @Html.DisplayNameFor(model => model.PartNo)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ApplicantName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TradeStatus)
+                @Html.DisplayNameFor(model => model.Applicant)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.StatusName)
@@ -133,6 +133,9 @@
                     }
                 </td>
                 <td>
+                    @Html.DisplayFor(modelItem => item.ProjectID)
+                </td>
+                <td>
                     @Html.DisplayFor(modelItem => item.vmCreateDate)
                 </td>
                 <td>
@@ -145,10 +148,7 @@
                     @Html.DisplayFor(modelItem => item.PartNo)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.ApplicantName)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.TradeStatus)
+                    @Html.DisplayFor(modelItem => item.Applicant)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.StatusName)

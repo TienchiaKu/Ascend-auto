@@ -24,7 +24,7 @@ namespace DDD_2024.Models
         [Display(Name = "密碼")]
         public string? userPWD { get; set; }
 
-        [Display(Name = "建立時間")]
+        [Display(Name = "更新時間")]
         public DateTime UpdateDate { get; set; }
 
         [Display(Name = "區域")]

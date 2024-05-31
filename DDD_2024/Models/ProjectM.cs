@@ -34,7 +34,7 @@ namespace DDD_2024.Models
         [Display(Name = "最終客戶名稱")]
         public string? EndCus { get; set; }
 
-        [StringLength(20)]
+        [StringLength(40)]
         [Display(Name = "產品應用")]
         public string? ProApp { get; set; }
 

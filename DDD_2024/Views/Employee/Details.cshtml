@@ -6,30 +6,45 @@
 
 <h1>員工資料</h1>
 
-<div>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.employee.EmpName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.employee.EmpName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OnDuty_CN)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OnDuty_CN)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.employee.UpdateDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.employee.UpdateDate)
-        </dd>
-    </dl>
+<div class="row" style="margin-top:6px">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="employee.EmpName" class="control-label"></label>
+            <input asp-for="employee.EmpName" class="form-control" readonly />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="OnDuty_CN" class="control-label"></label>
+            <input asp-for="OnDuty_CN" class="form-control" readonly />
+        </div>
+    </div>
+    <div class="col-md-4">
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.employee.EmpID">編輯</a> |
-    <a asp-action="Index">返回清單</a>
+<div class="row" style="margin-top:6px">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="employee.Region" class="control-label"></label>
+            <input asp-for="employee.Region" class="form-control" readonly />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="employee.UpdateDate" class="control-label"></label>
+            <input asp-for="employee.UpdateDate" class="form-control" readonly />
+        </div>
+    </div>
+    <div class="col-md-4">
+    </div>
+</div>
+<div class="row" style="margin-top:6px">
+    <div class="col-md-4">
+        <a asp-action="Edit" asp-route-id="@Model?.employee.EmpID" class="btn btn-primary">編輯</a>
+        <a asp-action="Index" class="btn btn-warning">返回清單</a>
+    </div>
+    <div class="col-md-4">
+    </div>
+    <div class="col-md-4">
+    </div>
 </div>

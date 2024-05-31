@@ -1,4 +1,5 @@
 ﻿@model DDD_2024.Models.DinViewModel
+@inject IHttpContextAccessor contxt
 @inject DDD_2024.Interfaces.IEmployeeService EmployeeService
 @inject DDD_2024.Interfaces.ICusVendoeService CusVendoeService
 
@@ -8,152 +9,259 @@
 
 <h1>Din建立</h1>
 
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <input asp-for="ProjectID" class="form-control" hidden />
-                <input asp-for="DoID" class="form-control" hidden />
-                <input asp-for="VendorID" class="form-control" hidden />
-                <input asp-for="vmCreateDate" class="form-control" hidden />
-                <input asp-for="Cus_DB" class="form-control" hidden />
-                <input asp-for="CusID" class="form-control" hidden />
-                <input asp-for="ProApp" class="form-control" hidden />
+<div class="accordion" id="accordionFunction">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFunOne" aria-expanded="true" aria-controls="collapseOne">
+                功能鍵
+            </button>
+        </h2>
+        <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
+            <div class="accordion-body">
+                <div class="row">
+                    <div class="col-md-2">
+                        <a asp-action="Index" class="btn btn-warning">返回Din清單</a>
+                    </div>
+                    <div class="col-md-10">
+                    </div>
+                </div>
+                @if (contxt.HttpContext != null)
+                {
+                    var empName = contxt.HttpContext.Session.GetString("EmpName");
+                    if (!string.IsNullOrEmpty(empName))
+                    {
+                        <div class="row" style="margin-top: 6px">
+                            <div class="col-md-8">
+                            </div>
+                            <div class="col-md-4">
+                                <label>login User: </label>
+                                <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                            </div>
+                        </div>
+                    }
+                }
             </div>
+        </div>
+    </div>
+</div>
+
+<form asp-action="Create">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="VendorID" class="control-label"></label>
-                <input type="text" id="searchVendorInput" class="form-control" placeholder="搜尋原廠..."><br />
-                <select id="vendorSelect" asp-for="VendorID" class="form-control" asp-items="@(await CusVendoeService.Ascendvendor_SelectList())"></select>
+                <label asp-for="DinDate" class="control-label"></label>
+                <input asp-for="DinDate" class="form-control" type="date" />
             </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="CusName" class="control-label"></label>
+                <select asp-for="CusID" asp-items="ViewBag.CustomerList" class="form-control" id="cusSelect"></select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="VendorName" class="control-label"></label>
+            <select asp-for="VendorID" asp-items="ViewBag.VendorList" class="form-control" id="cusSelect"></select>
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="PartNo" class="control-label"></label>
                 <input asp-for="PartNo" class="form-control" />
                 <span asp-validation-for="PartNo" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Cus_DB" class="control-label"></label>
-                <select id="CusDBselector" asp-for="Cus_DB" asp-items="CusVendoeService.DBSource" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="CusID" class="control-label"></label>
-                <select id="CusIDselectorAti" asp-for="CusID" asp-items="CusVendoeService.GetCusItem_Amico()" class="form-control"></select>
-                <select id="CusIDselectorAsc" asp-for="CusID" asp-items="CusVendoeService.GetCusItem_Ascend()" class="form-control"></select>
-                <select id="CusIDselectorInt" asp-for="CusID" asp-items="CusVendoeService.GetCusItem_Intetek()" class="form-control"></select>
-                <select id="CusIDselectorK1n" asp-for="CusID" asp-items="CusVendoeService.GetCusItem_Kir1n()" class="form-control"></select>
-                <select id="CusIDselectorTestB" asp-for="CusID" asp-items="CusVendoeService.GetCusItem_TestB()" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="EndCus" class="control-label"></label>
-                <input asp-for="EndCus" class="form-control" />
-                <span asp-validation-for="EndCus" class="text-danger"></span>
-            </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="ProApp" class="control-label"></label>
                 <input asp-for="ProApp" class="form-control" />
                 <span asp-validation-for="ProApp" class="text-danger"></span>
             </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="ProModel" class="control-label"></label>
                 <input asp-for="ProModel" class="form-control" />
                 <span asp-validation-for="ProModel" class="text-danger"></span>
             </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="EProduceYS" class="control-label"></label>
+                <label asp-for="EndCus" class="control-label"></label>
+                <input asp-for="EndCus" class="form-control" />
+                <span asp-validation-for="EndCus" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="EProduceYS" class="control-label">預估量產時間(格式年+季度，範例:2024Q2)</label>
                 <input asp-for="EProduceYS" class="form-control" />
                 <span asp-validation-for="EProduceYS" class="text-danger"></span>
             </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="ELTR" class="control-label"></label>
                 <input asp-for="ELTR" class="form-control" />
                 <span asp-validation-for="ELTR" class="text-danger"></span>
             </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="EGP" class="control-label"></label>
                 <input asp-for="EGP" class="form-control" />
                 <span asp-validation-for="EGP" class="text-danger"></span>
             </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="EFirstYQty" class="control-label"></label>
-                <input asp-for="EFirstYQty" class="form-control" />
-                <span asp-validation-for="EFirstYQty" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="EFirstYQty" class="control-label"></label>
+                    <input asp-for="EFirstYQty" class="form-control" />
+                    <span asp-validation-for="EFirstYQty" class="text-danger"></span>
+                </div>
             </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="ESecondYQty" class="control-label"></label>
                 <input asp-for="ESecondYQty" class="form-control" />
                 <span asp-validation-for="ESecondYQty" class="text-danger"></span>
             </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="EThirdYQty" class="control-label"></label>
                 <input asp-for="EThirdYQty" class="form-control" />
                 <span asp-validation-for="EThirdYQty" class="text-danger"></span>
             </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="UFirstYPrice" class="control-label"></label>
-                <input asp-for="UFirstYPrice" class="form-control" />
-                <span asp-validation-for="UFirstYPrice" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="UFirstYPrice" class="control-label"></label>
+                    <input asp-for="UFirstYPrice" class="form-control" />
+                    <span asp-validation-for="UFirstYPrice" class="text-danger"></span>
+                </div>
             </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="USecondYPrice" class="control-label"></label>
                 <input asp-for="USecondYPrice" class="form-control" />
                 <span asp-validation-for="USecondYPrice" class="text-danger"></span>
             </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="UThirdYPrice" class="control-label"></label>
                 <input asp-for="UThirdYPrice" class="form-control" />
                 <span asp-validation-for="UThirdYPrice" class="text-danger"></span>
             </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="PM_EmpName" class="control-label"></label>
-                <select asp-for="PM_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
-                <span asp-validation-for="PM_EmpName" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="PM_EmpName" class="control-label"></label>
+                    <select asp-for="PM_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
+                    <span asp-validation-for="PM_EmpName" class="text-danger"></span>
+                </div>
             </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="Sales_EmpName" class="control-label"></label>
                 <select asp-for="Sales_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
                 <span asp-validation-for="Sales_EmpName" class="text-danger"></span>
             </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="FAE1_EmpName" class="control-label"></label>
-                <select asp-for="FAE1_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
-                <span asp-validation-for="FAE1_EmpName" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="FAE1_EmpName" class="control-label"></label>
+                    <select asp-for="FAE1_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
+                    <span asp-validation-for="FAE1_EmpName" class="text-danger"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="FAE1_Bonus" class="control-label"></label>
-                <input type="range" asp-for="FAE1_Bonus" min="0" max="1" step="0.05" class="form-control-range" id="fae1-bonus-range" />
-                <span id="fae1-bonus-value">0</span>
-            </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="FAE2_EmpName" class="control-label"></label>
                 <select asp-for="FAE2_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
                 <span asp-validation-for="FAE2_EmpName" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="FAE2_Bonus" class="control-label"></label>
-                <input type="range" asp-for="FAE2_Bonus" min="0" max="1" step="0.05" class="form-control-range" id="fae2-bonus-range" />
-                <span id="fae2-bonus-value">0</span>
-            </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="FAE3_EmpName" class="control-label"></label>
                 <select asp-for="FAE3_EmpName" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
                 <span asp-validation-for="FAE3_EmpName" class="text-danger"></span>
             </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="FAE1_Bonus" class="control-label"></label>
+                <input type="range" asp-for="FAE1_Bonus" min="0" max="1" step="0.05" class="form-control-range" id="fae1-bonus-range" />
+                <span id="fae1-bonus-value">0</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="FAE2_Bonus" class="control-label"></label>
+                <input type="range" asp-for="FAE2_Bonus" min="0" max="1" step="0.05" class="form-control-range" id="fae2-bonus-range" />
+                <span id="fae2-bonus-value">0</span>
+            </div>
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="FAE3_Bonus" class="control-label"></label>
                 <input type="range" asp-for="FAE3_Bonus" min="0" max="1" step="0.05" class="form-control-range" id="fae3-bonus-range" />
                 <span id="fae3-bonus-value">0</span>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+        </div>
+        <div class="col-md-4">
+        </div>
+        <div class="col-md-4">
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="submit" value="確認送出" class="btn btn-secondary" />
+            </div>
+            <div class="col-md-8">
+            </div>
+        </div>
+    </div>
+</form>
 
-<div>
-    <a asp-action="Index">返回清單</a>
-</div>
+<hr />
 
 @section Scripts {
     @{
@@ -171,7 +279,7 @@
         if (bar) {
             bar.addEventListener('input', function () {
                 var value = this.value;
-                document.getElementById(valueId).textContent = value;
+                document.getElementById(valueId).textContent = value ;
             });
         }
     }
@@ -179,59 +287,5 @@
     addEventListenerToRangeBar('fae1-bonus-range', 'fae1-bonus-value');
     addEventListenerToRangeBar('fae2-bonus-range', 'fae2-bonus-value');
     addEventListenerToRangeBar('fae3-bonus-range', 'fae3-bonus-value');
-
-    document.addEventListener("DOMContentLoaded", function () {
-        var cusDBSelect = document.getElementById("CusDBselector");
-        var cusIDATI = document.getElementById("CusIDselectorAti");
-        var cusIDAsc = document.getElementById("CusIDselectorAsc");
-        var cusIDInt = document.getElementById("CusIDselectorInt");
-        var cusIDK1n = document.getElementById("CusIDselectorK1n");
-        var cusIDTest = document.getElementById("CusIDselectorTestB");
-
-        cusDBSelect.addEventListener("change", function () {
-            if (cusDBSelect.value === "ATI") {
-                cusIDATI.style.display = "block"; 
-                cusIDAsc.style.display = "none";
-                cusIDInt.style.display = "none";
-                cusIDK1n.style.display = "none";
-                cusIDTest.style.display = "none"; 
-            }
-            else if (cusDBSelect.value === "ASCEND") {
-                cusIDATI.style.display = "none";
-                cusIDAsc.style.display = "block";
-                cusIDInt.style.display = "none";
-                cusIDK1n.style.display = "none";
-                cusIDTest.style.display = "none";
-            }
-            else if (cusDBSelect.value === "INTERTEK") {
-                cusIDATI.style.display = "none";
-                cusIDAsc.style.display = "none";
-                cusIDInt.style.display = "block";
-                cusIDK1n.style.display = "none";
-                cusIDTest.style.display = "none";
-            }
-            else if (cusDBSelect.value === "KIR1N") {
-                cusIDATI.style.display = "none";
-                cusIDAsc.style.display = "none";
-                cusIDInt.style.display = "none";
-                cusIDK1n.style.display = "block";
-                cusIDTest.style.display = "none";
-            }
-            else {
-                cusIDATI.style.display = "none";
-                cusIDAsc.style.display = "none";
-                cusIDInt.style.display = "none";
-                cusIDK1n.style.display = "none";
-                cusIDTest.style.display = "block";
-            }
-        });
-            if (cusDBSelect.value === "ASCEND") {
-            cusIDATI.style.display = "none";
-            cusIDAsc.style.display = "block";
-            cusIDInt.style.display = "none";
-            cusIDK1n.style.display = "none";
-            cusIDTest.style.display = "none";
-        }
-    });
 
 </script>

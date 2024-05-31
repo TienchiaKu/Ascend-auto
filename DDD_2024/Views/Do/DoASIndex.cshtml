@@ -1,0 +1,87 @@
+﻿@model IEnumerable<DDD_2024.Models.DOASUViewModel>
+@inject IHttpContextAccessor contxt;
+@inject DDD_2024.Interfaces.IDoService DoService;
+@inject DDD_2024.Interfaces.IEmployeeService EmployeeService;
+
+@{
+    ViewData["Title"] = "DoASIndex";
+}
+
+<h1>Do進度查詢</h1>
+
+
+<div class="accordion" id="accordionFunction">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFunOne" aria-expanded="true" aria-controls="collapseOne">
+                功能鍵
+            </button>
+        </h2>
+        <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
+            <div class="accordion-body">
+                <div class="row" style="margin-top:6px">
+                    <div class="col-md-2">
+                        <a asp-action="Index" class="btn btn-secondary">返回清單</a>
+                    </div>
+                    <div class="col-md-10">
+                    </div>
+                </div>
+                @if (contxt.HttpContext != null)
+                {
+                    var empName = contxt.HttpContext.Session.GetString("EmpName");
+                    if (!string.IsNullOrEmpty(empName))
+                    {
+                        <div class="row" style="margin-top: 6px">
+                            <div class="col-md-8">
+                            </div>
+                            <div class="col-md-4">
+                                <label>login User: </label>
+                                <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table" style="margin-top:6px">
+    <thead>
+        <tr>
+            <th hidden>
+                @Html.DisplayNameFor(model => model.DoID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DoUDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DoUAction)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DoUStatus)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="tableBody">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td hidden>
+                    @Html.DisplayFor(modelItem => item.DoID)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DoUDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DoUAction)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DoUStatus)
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>

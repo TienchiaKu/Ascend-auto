@@ -1,0 +1,68 @@
+﻿@model DDD_2024.Models.DoReportFilterViewModel
+@inject IHttpContextAccessor contxt;
+@inject DDD_2024.Interfaces.IDoService DoService;
+@inject DDD_2024.Interfaces.IEmployeeService EmployeeService;
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<h1>Do報表匯出(Excel)</h1>
+
+<div class="accordion" id="accordionConditon">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConOne" aria-expanded="true" aria-controls="collapseOne">
+                篩選條件 
+            </button>
+        </h2>
+        <form asp-action="DoReport_Excel">
+            <div id="collapseConOne" class="accordion-collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConditon">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label asp-for="DoStatus"></label>
+                            <select asp-for="DoStatus" class="form-control" asp-items="@(DoService.GetStatus)"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="applicantID"></label>
+                            <select asp-for="applicantID" class="form-control" asp-items="@(EmployeeService.GetEmployeeNameList)"></select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label asp-for="StartDate"></label>
+                            <input asp-for="StartDate" class="form-control" type="date" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EndDate"></label>
+                            <input asp-for="EndDate" class="form-control" type="date" />
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:6px">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <input type="submit" value="匯出Do報表" class="btn btn-warning" />
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                        </div>
+                    </div>
+                    @if (contxt.HttpContext != null)
+                    {
+                        var empName = contxt.HttpContext.Session.GetString("EmpName");
+                        if (!string.IsNullOrEmpty(empName))
+                        {
+                            <div class="row" style="margin-top: 6px">
+                                <div class="col-md-8">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>login User: </label>
+                                    <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

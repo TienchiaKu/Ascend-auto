@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace DDD_2024.Models
 {
@@ -29,5 +30,37 @@ namespace DDD_2024.Models
 
         [Display(Name = "更新時間")]
         public DateTime UpdateDate { get; set; }    
+    }
+
+    public class CusReportViewModel
+    {
+        [StringLength(8)]
+        [Display(Name = "資料庫來源")]
+        public string? DBSource { get; set; }
+
+        [StringLength(10)]
+        [Display(Name = "客戶代碼")]
+        public string? CusID { get; set; }
+
+        [StringLength(25)]
+        [Display(Name = "客戶名稱")]
+        [Required]
+        public string? CusName { get; set; }
+    }
+
+    public class VendorReportViewModel
+    {
+        [StringLength(8)]
+        [Display(Name = "資料庫來源")]
+        public string? DBSource { get; set; }
+
+        [StringLength(10)]
+        [Display(Name = "供應商代碼")]
+        public string? VendorID { get; set; }
+
+        [StringLength(25)]
+        [Display(Name = "供應商名稱")]
+        [Required]
+        public string? VendorName { get; set; }
     }
 }

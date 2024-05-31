@@ -17,7 +17,12 @@ namespace DDD_2024.Interfaces
         bool CheckOnDuty(int empID, string empName);
 
         List<SelectListItem> YesNo { get; set; }
+        List<SelectListItem> YesNo_NotSelected { get; set; }
         List<SelectListItem> GetEmployeeNameList { get; }
         List<SelectListItem> GetEmployeeNameList_Selected(int? EmpID);
+        List<SelectListItem> GetRegion { get; }
+
+        Task<List<EmployeeViewModel>> GetEmployees();
+        Task<List<EmployeeViewModel>> GetEmployeesFilter(EmployeeFilterViewModel filter);
     }
 }

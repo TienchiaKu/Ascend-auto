@@ -1,0 +1,178 @@
+﻿@model IEnumerable<DDD_2024.Models.BonusCalViewModel>
+@inject IHttpContextAccessor contxt;
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>獎金計算</h1>
+
+<div class="accordion" id="accordionFunction">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFunOne" aria-expanded="true" aria-controls="collapseOne">
+                功能鍵
+            </button>
+        </h2>
+        <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
+            <div class="accordion-body">
+                <div class="row">
+                    <div class="col-md-2">
+                        <button id="btn_check_all" class="btn btn-warning">全選</button>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="btn_uncheck_all" class="btn btn-warning">取消全選</button>
+                    </div>
+                    <div class="col-md-8">
+                    </div>
+                </div>
+                <div class="row" style="margin-top:6px; background-color:lightgray">
+                    <div class="col-md-8">
+                        <h2>Do</h2>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="btn_deliver" class="btn btn-warning">獎金預覽</button>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="btn_deliver" class="btn btn-warning">獎金發放</button>
+                    </div>
+                </div>
+                @if (contxt.HttpContext != null)
+                {
+                    var empName = contxt.HttpContext.Session.GetString("EmpName");
+                    if (!string.IsNullOrEmpty(empName))
+                    {
+                        <div class="row" style="margin-top: 6px">
+                            <div class="col-md-8">
+                            </div>
+                            <div class="col-md-4">
+                                <label>login User: </label>
+                                <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (ViewBag.Message != null)
+{
+    <script>alert('@ViewBag.Message');</script>
+}
+
+@if (ViewBag.Message == null)
+{
+    <table class="table">
+        <thead>            
+            <tr>
+                <th>勾選</th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ProjectID)
+                </th>
+                <th class="hidden-column">
+                    @Html.DisplayNameFor(model => model.Status)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PartNo)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.VendorName) 
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.CusName)
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th colspan="2">Do</th>
+            </tr>
+            @foreach (var item in Model)
+            {
+                @if (item.Status == "DO")
+                {
+                    <tr>
+                        <td>
+                            @if (item.ProjectID != null)
+                            {
+                                <input type="checkbox" id="chk_@item.ProjectID+@item.Status" />
+                            }
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ProjectID)
+                        </td>
+                        <td style="display: none;">
+                            @Html.DisplayFor(modelItem => item.Status)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.PartNo)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.VendorName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CusName)
+                        </td>
+                        <td>
+                            <form asp-action="TransProjectDetail" asp-route-ProjectID="@item.ProjectID" asp-route-Status="@item.Status">
+                                <button type="submit" class="btn btn-dark">詳細資料</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }       
+        </tbody>
+    </table>
+}
+
+<style>
+    .hidden-column {
+        display: none;
+    }
+</style>
+
+<script>
+document.getElementById("btn_check_all").addEventListener("click", function () {
+    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(function (checkbox) {
+        checkbox.checked = true;
+    });
+});
+
+document.getElementById("btn_uncheck_all").addEventListener("click", function () {
+    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(function (checkbox) {
+        checkbox.checked = false;
+    });
+});
+
+    // 監聽全部同意按鈕的點擊事件
+    document.getElementById('btn_deliver').addEventListener('click', function () {
+        var projectIds = [];
+
+        // 找到所有被勾選的勾選框
+        var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+
+        checkboxes.forEach(function (checkbox) {
+            projectIds.push(checkbox.id.replace('chk_', ''));
+        });
+
+        fetch('/BonusCal/BonusConfirm', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(projectIds) // 將 doIds 陣列轉換為 JSON 字串並傳遞給 controller
+        })
+            .then(response => {
+                // 處理回應，可能需要做一些錯誤處理或者確認操作成功
+                console.log('Status changed successfully');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+</script>

@@ -1,4 +1,5 @@
-﻿@model IEnumerable<DDD_2024.Models.WD2SU01>
+﻿@model IEnumerable<DDD_2024.Models.CusReportViewModel>
+@inject IHttpContextAccessor contxt;
 @inject DDD_2024.Interfaces.ICusVendoeService CusVendoeService
 
 @{
@@ -7,31 +8,91 @@
 
 <h1>客供商查詢</h1>
 
-<label for="cusVendor">類型：</label>
-<select id="cusVendor" onchange="onDatabaseChange()">
-    @foreach (var item in CusVendoeService.cusVendor)
-    {
-        <option value="@item.Value">@item.Text</option>
-    }
-</select>
-<br />
-
-<label for="datasource">資料來源：</label>
-<select id="datasource" onchange="onDatabaseChange()">
-    @foreach (var item in CusVendoeService.DBSource)
-    {
-        <option value="@item.Value">@item.Text</option>
-    }
-</select>
+<div class="accordion" id="accordionConditon">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConOne" aria-expanded="true" aria-controls="collapseOne">
+                篩選條件
+            </button>
+        </h2>
+        <div id="collapseConOne" class="accordion-collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConditon">
+            <div class="accordion-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label>客戶/供應商</label>
+                        <select id="CusVentype" onchange="onDatabaseChange()" class="form-control" asp-items="@(CusVendoeService.GetCusVenType)"></select>
+                    </div>
+                    <div class="col-md-8">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionConditon">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConOne" aria-expanded="true" aria-controls="collapseOne">
+                功能鍵
+            </button>
+        </h2>
+        <div id="collapseConOne" class="accordion-collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConditon">
+            <div class="accordion-body">
+                <div class="row" style="margin-top:6px">
+                    <form asp-action="CusVendorReport_Excel">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <input type="submit" value="匯出客供商報表" class="btn btn-warning" />
+                        </div>
+                    </div>
+                    </form>
+                    <div class="col-md-9">
+                    </div>
+                </div>
+                <div class="row" style="margin-top:6px">
+                    <div class="col-md-3">
+                        <a asp-action="Create" asp-route-type="Cus" class="btn btn-warning">建立客戶</a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-action="Create" asp-route-type="Ven" class="btn btn-warning">建立供應商</a>
+                    </div>
+                    <div class="col-md-3">
+                        <button onclick="onclick()" class="btn btn-warning">停用名單</button>
+                    </div>
+                    <div class="col-md-3">
+                    </div>
+                </div>
+                @if (contxt.HttpContext != null)
+                {
+                    var empName = contxt.HttpContext.Session.GetString("EmpName");
+                    if (!string.IsNullOrEmpty(empName))
+                    {
+                        <div class="row" style="margin-top: 6px">
+                            <div class="col-md-8">
+                            </div>
+                            <div class="col-md-4">
+                                <label>login User: </label>
+                                <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
 
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.SU01001)
+                @Html.DisplayNameFor(model => model.DBSource)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.SU01003)
+                @Html.DisplayNameFor(model => model.CusID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CusName)
             </th>
             <th></th>
         </tr>
@@ -41,70 +102,66 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.SU01001)
+                    @Html.DisplayFor(modelItem => item.DBSource)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.SU01003)
+                    @Html.DisplayFor(modelItem => item.CusID)
                 </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CusName)
+                </td>
+                @if (item.DBSource != "Auto")
+                {
+                    <td>
+                        <a asp-action="Suspend" asp-route-DBSource="@item.DBSource" asp-route-CusID="@item.CusID" asp-route-CusName="@item.CusName" class="btn btn-warning">停用</a>
+                    </td>
+                }
+                else
+                {
+                    <td>
+                        <a asp-action="Edit" asp-route-DBSource="@item.DBSource" asp-route-CusID="@item.CusID" asp-route-CusName="@item.CusName" class="btn btn-primary">編輯</a>
+                    </td>
+                }
             </tr>
         }
     </tbody>
 </table>
+
 <script>
     // 處理select元素的更改事件
     function onDatabaseChange() {
-        var selectedDatasource = document.getElementById("datasource").value;
-        var selectedCusVendor = document.getElementById("cusVendor").value;
-        if (selectedCusVendor === 'cus') {
-            switch (selectedDatasource) {
-                case 'ASCEND':
-                    fetchData('/CusVendor/GetASCENDcustomer', selectedDatasource);
-                    break;
-                case 'ATI':
-                    fetchData('/CusVendor/GetATIcustomer', selectedDatasource);
-                    break;
-                case 'INTERTEK':
-                    fetchData('/CusVendor/GetINTERTEKcustomer', selectedDatasource);
-                    break;
-                case 'KIR1N':
-                    fetchData('/CusVendor/GetKIR1NIcustomer', selectedDatasource);
-                    break;
-                case 'TEST-B':
-                    fetchData('/CusVendor/GetTESTBcustomer', selectedDatasource);
-                    break;
-                default:
-                    console.error('Invalid customer selected.');
-            }
-        }
-        else {
-            switch (selectedDatasource) {
-                case 'ASCEND':
-                    fetchData('/CusVendor/GetASCENDvendor', selectedDatasource);
-                    break;
-                case 'ATI':
-                    fetchData('/CusVendor/GetATIvendor', selectedDatasource);
-                    break;
-                case 'INTERTEK':
-                    fetchData('/CusVendor/GetINTERTEKvendor', selectedDatasource);
-                    break;
-                case 'KIR1N':
-                    fetchData('/CusVendor/GetKIR1Nvendor', selectedDatasource);
-                    break;
-                case 'TEST-B':
-                    fetchData('/CusVendor/GetTESTBvendor', selectedDatasource);
-                    break;
-                default:
-                    console.error('Invalid vendor selected.');
-            }
-        }      
+        var selectedtype = document.getElementById("CusVentype").value;
+
+        // 清除当前表格的所有数据
+        clearTable();
+
+        fetchData('/CusVendor/IndexFilter', selectedtype);
+    }
+
+    function onclick() {
+        clearTable();
+
+        fetchData('/CusVendor/Recovery');
+    }
+
+    // 清除当前表格的所有数据
+    function clearTable() {
+        // 找到表格
+        var table = document.querySelector('table');
+
+        // 找到表格主体
+        var tbody = table.querySelector('tbody');
+
+        // 清空表格主体的内容
+        tbody.innerHTML = '';
     }
 
     // 發送 AJAX 請求並更新表格資料
-    function fetchData(url, datasource) {
+    function fetchData(url, type) {
         $.ajax({
             url: url,
             type: 'GET',
-            data: { datasource: datasource },
+            data: { type: type },
             success: function (data) {
                 $('#tableBody').html(data);
             },
@@ -118,5 +175,5 @@
     function handleAjaxError(error) {
         console.error('Error fetching data:', error);
     }
-</script>
 
+</script>

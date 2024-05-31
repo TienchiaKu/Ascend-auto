@@ -13,7 +13,7 @@ namespace DDD_2024.Models
         [Display(Name = "客戶代碼")]
         public string? CusID { get; set; }
 
-        [StringLength(20)]
+        [StringLength(40)]
         [Display(Name = "產品應用")]
         public string? ProApp { get; set; }
 
@@ -29,20 +29,41 @@ namespace DDD_2024.Models
         //Project_DO
         [DisplayFormat(DataFormatString = "{0:yyyy/MM/dd}", ApplyFormatInEditMode = true)]
         [Display(Name = "建立時間")]
+        [Required]
         public DateTime CreateDate { get; set; }
 
         [StringLength(1)]
         [Display(Name = "交易狀態")]
         public string? TradeStatus { get; set; }
 
+        //Project_DOASUpdate
+        [Display(Name = "更新時間")]
+        public string? DoUDate { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "DoAction")]
+        public string? DoUAction { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "DoStatus")]
+        public string? DoUStatus { get; set; }
+
         //公用
         [Display(Name = "申請者")]
-        public string? ApplicantName { get; set; }
+        public string? Applicant { get; set; }
 
         [Display(Name = "申請者ID")]
+        [Required]
         public int ApplicantID { get; set; }
 
+        [Display(Name = "覆核者")]
+        public string? Approver { get; set; }
+
+        [Display(Name = "覆核者ID")]
+        public int ApproverID { get; set; }
+
         //讀取資料用
+        [Required]
         public string? DoID { get; set; }
 
         [Display(Name = "建立時間")]

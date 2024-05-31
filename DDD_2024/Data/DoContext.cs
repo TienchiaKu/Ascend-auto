@@ -42,14 +42,24 @@ namespace DDD_2024.Data
         public DbSet<DDD_2024.Models.ProjectD> ProjectD { get; set; } = default!;
     }
 
-    public class ProjectDOontext : DbContext
+    public class ProjectDOContext : DbContext
     {
-        public ProjectDOontext(DbContextOptions<ProjectDOontext> options)
+        public ProjectDOContext(DbContextOptions<ProjectDOContext> options)
             : base(options)
         {
         }
 
         public DbSet<DDD_2024.Models.Project_DO> Project_DO { get; set; } = default!;
+    }
+
+    public class Project_DOASUpdateContext : DbContext
+    {
+        public Project_DOASUpdateContext(DbContextOptions<Project_DOASUpdateContext> options)
+            : base(options)
+        {
+        }
+
+        public DbSet<DDD_2024.Models.Project_DOASUpdate> Project_DOASUpdate { get; set; } = default!;
     }
 
     public class Project_DIDWContext : DbContext

@@ -6,10 +6,7 @@
         {
             <tr>
                 <td>
-                    @if (item.DOStatus == "N")
-                    {
-                        <input type="checkbox" id="chk_@item.DoID" />
-                    }
+                    @Html.DisplayFor(modelItem => item.ProjectID)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.vmCreateDate)
@@ -24,7 +21,7 @@
                     @Html.DisplayFor(modelItem => item.PartNo)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.ApplicantName)
+                    @Html.DisplayFor(modelItem => item.Applicant)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.TradeStatus)

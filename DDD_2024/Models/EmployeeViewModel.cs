@@ -14,4 +14,10 @@ namespace DDD_2024.Models
         [Display(Name = "是否在職")]
         public string? OnDuty_CN { get; set; }
     }
+
+    //篩選條件
+    public class EmployeeFilterViewModel
+    {
+        public string? IsName { get; set; }
+    }
 }

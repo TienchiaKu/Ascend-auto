@@ -1,0 +1,68 @@
+﻿@model DDD_2024.Models.CusVendor
+@inject DDD_2024.Interfaces.IEmployeeService EmployeeService
+@inject DDD_2024.Interfaces.ICusVendoeService CusVendorService 
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>客供商資料更新</h1>
+
+<form asp-action="Edit">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="CusVenID" class="control-label"></label>
+                <input asp-for="CusVenID" class="form-control" readonly />
+                <span asp-validation-for="CusVenID" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="CusVenName" class="control-label"></label>
+                <input asp-for="CusVenName" class="form-control" readonly />
+                <span asp-validation-for="CusVenName" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="DBSource" class="control-label"></label>
+                <select asp-for="DBSource" asp-items="CusVendorService.GetDBSource" class="form-control"></select>
+                <span asp-validation-for="DBSource" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="CusVenCode" class="control-label"></label>
+                <input asp-for="CusVenCode" class="form-control" />
+                <span asp-validation-for="CusVenCode" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="IsUse" class="control-label"></label>
+                <select asp-for="IsUse" asp-items="EmployeeService.YesNo" class="form-control"></select>
+                <span asp-validation-for="IsUse" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="submit" value="確認更新" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-warning">返回清單</a>
+            </div>
+        </div>
+        <div class="col-md-8">
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

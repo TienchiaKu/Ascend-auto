@@ -71,8 +71,14 @@ namespace DDD_2024.Controllers
         }
 
         // GET: Din/Create
-        public IActionResult Create(string projectID)
+        public async Task<IActionResult> Create(string projectID)
         {
+            var selectListItems_Cus = await _cusVendoeService.GetAllCus_Selector();
+            ViewBag.CustomerList = selectListItems_Cus;
+
+            var selectListItems_Ven = await _cusVendoeService.GetAllVendor_Selector();
+            ViewBag.VendorList = selectListItems_Ven;
+
             if (!string.IsNullOrEmpty(projectID))
             {
                 if (_doService.chk_DoTransDin(projectID))
@@ -355,8 +361,6 @@ namespace DDD_2024.Controllers
 
             return View(list);
         }
-
-
 
         private bool DinViewModelExists(string ProjectID)
         {

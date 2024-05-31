@@ -22,7 +22,7 @@ namespace DDD_2024.Controllers
     {
         private readonly ProjectMContext _projectMContext;
         private readonly ProjectDContext _projectDContext;
-        private readonly ProjectDOontext _projectDOontext;
+        private readonly ProjectDOContext _projectDOContext;
         private readonly DoContext _Docontext;
         private readonly Project_DIDWContext _project_DIDWContext;
         private readonly Project_EmpContext _empContext;
@@ -33,13 +33,13 @@ namespace DDD_2024.Controllers
         private readonly IWebHostEnvironment _env;
 
         public BonusCalController(ProjectMContext projectMContext, ProjectDContext projectDContext, Project_DIDWContext project_DIDWContext, 
-            DoContext doContext, ProjectDOontext projectDOontext, Project_EmpContext project_EmpContext,
+            DoContext doContext, ProjectDOContext projectDOContext, Project_EmpContext project_EmpContext,
             IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService,
             IBounsCalService bounsCalService, IWebHostEnvironment env)
         {
             _projectMContext = projectMContext;
             _projectDContext = projectDContext;
-            _projectDOontext = projectDOontext;
+            _projectDOContext = projectDOContext;
             _Docontext = doContext;
             _project_DIDWContext = project_DIDWContext;
             _empContext = project_EmpContext;
@@ -51,9 +51,25 @@ namespace DDD_2024.Controllers
         }
 
         // GET: BonusCal
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> DoIndex()
         {
-            var model = await _bounsCalService.GetProjects();
+            var model = await _bounsCalService.GetProjects_DO();
+
+            if (model != null)
+            {
+                return View(model);
+            }
+            else
+            {
+                ViewBag.Message = "No match data.";
+                return View();
+            }
+        }
+
+        // GET: BonusCal
+        public async Task<IActionResult> DInWinIndex()
+        {
+            var model = await _bounsCalService.GetProjects_DINWIN();
 
             if (model != null)
             {
@@ -190,6 +206,40 @@ namespace DDD_2024.Controllers
         //    //};
         //    return RedirectToAction("ProjectIndex");
         //}
+
+        [HttpPost]
+        public ActionResult PreviewDo([FromBody] string[] projectIds)
+        {
+            var model = _bounsCalService.BonusConfirm(projectIds);
+
+            if (model != null)
+            {
+                var empDIDWBonusModel = _bounsCalService.GetDIDWBonusbyEmployee(model);
+                var empDOBonusModel = _bounsCalService.GetDOBonusbyEmployee(model);
+
+                var sheets = new Dictionary<string, object>
+                {
+                    ["各專案獎金"] = model,
+                    ["員工Do獎金"] = empDOBonusModel,
+                    ["員工DIDW獎金"] = empDIDWBonusModel
+                };
+
+                string path = @"D:\獎金報表_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx";
+
+                if (!System.IO.File.Exists(path))
+                {
+                    MiniExcel.SaveAs(path, sheets);
+
+                    ViewBag.Message = "Excel匯出完成！";
+                }
+
+                return View("Index", model);
+            }
+            else
+            {
+                return Content("匯出錯誤");
+            }
+        }
 
         [HttpPost]
         public ActionResult BonusConfirm([FromBody] string[] projectIds)

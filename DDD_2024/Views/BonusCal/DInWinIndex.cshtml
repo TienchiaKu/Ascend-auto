@@ -26,11 +26,15 @@
                     <div class="col-md-8">
                     </div>
                 </div>
-                <div class="row" style="margin-top:6px">
-                    <div class="col-md-10">
+                <div class="row" style="margin-top:6px; background-color:lightgreen">
+                    <div class="col-md-8">
+                        <h2>Din/Dwin</h2>
                     </div>
                     <div class="col-md-2">
-                        <button id="btn_deliver" class="btn btn-warning">獎金發放&報表</button>
+                        <button id="btn_deliver" class="btn btn-warning">獎金預覽</button>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="btn_deliver" class="btn btn-warning">獎金發放</button>
                     </div>
                 </div>
                 @if (contxt.HttpContext != null)
@@ -83,43 +87,6 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <th colspan="2">Do</th>
-            </tr>
-            @foreach (var item in Model)
-            {
-                @if (item.Status == "DO")
-                {
-                    <tr>
-                        <td>
-                            @if (item.ProjectID != null)
-                            {
-                                <input type="checkbox" id="chk_@item.ProjectID+@item.Status" />
-                            }
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.ProjectID)
-                        </td>
-                        <td style="display: none;">
-                            @Html.DisplayFor(modelItem => item.Status)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.PartNo)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.VendorName)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.CusName)
-                        </td>
-                        <td>
-                            <form asp-action="TransProjectDetail" asp-route-ProjectID="@item.ProjectID" asp-route-Status="@item.Status">
-                                <button type="submit" class="btn btn-dark">詳細資料</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            }
             <tr>
                 <th colspan="2">Din</th>
             </tr>

@@ -1,4 +1,6 @@
 ﻿@model IEnumerable<DDD_2024.Models.EmployeeViewModel>
+@inject DDD_2024.Interfaces.IEmployeeService EmployeeService;
+
 
 @{
     ViewData["Title"] = "Index";
@@ -9,6 +11,29 @@
 <p>
     <a asp-action="Create" class="btn btn-primary">新增</a>
 </p>
+
+<div class="accordion" id="accordionConditon">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConOne" aria-expanded="true" aria-controls="collapseOne">
+                篩選條件
+            </button>
+        </h2>
+        <div id="collapseConOne" class="accordion-collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConditon">
+            <div class="accordion-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>用員工姓名排序?</label>
+                        <select id="IsNameFilter" onchange="onDatabaseChange()" class="form-control" asp-items="@(EmployeeService.YesNo)"></select>
+                    </div>
+                    <div class="col-md-6">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <table class="table table-striped table-bordered table-hover">
     <thead>
         <tr>
@@ -24,7 +49,7 @@
             <th>功能鍵</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="tableBody">
 @foreach (var item in Model) {
         <tr>
             <td>
@@ -44,3 +69,47 @@
 }
     </tbody>
 </table>
+
+<script>
+    // 處理select元素的更改事件
+    function onDatabaseChange() {
+        var selectedIsName = document.getElementById("IsNameFilter").value;
+
+        // 清除当前表格的所有数据
+        clearTable();
+
+        fetchData('/Employee/IndexFilter', selectedIsName);
+    }
+
+    // 清除当前表格的所有数据
+    function clearTable() {
+        // 找到表格
+        var table = document.querySelector('table');
+
+        // 找到表格主体
+        var tbody = table.querySelector('tbody');
+
+        // 清空表格主体的内容
+        tbody.innerHTML = '';
+    }
+
+    // 發送 AJAX 請求並更新表格資料
+    function fetchData(url, IsNameFilter) {
+        $.ajax({
+            url: url,
+            type: 'GET',
+            data: { IsNameFilter: IsNameFilter },
+            success: function (data) {
+                $('#tableBody').html(data);
+            },
+            error: function (error) {
+                handleAjaxError(error);
+            }
+        });
+    }
+
+    // 處理 AJAX 請求錯誤
+    function handleAjaxError(error) {
+        console.error('Error fetching data:', error);
+    }
+</script>

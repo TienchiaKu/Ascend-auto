@@ -19,7 +19,7 @@
             || string.IsNullOrEmpty(item.VendorID)
             || string.IsNullOrEmpty(item.PartNo)
             || string.IsNullOrEmpty(item.ProApp)
-            || string.IsNullOrEmpty(item.ApplicantName)
+            || string.IsNullOrEmpty(item.Applicant)
             || item.ApplicantID == 0;
     }
 }
@@ -29,17 +29,13 @@
     <table>
         <thead>
             <tr>
+                <th>@Html.DisplayNameFor(model => model.ProjectID)</th>
                 <th>@Html.DisplayNameFor(model => model.vmCreateDate)</th>
                 <th>@Html.DisplayNameFor(model => model.CusName)</th>
-                <th>@Html.DisplayNameFor(model => model.Cus_DB)</th>
-                <th>@Html.DisplayNameFor(model => model.CusID)</th>
                 <th>@Html.DisplayNameFor(model => model.VendorName)</th>
-                <th>@Html.DisplayNameFor(model => model.VendorID)</th>
                 <th>@Html.DisplayNameFor(model => model.PartNo)</th>
                 <th>@Html.DisplayNameFor(model => model.ProApp)</th>
-                <th>@Html.DisplayNameFor(model => model.ApplicantName)</th>
-                <th>@Html.DisplayNameFor(model => model.ApplicantID)</th>
-                <th>@Html.DisplayNameFor(model => model.TradeStatus)</th>
+                <th>@Html.DisplayNameFor(model => model.Applicant)</th>
                 <th>@Html.DisplayNameFor(model => model.UploadStatus)</th>
             </tr>
         </thead>
@@ -49,17 +45,13 @@
                 var rowClass = item.UploadStatus != "Success" ? "lightgray-background" : "";
 
                 <tr class="@rowClass">
+                    <td>@Html.DisplayFor(modelItem => item.ProjectID)</td>
                     <td>@Html.DisplayFor(modelItem => item.vmCreateDate)</td>
                     <td>@Html.DisplayFor(modelItem => item.CusName)</td>
-                    <td>@Html.DisplayFor(modelItem => item.Cus_DB)</td>
-                    <td>@Html.DisplayFor(modelItem => item.CusID)</td>
                     <td>@Html.DisplayFor(modelItem => item.VendorName)</td>
-                    <td>@Html.DisplayFor(modelItem => item.VendorID)</td>
                     <td>@Html.DisplayFor(modelItem => item.PartNo)</td>
                     <td>@Html.DisplayFor(modelItem => item.ProApp)</td>
-                    <td>@Html.DisplayFor(modelItem => item.ApplicantName)</td>
-                    <td>@Html.DisplayFor(modelItem => item.ApplicantID)</td>
-                    <td>@Html.DisplayFor(modelItem => item.TradeStatus)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Applicant)</td>
                     <td>@Html.DisplayFor(modelItem => item.UploadStatus)</td>
                 </tr>
             }

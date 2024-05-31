@@ -10,33 +10,37 @@ namespace DDD_2024.Services
 {
     public class BonusCalService : IBounsCalService
     {
-        private readonly ProjectDOontext _projectDOontext;
+        private readonly ProjectDOContext _projectDOContext;
         private readonly ProjectMContext _projectMContext;
         private readonly ProjectDContext _projectDContext;
         private readonly Project_EmpContext _projectEmpContext;
         private readonly Project_DIDWContext _projectDIDWContext;
+        private readonly Project_DOASUpdateContext _project_DOASUpdateContext;
         private readonly IEmployeeService _employeeService;
         private readonly ICusVendoeService _cusVendoeService;
+        private readonly IDoService _doService;
 
-        public BonusCalService(ProjectMContext projectMContext, ProjectDContext projectDContext, ProjectDOontext projectDOontext,
-            Project_DIDWContext projectDIDWContext,
-    Project_EmpContext project_EmpContext, IEmployeeService employeeService, ICusVendoeService cusVendoeService)
+        public BonusCalService(ProjectMContext projectMContext, ProjectDContext projectDContext, ProjectDOContext projectDOContext,
+            Project_DIDWContext projectDIDWContext, Project_DOASUpdateContext project_DOASUpdateContext,
+            Project_EmpContext project_EmpContext, IEmployeeService employeeService, ICusVendoeService cusVendoeService, IDoService doService)
         {
             _projectMContext = projectMContext;
             _projectDContext = projectDContext;
-            _projectDOontext = projectDOontext;
+            _projectDOContext = projectDOContext;
             _projectDIDWContext = projectDIDWContext;
             _projectEmpContext = project_EmpContext;
             _employeeService = employeeService;
             _cusVendoeService = cusVendoeService;
+            _doService = doService;
+            _project_DOASUpdateContext = project_DOASUpdateContext;
         }
 
-        public async Task<List<BonusCalViewModel>> GetProjects()
+        public async Task<List<BonusCalViewModel>> GetProjects_DO()
         {
             List<BonusCalViewModel> list_BonusCal = new List<BonusCalViewModel>();
 
             //加入DO資料
-            var modelDo = await _projectDOontext.Project_DO.Where(p => p.Status == "C").ToListAsync();
+            var modelDo = await _projectDOContext.Project_DO.Where(p => p.Status == "C").ToListAsync();
             foreach (var item in modelDo)
             {
                 var modelProjectM = _projectMContext.ProjectM.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
@@ -53,18 +57,12 @@ namespace DDD_2024.Services
 
                     if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
                     {
-                        model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
+                        model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB,modelProjectM.CusID);
                     }
 
                     if (!string.IsNullOrEmpty(modelProjectD.VendorID))
                     {
-                        model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
-
-                        if (string.IsNullOrEmpty(model.VendorName))
-                        {
-                            model.VendorName = _cusVendoeService.GetvendorName("Auto", modelProjectD.VendorID);
-                        }
-
+                        model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
                     }
 
                     list_BonusCal.Add(model);
@@ -94,13 +92,7 @@ namespace DDD_2024.Services
 
                     if (!string.IsNullOrEmpty(modelProjectD.VendorID))
                     {
-                        model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
-
-                        if (string.IsNullOrEmpty(model.VendorName))
-                        {
-                            model.VendorName = _cusVendoeService.GetvendorName("Auto", modelProjectD.VendorID);
-                        }
-
+                        model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
                     }
 
                     list_BonusCal.Add(model);
@@ -130,20 +122,80 @@ namespace DDD_2024.Services
 
                     if (!string.IsNullOrEmpty(modelProjectD.VendorID))
                     {
-                        model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
-
-                        if (string.IsNullOrEmpty(model.VendorName))
-                        {
-                            model.VendorName = _cusVendoeService.GetvendorName("Auto", modelProjectD.VendorID);
-                        }
-
+                        model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
                     }
 
                     list_BonusCal.Add(model);
                 }
             }
             return list_BonusCal;
-        }      
+        }
+
+        public async Task<List<BonusCalViewModel>> GetProjects_DINWIN()
+        {
+            List<BonusCalViewModel> list_BonusCal = new List<BonusCalViewModel>();           
+
+            //加入Din資料
+            var modelDIn = await _projectDIDWContext.Project_DIDW.Where(p => p.DinStatus == "C").ToListAsync();
+            foreach (var item in modelDIn)
+            {
+                var modelProjectM = _projectMContext.ProjectM.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
+                var modelProjectD = _projectDContext.ProjectD.Where(p => p.ProjectID == item.ProjectID && p.Stage == "DIN").FirstOrDefault();
+
+                if (modelProjectM != null && modelProjectD != null)
+                {
+                    var model = new BonusCalViewModel
+                    {
+                        ProjectID = item.ProjectID,
+                        PartNo = modelProjectD.PartNo,
+                        Status = "DIN"
+                    };
+
+                    if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
+                    {
+                        model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
+                    }
+
+                    if (!string.IsNullOrEmpty(modelProjectD.VendorID))
+                    {
+                        model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
+                    }
+
+                    list_BonusCal.Add(model);
+                }
+            }
+
+            //加入DWIN資料
+            var modelDWin = await _projectDIDWContext.Project_DIDW.Where(p => p.DwinStatus == "C").ToListAsync();
+            foreach (var item in modelDWin)
+            {
+                var modelProjectM = _projectMContext.ProjectM.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
+                var modelProjectD = _projectDContext.ProjectD.Where(p => p.ProjectID == item.ProjectID && p.Stage == "DWIN").FirstOrDefault();
+
+                if (modelProjectM != null && modelProjectD != null)
+                {
+                    var model = new BonusCalViewModel
+                    {
+                        ProjectID = item.ProjectID,
+                        PartNo = modelProjectD.PartNo,
+                        Status = "DWIN"
+                    };
+
+                    if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
+                    {
+                        model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
+                    }
+
+                    if (!string.IsNullOrEmpty(modelProjectD.VendorID))
+                    {
+                        model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
+                    }
+
+                    list_BonusCal.Add(model);
+                }
+            }
+            return list_BonusCal;
+        }
 
         public List<ProjectBonusViewModel> BonusConfirm(string[] projectIds)
         {
@@ -181,7 +233,7 @@ namespace DDD_2024.Services
         private ProjectBonusViewModel GetDoBonus(string projectID)
         {
             var projectM = _projectMContext.ProjectM.Where(e => e.ProjectID == projectID).FirstOrDefault();
-            var projectDO = _projectDOontext.Project_DO.Where(e => e.ProjectID == projectID && e.Status == "C").FirstOrDefault();
+            var projectDO = _projectDOContext.Project_DO.Where(e => e.ProjectID == projectID && e.Status == "C").FirstOrDefault();
 
             var model = new ProjectBonusViewModel();
 
@@ -521,5 +573,71 @@ namespace DDD_2024.Services
             }
             return list_EmpBonus;
         }
+
+        public async Task<List<DoReportViewModel>> GetDoReport()
+        {
+            List<DoReportViewModel> list_DoReport = new List<DoReportViewModel>();
+
+            var model = _projectDOContext.Project_DO.Where(e => e.Status == "N").ToList();
+
+            foreach(var item in model)
+            {
+                var ItemModel = new DoReportViewModel();
+
+                //取資料Project_DO
+                ItemModel.ProjectID = item.ProjectID;
+
+                if (!string.IsNullOrEmpty(item.CreateDate))
+                {
+                    ItemModel.ApplicationDate = item.CreateDate.Substring(0, 4) + "/" + item.CreateDate.Substring(4, 2) + "/" + item.CreateDate.Substring(6, 2);
+                }
+
+                ItemModel.Applicant = _employeeService.GetEmployeeName(item.ApplicantID);
+                ItemModel.Approver = _employeeService.GetEmployeeName(item.ApproverID);
+
+                if (!string.IsNullOrEmpty(item.TradeStatus))
+                {
+                    item.TradeStatus = _doService.GetTradingStatusName(item.TradeStatus);
+                }
+
+                //取資料ProjectM
+                var modelM = _projectMContext.ProjectM.Where(e => e.ProjectID == item.ProjectID).FirstOrDefault();
+
+                if(modelM != null)
+                {
+                    if(!string.IsNullOrEmpty(modelM.Cus_DB) && !string.IsNullOrEmpty(modelM.CusID))
+                    {
+                        ItemModel.CusName = _cusVendoeService.GetvendorName(modelM.Cus_DB,modelM.CusID);
+                    }
+
+                    ItemModel.ProApp = modelM.ProApp;
+                }
+
+                //取資料ProjectD
+                var modelD = _projectDContext.ProjectD.Where(e => e.ProjectID == item.ProjectID).FirstOrDefault();
+
+                if (modelD != null)
+                {
+                    if (!string.IsNullOrEmpty(modelD.VendorID))
+                    {
+                        ItemModel.VendorName = await _cusVendoeService.GetVenName(modelD.VendorID);
+                    }
+
+                    ItemModel.PartNo = modelD.PartNo;
+                }
+
+                //取資料Project_DOASUpdate 還沒寫取最新的資料
+                var modelDOAS = _project_DOASUpdateContext.Project_DOASUpdate.Where(e => e.DoID == item.DoID).OrderByDescending(p => p.DoUDate).FirstOrDefault();
+
+                if(modelDOAS != null)
+                {
+                    ItemModel.DoUStatus = modelDOAS.DoUStatus;
+                    ItemModel.DoUAction = modelDOAS.DoUAction;
+                }
+            }
+
+            return list_DoReport;
+        }
+       
     }
 }

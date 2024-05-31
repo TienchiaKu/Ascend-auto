@@ -8,21 +8,26 @@ using Microsoft.EntityFrameworkCore;
 using DDD_2024.Data;
 using DDD_2024.Models;
 using DDD_2024.Interfaces;
+using DDD_2024.Services;
+using MiniExcelLibs;
+
 namespace DDD_2024.Controllers
 {
     public class CusVendorController : Controller
     {
         private readonly ICusVendoeService _cusVendoeService;
+        private readonly CusVendorContext _cusVendorContext;
 
-        public CusVendorController(ICusVendoeService cusVendoeService)
+        public CusVendorController(ICusVendoeService cusVendoeService, CusVendorContext cusVendorContext)
         {
             _cusVendoeService = cusVendoeService;
+            _cusVendorContext = cusVendorContext;
         }
 
         // GET: CusVendor
         public async Task<IActionResult> Index()
         {
-            var model =  await _cusVendoeService.vendorlistAscend();
+            var model =  await _cusVendoeService.GetAllCus();
 
             if (model != null)
             {
@@ -34,153 +39,163 @@ namespace DDD_2024.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetASCENDvendor()
+        // GET: Do
+        public async Task<IActionResult> IndexFilter([FromQuery] string type)
         {
-            var data = await _cusVendoeService.vendorlistAscend();
-            return PartialView("_VendorListPartial", data);
-        }
+            var model = await _cusVendoeService.GetAutoCusVen(type);
 
-        [HttpGet]
-        public async Task<IActionResult> GetATIvendor()
-        {
-            var data = await _cusVendoeService.vendorlistATI();
-            return PartialView("_VendorListPartial", data);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetKIR1Nvendor()
-        {
-            var data = await _cusVendoeService.vendorlistKIR1N();
-            return PartialView("_VendorListPartial", data);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetINTERTEKvendor()
-        {
-            var data = await _cusVendoeService.vendorlistINTERTEK();
-            return PartialView("_VendorListPartial", data);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetTESTBvendor()
-        {
-            var data = await _cusVendoeService.vendorlistTESTB();
-            return PartialView("_VendorListPartial", data);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetASCENDcustomer()
-        {
-            var data = await _cusVendoeService.cuslistAscend();
-            return PartialView("_VendorListPartial", data);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetATIcustomer()
-        {
-            var data = await _cusVendoeService.cuslistATI();
-            return PartialView("_VendorListPartial", data);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetKIR1NIcustomer()
-        {
-            var data = await _cusVendoeService.cuslistKIR1N();
-            return PartialView("_VendorListPartial", data);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetINTERTEKcustomer()
-        {
-            var data = await _cusVendoeService.cuslistINTERTEK();
-
-            return PartialView("_VendorListPartial", data);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetTESTBcustomer()
-        {
-            var data = await _cusVendoeService.cuslistTESTB();
-            return PartialView("_VendorListPartial", data);
-        }
-
-        [HttpGet]
-        public async Task<IEnumerable<SelectListItem>> KIR1Nvendor_SelectList()
-        {
-            var vendors = await _cusVendoeService.vendorlistKIR1N();
-
-            var selectList = vendors.Select(vendor => new SelectListItem
+            if (model != null)
             {
-                Value = vendor.SU01001,
-                Text = vendor.SU01003
-            }).ToList();
-
-            return selectList;
-        }
-
-        [HttpGet]
-        public async Task<IEnumerable<SelectListItem>> TESTBvendor_SelectList()
-        {
-            var vendors = await _cusVendoeService.vendorlistTESTB();
-
-            var selectList = vendors.Select(vendor => new SelectListItem
+                return PartialView("_CusVenPartial", model);
+            }
+            else
             {
-                Value = vendor.SU01001,
-                Text = vendor.SU01003
-            }).ToList();
-
-            return selectList;
+                return Problem("Entity set 'CusVen' is null.");
+            }
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<SelectListItem>> ATIvendor_SelectList()
+        public async Task<IActionResult> CusVendorReport_Excel()
         {
-            var vendors = await _cusVendoeService.vendorlistATI();
+            var cusModel = await _cusVendoeService.GetAllCus();
+            var venModel = await _cusVendoeService.GetAllVendor();
 
-            var selectList = vendors.Select(vendor => new SelectListItem
+            if (cusModel != null && venModel != null)
             {
-                Value = vendor.SU01001,
-                Text = vendor.SU01003
-            }).ToList();
+                var sheets = new Dictionary<string, object>
+                {
+                    ["客戶"] = cusModel,
+                    ["供應商"] = venModel
+                };
 
-            return selectList;
-        }
-
-        [HttpGet]
-        public async Task<IEnumerable<SelectListItem>> INTERTEKvendor_SelectList()
-        {
-            var vendors = await _cusVendoeService.vendorlistINTERTEK();
-
-            var selectList = vendors.Select(vendor => new SelectListItem
+                var memoryStream = new MemoryStream();
+                memoryStream.SaveAs(sheets);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                {
+                    FileDownloadName = "客供商報表_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx"
+                };
+            }
+            else
             {
-                Value = vendor.SU01001,
-                Text = vendor.SU01003
-            }).ToList();
-
-            return selectList;
+                return Content("匯出錯誤");
+            }
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<SelectListItem>> Ascendvendor_SelectList()
+        // GET: CusVendor/Create
+        public IActionResult Create(string type)
         {
-            var vendors = await _cusVendoeService.vendorlistAscend();
+            var model = new CusVendor();
 
-            var selectList = vendors.Select(vendor => new SelectListItem
+            if (string.IsNullOrEmpty(type) )
             {
-                Value = vendor.SU01001,
-                Text = vendor.SU01003
-            }).ToList();
+                return Content("");
+            }
+            else
+            {
+                if(type == "Cus")
+                {
+                    model.CusVenID = _cusVendoeService.GetNewCusID();
+                }
+                else if(type == "Ven")
+                {
+                    model.CusVenID = _cusVendoeService.GetNewVenID();
+                }
+                else
+                {
+                    return Content("");
+                }
+            }
 
-            return selectList;
+            return View(model);
         }
 
+        // GET: CusVendor/Edit
         [HttpGet]
-        public List<SelectListItem> GetAscendvendor_SelectList()
+        public IActionResult Edit(string DBSource, string CusID,string CusName)
         {
-            var vendors = _cusVendoeService.GetCusItem_Ascend();
+            var model = new CusVendor()
+            {
+                CusVenID = CusID,
+                CusVenName = CusName,
+                DBSource = DBSource
+            };
 
-            return vendors;
+            return View(model);
+        }
+
+        public IActionResult Suspend([Bind("DBSource,CusID,CusName")] CusReportViewModel cusReportViewModel)
+        {
+            var model = new CusVendor()
+            {
+                CusVenCode = cusReportViewModel.CusID,
+                CusVenName = cusReportViewModel.CusName,
+                DBSource = cusReportViewModel.DBSource
+            };
+
+            _cusVendoeService.SuspendCusVen(model);
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Do
+        public async Task<IActionResult> Recovery()
+        {
+            var model = await _cusVendoeService.GetSuspendList();
+
+            if (model != null && model.Count > 0)
+            {
+                return PartialView("_CusVenPartial", model);
+            }
+            else
+            {
+                return Problem("Entity set 'Suspend CusVen' is null.");
+            }
+        }
+
+        // POST: CusVendor/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit([Bind("CusVenID,CusVenName,DBSource,CusVenCode,IsUse")] CusVendor cusVendor)
+        {                      
+            if (cusVendor == null)
+            {
+                return NotFound();
+            }
+
+            if(ModelState.IsValid)
+            {
+                await _cusVendoeService.EditAutoCusVen(cusVendor);
+                return RedirectToAction(nameof(Index));
+            }
+            
+            return View();
+        }
+
+
+        // POST: CusVendor/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("CusVenID,CusVenName,IsUse")] CusVendor cusVendor)
+        {
+            if (ModelState.IsValid)
+            {
+                if (!string.IsNullOrWhiteSpace(cusVendor.CusVenName))
+                {
+                    //檢查名稱是否重複
+                    if (_cusVendoeService.CheckCusVenName(cusVendor.CusVenName))
+                    {
+                        ModelState.AddModelError(string.Empty, "客供商資料重複");
+                    }
+                    else
+                    {
+                        cusVendor.DBSource = "Auto";
+                        cusVendor.UpdateDate = DateTime.Now;
+                        _cusVendorContext.Add(cusVendor);
+                        await _cusVendorContext.SaveChangesAsync();
+                        return RedirectToAction(nameof(Index));
+                    }
+                }              
+            }
+            return View();
         }
     }
 }

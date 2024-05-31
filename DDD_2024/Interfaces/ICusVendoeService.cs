@@ -8,30 +8,33 @@ namespace DDD_2024.Interfaces
     {
         List<SelectListItem> DBSource { get; set; }
         List<SelectListItem> cusVendor { get; set; }
-        Task<List<WD2SU01>> vendorlistAscend();
-        Task<List<WD2SU01>> cuslistAscend();
-        Task<List<WD2SU01>> vendorlistATI();
-        Task<List<WD2SU01>> cuslistATI();
-        Task<List<WD2SU01>> vendorlistKIR1N();
-        Task<List<WD2SU01>> cuslistKIR1N();
-        Task<List<WD2SU01>> vendorlistINTERTEK();
-        Task<List<WD2SU01>> cuslistINTERTEK();
-        Task<List<WD2SU01>> vendorlistTESTB();
-        Task<List<WD2SU01>> cuslistTESTB();
+        List<SelectListItem> GetCusVenType { get; }
+        List<SelectListItem> GetDBSource { get; }
 
-        Task<IEnumerable<SelectListItem>> Ascendvendor_SelectList();
-        List<SelectListItem> GetCusItem_Amico();
-        List<SelectListItem> GetCusItem_Ascend();
-        List<SelectListItem> GetCusItem_Intetek();
-        List<SelectListItem> GetCusItem_Kir1n();
-        List<SelectListItem> GetCusItem_TestB();
+        Task EditAutoCusVen(CusVendor model);
+        Task SuspendCusVen(CusVendor model);
+        Task<List<CusReportViewModel>> GetSuspendList();
+
+        Task<List<CusReportViewModel>> GetAutoCusVen(string type);
+        Task<List<CusReportViewModel>> GetAllCus();
+        Task<List<CusReportViewModel>> GetAllVendor();
+
+        Task<List<SelectListItem>> GetAllCus_Selector();
+        Task<List<SelectListItem>> GetAllVendor_Selector();
+
+        Task<string> GetCusDBName(string CusID);
+        Task<string> GetCusName(string CusID);
+        Task<string> GetVenName(string CusID);
 
         string GetvendorName(string dbSource, string vendorID);
         (string DBScource, string CusCode) GetCusCode(string CusName);
         (string DBScource, string CusID) GetCusID(string CusName);
         string GetVendorID(string VendorName);
+        string GetNewCusID();
+        string GetNewVenID();
         string CreateNewCusID(string CusVenName);
         string CreateNewVenID(string CusVenName);
         string GetVenID(string VendorName);
+        bool CheckCusVenName(string cusVenName);
     }
 }

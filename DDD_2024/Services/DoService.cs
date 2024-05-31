@@ -7,15 +7,17 @@ using Microsoft.Build.Evaluation;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Scaffolding.Shared.ProjectModel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DDD_2024.Services
 {
     public class DoService: IDoService
     {
-        private readonly ProjectDOontext _projectDOontext;
+        private readonly ProjectDOContext _projectDOContext;
         private readonly ProjectMContext _projectMContext;
         private readonly ProjectDContext _projectDContext;
         private readonly Project_EmpContext _projectEmpContext;
+        private readonly Project_DOASUpdateContext _project_DOASUpdateContext;
         private readonly ASCENDContext _AscendContext;
         private readonly ATIContext _ATIContext;
         private readonly KIR1NContext _KIR1NContext;
@@ -24,13 +26,15 @@ namespace DDD_2024.Services
         private readonly IEmployeeService _employeeService;
         private readonly ICusVendoeService _cusVendoeService;
 
-        public DoService(ProjectMContext projectMContext, ProjectDContext projectDContext, ProjectDOontext projectDOontext, 
-            Project_EmpContext project_EmpContext, ASCENDContext aSCENDContext, ATIContext aTIContext, KIR1NContext kIR1NContext,
+        public DoService(ProjectMContext projectMContext, ProjectDContext projectDContext, ProjectDOContext projectDOContext, 
+            Project_EmpContext project_EmpContext, Project_DOASUpdateContext project_DOASUpdateContext,  ASCENDContext aSCENDContext, 
+            ATIContext aTIContext, KIR1NContext kIR1NContext,
             INTERTEKContext iNTERTEKContext, TESTBContext tESTBContext, IEmployeeService employeeService, ICusVendoeService cusVendoeService)
         {
             _projectMContext = projectMContext;
             _projectDContext = projectDContext;
-            _projectDOontext = projectDOontext;
+            _projectDOContext = projectDOContext;
+            _project_DOASUpdateContext = project_DOASUpdateContext;
             _projectEmpContext = project_EmpContext;
             _AscendContext = aSCENDContext;
             _ATIContext = aTIContext;
@@ -43,7 +47,7 @@ namespace DDD_2024.Services
 
         public async Task<List<DoViewModel>> GetDOsAsync()
         {          
-            var modelDo = await _projectDOontext.Project_DO.ToListAsync();
+            var modelDo = await _projectDOContext.Project_DO.ToListAsync();
 
             var list_doViewModel = new List<DoViewModel>();
 
@@ -53,7 +57,7 @@ namespace DDD_2024.Services
                 {
                     DoID = item.DoID,
                     ProjectID = item.ProjectID,
-                    ApplicantName = _employeeService.GetEmployeeName(item.ApplicantID),
+                    Applicant = _employeeService.GetEmployeeName(item.ApplicantID),
                     StatusName = GetStatusName(item.Status),
                     TradeStatus = item.TradeStatus,
                     DOStatus = item.Status
@@ -87,7 +91,7 @@ namespace DDD_2024.Services
                 {
                     if (!string.IsNullOrEmpty(modelProjectD.VendorID))
                     {
-                        model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
+                        model.VendorName = _cusVendoeService.GetvendorName("Ascend", modelProjectD.VendorID);
 
                         if (string.IsNullOrEmpty(model.VendorName))
                         {
@@ -112,7 +116,7 @@ namespace DDD_2024.Services
         {
             var modelProjectM = await _projectMContext.ProjectM.Where(p => p.ProjectID == ProjectID).FirstOrDefaultAsync();
             var modelProjectD = await _projectDContext.ProjectD.Where(p => p.ProjectID == ProjectID && (p.Stage == "DO" || p.Stage == "DIN")).FirstOrDefaultAsync();
-            var modelDo = await _projectDOontext.Project_DO.Where(p => p.ProjectID == ProjectID).FirstOrDefaultAsync();
+            var modelDo = await _projectDOContext.Project_DO.Where(p => p.ProjectID == ProjectID).FirstOrDefaultAsync();
 
             var model = new DoViewModel();
 
@@ -125,6 +129,7 @@ namespace DDD_2024.Services
                 model.TradeStatus = modelDo.TradeStatus;
                 model.StatusName = GetStatusName(modelDo.Status);
                 model.ApplicantID = modelDo.ApplicantID;
+                model.ApproverID = modelDo.ApproverID;
 
                 if (!string.IsNullOrEmpty(modelDo.CreateDate) && modelDo.CreateDate.Length == 8)
                 {
@@ -132,7 +137,24 @@ namespace DDD_2024.Services
                     model.CreateDate = DateTime.Parse(model.vmCreateDate);
                 }
 
-                model.ApplicantName = _employeeService.GetEmployeeName(modelDo.ApplicantID);
+                model.Applicant = _employeeService.GetEmployeeName(modelDo.ApplicantID);
+                model.Approver = _employeeService.GetEmployeeName(modelDo.ApproverID);
+
+                var modelDoAS = await _project_DOASUpdateContext.Project_DOASUpdate
+                    .Where(p => p.DoID == modelDo.DoID)
+                    .OrderByDescending(p => p.DoUDate)
+                    .FirstOrDefaultAsync();
+
+                if (modelDoAS != null)
+                {
+                    if (!string.IsNullOrEmpty(modelDoAS.DoUDate))
+                    {
+                        model.DoUDate = modelDoAS.DoUDate.Substring(0, 4) + "/" + modelDoAS.DoUDate.Substring(4, 2);
+                    }
+
+                    model.DoUAction = modelDoAS.DoUAction;
+                    model.DoUStatus = modelDoAS.DoUStatus;
+                }
             }
 
             if (modelProjectM != null && modelProjectD != null)
@@ -145,14 +167,8 @@ namespace DDD_2024.Services
                 }
 
                 if (!string.IsNullOrEmpty(modelProjectD.VendorID))
-                {                  
-                    model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
-
-                    if (string.IsNullOrEmpty(model.VendorName))
-                    {
-                        model.VendorName = _cusVendoeService.GetvendorName("Auto", modelProjectD.VendorID);
-                    }
-
+                {
+                    model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
                 }
 
                 model.PartNo = modelProjectD.PartNo;
@@ -163,7 +179,7 @@ namespace DDD_2024.Services
         }
         public async Task<List<DoViewModel>> GetDOsFilterAsync(string projectStatus, string applicant)
         {
-            List<Project_DO> list_ProjectDo = await _projectDOontext.Project_DO.ToListAsync();
+            List<Project_DO> list_ProjectDo = await _projectDOContext.Project_DO.ToListAsync();
 
             if (!string.IsNullOrEmpty(projectStatus))
             {
@@ -183,7 +199,7 @@ namespace DDD_2024.Services
                 {
                     DoID = item.DoID,
                     ProjectID = item.ProjectID,
-                    ApplicantName = _employeeService.GetEmployeeName(item.ApplicantID),
+                    Applicant = _employeeService.GetEmployeeName(item.ApplicantID),
                     StatusName = GetStatusName(item.Status),
                     TradeStatus = item.TradeStatus,
                     DOStatus = item.Status
@@ -239,6 +255,230 @@ namespace DDD_2024.Services
             return list_doViewModel;
         }
 
+        public async Task<List<DoReportViewModel>> GetDosReport(DoReportFilterViewModel filter)
+        {
+            var modelDo = await _projectDOContext.Project_DO.OrderBy(e => e.ProjectID).ToListAsync();
+
+            if (!string.IsNullOrEmpty(filter.DoStatus))
+            {
+                modelDo = modelDo.Where(e => e.Status == filter.DoStatus).ToList();
+            }
+
+            if (filter.applicantID != 999)
+            {
+                modelDo = modelDo.Where(e => e.ApplicantID == filter.applicantID).ToList();
+            }
+
+            var list_dosReport = new List<DoReportViewModel>();
+
+            foreach (var item in modelDo)
+            {
+                var model = new DoReportViewModel
+                {
+                    ProjectID = item.ProjectID,
+                    Applicant = _employeeService.GetEmployeeName(item.ApplicantID),
+                    Approver = _employeeService.GetEmployeeName(item.ApproverID),
+                    TradeStatus = item.TradeStatus
+                };
+
+                if (!string.IsNullOrEmpty(item.CreateDate))
+                {
+                    model.ApplicationDate = item.CreateDate.Substring(0, 4) + "/" + item.CreateDate.Substring(4, 2) + "/" + item.CreateDate.Substring(6, 2);
+                }
+
+                // 加入ProjectM的資料
+                var modelProjectM = await _projectMContext.ProjectM.Where(e => e.ProjectID == item.ProjectID).FirstOrDefaultAsync();
+
+                if (modelProjectM != null)
+                {
+                    DateTime dtCreateDate;
+
+                    if(modelProjectM.CreateDate != null )
+                    {
+                        if (!string.IsNullOrEmpty(item.CreateDate))
+                        {
+                            dtCreateDate = DateTime.Parse(modelProjectM.CreateDate.Substring(0, 4) + "/" + modelProjectM.CreateDate.Substring(4, 2) + "/" + modelProjectM.CreateDate.Substring(6, 2));
+
+                            if ((filter.StartDate.HasValue && dtCreateDate < filter.StartDate.Value) || (filter.EndDate.HasValue && dtCreateDate > filter.EndDate.Value))
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                   
+                    if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
+                    {
+                        // 將 matchingProjectM 的資料設定給 Cus_DB 屬性
+                        model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
+                    }
+
+                    model.ProApp = modelProjectM.ProApp;
+                }
+                else
+                {
+                    continue;
+                }
+
+                // 加入ProjectD的資料
+                var modelProjectD = await _projectDContext.ProjectD.Where(e => e.ProjectID == item.ProjectID).FirstOrDefaultAsync();
+
+                if (modelProjectD != null)
+                {
+                    if (!string.IsNullOrEmpty(modelProjectD.VendorID))
+                    {
+                        model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
+
+                        if (string.IsNullOrEmpty(model.VendorName))
+                        {
+                            model.VendorName = _cusVendoeService.GetvendorName("Auto", modelProjectD.VendorID);
+                        }
+                    }
+
+                    model.PartNo = modelProjectD.PartNo;
+                }
+                else
+                {
+                    continue;
+                }
+
+                list_dosReport.Add(model);
+            }
+            return list_dosReport;
+        }
+        public async Task EditDo(DoViewModel model)
+        {
+            if(model != null)
+            {
+                var existingEntity = await _projectDOContext.Project_DO.AsNoTracking().FirstOrDefaultAsync(p => p.DoID == model.DoID);
+
+                if (existingEntity != null)
+                {
+                    existingEntity.CreateDate = model.CreateDate.ToString("yyyyMMdd");
+                    existingEntity.ApplicantID = model.ApplicantID;
+                    existingEntity.ApproverID = model.ApproverID;
+                    existingEntity.TradeStatus = model.TradeStatus;
+
+                    _projectDOContext.Update(existingEntity);
+                    await _projectDOContext.SaveChangesAsync();
+                }
+            }
+        }
+
+        public async Task<List<DOASUViewModel>> GetDOASUsAsync(string DoID)
+        {
+            var modelASU = await _project_DOASUpdateContext.Project_DOASUpdate.Where(e => e.DoID == DoID).OrderByDescending(e => e.DoUDate).ToListAsync();
+
+            var listViewModel = new List<DOASUViewModel>();
+
+            foreach (var item in modelASU)
+            {
+                var model = new DOASUViewModel
+                {
+                    DoID = item.DoID,
+                    DoUAction = item.DoUAction,
+                    DoUStatus = item.DoUStatus
+                };
+
+                if (!string.IsNullOrEmpty(item.DoUDate))
+                {
+                    model.DoUDate = item.DoUDate.Substring(0, 4) + "/" + item.DoUDate.Substring(4, 2);
+                }
+
+                listViewModel.Add(model);
+            }
+
+            return listViewModel;
+        }
+
+        public async Task CreateDO(DoViewModel model)
+        {
+            if(model != null)
+            {
+                string projectID = GetProjectID(DateTime.Now.ToString("yyyyMMdd"));
+                string createDate = model.CreateDate.ToString("yyyyMMdd");
+                string DoID = GetDOID(DateTime.Now.ToString("yyyyMMdd"));
+
+                //加一筆紀錄到ProjectM
+                var modelprojectM = new ProjectM
+                {
+                    ProjectID = projectID,
+                    Status = "DO", // Status: DO
+                    CreateDate = createDate,
+                    CusID = model.CusID,
+                    ProApp = model.ProApp
+                };
+                if (!string.IsNullOrEmpty(model.CusID))
+                {
+                    modelprojectM.Cus_DB = await _cusVendoeService.GetCusDBName(model.CusID);
+                }
+                _projectMContext.Add(modelprojectM);
+                await _projectMContext.SaveChangesAsync();
+
+                //加一筆紀錄到ProjectD
+                var modelprojectD = new ProjectD
+                {
+                    ProjectID = projectID,
+                    VendorID = model.VendorID,
+                    PartNo = model.PartNo,
+                    Stage = "DO"
+                };
+                _projectDContext.Add(modelprojectD);
+                await _projectDContext.SaveChangesAsync();
+
+                //加一筆紀錄到Project_DO
+                var modelprojectDO = new Project_DO
+                {
+                    DoID = DoID,
+                    ProjectID = projectID,
+                    CreateDate = createDate,
+                    ApplicantID = model.ApplicantID,
+                    ApproverID = model.ApproverID,
+                    Status = "N", // Status: 新單
+                    TradeStatus = model.TradeStatus
+                };
+                _projectDOContext.Add(modelprojectDO);
+                await _projectDOContext.SaveChangesAsync();
+
+                if(!string.IsNullOrEmpty(model.DoUAction) && !string.IsNullOrEmpty(model.DoUStatus))
+                {
+                    //加一筆紀錄到Project_DOASUpdate
+                    var modelProjecyDOAS = new Project_DOASUpdate
+                    {
+                        SEQ = NewProjectDOASSEQ,
+                        DoID = DoID,
+                        DoUDate = model.CreateDate.ToString("yyyyMM"),
+                        DoUAction = model.DoUAction,
+                        DoUStatus = model.DoUStatus
+                    };
+                    _project_DOASUpdateContext.Add(modelProjecyDOAS);
+                    await _project_DOASUpdateContext.SaveChangesAsync();
+                }
+            }
+        }
+        public async Task CreateDoAS(DOASUViewModel model)
+        {
+            if(model != null)
+            {
+                //檢查當月是否已經有資料
+                var model_Chk = _project_DOASUpdateContext.Project_DOASUpdate.Where(e => e.DoID == model.DoID && e.DoUDate == model.vmDoUDate.ToString("yyyyMM")).FirstOrDefaultAsync();
+                //如果沒有才能新增資料
+                if (model_Chk.Result == null)
+                {
+                    var modelDOAS = new Project_DOASUpdate()
+                    {
+                        SEQ = NewProjectDOASSEQ,
+                        DoID = model.DoID,
+                        DoUDate = model.vmDoUDate.ToString("yyyyMM"),
+                        DoUAction = model.DoUAction,
+                        DoUStatus = model.DoUStatus
+                    };
+
+                    _project_DOASUpdateContext.Add(modelDOAS);
+                    await _project_DOASUpdateContext.SaveChangesAsync();
+                }                
+            }
+        }
+
         public string ConfirmDo(string DoId)
         {
             string msg = string.Empty;
@@ -249,13 +489,13 @@ namespace DDD_2024.Services
             }
             else
             {
-                var ProjectDO = _projectDOontext.Project_DO.Where(e => e.DoID == DoId).ToList().FirstOrDefault();
+                var ProjectDO = _projectDOContext.Project_DO.Where(e => e.DoID == DoId).ToList().FirstOrDefault();
 
                 if (ProjectDO != null)
                 {
                     ProjectDO.Status = "C";  // Do狀態改為審核通過
-                    _projectDOontext.Update(ProjectDO);
-                    _projectDOontext.SaveChanges();
+                    _projectDOContext.Update(ProjectDO);
+                    _projectDOContext.SaveChanges();
 
                     var ProjectM = _projectMContext.ProjectM.Where(e => e.ProjectID == ProjectDO.ProjectID).ToList().FirstOrDefault();
 
@@ -291,13 +531,13 @@ namespace DDD_2024.Services
                         continue;
                     }
                     
-                    var ProjectDO = _projectDOontext.Project_DO.Where(e => e.DoID == doId).ToList().FirstOrDefault();
+                    var ProjectDO = _projectDOContext.Project_DO.Where(e => e.DoID == doId).ToList().FirstOrDefault();
 
                     if (ProjectDO != null)
                     {
                         ProjectDO.Status = "C";  // 狀態改為審核通過
-                        _projectDOontext.Update(ProjectDO);
-                        _projectDOontext.SaveChanges();
+                        _projectDOContext.Update(ProjectDO);
+                        _projectDOContext.SaveChanges();
 
                         var ProjectM = _projectMContext.ProjectM.Where(e => e.ProjectID == ProjectDO.ProjectID).ToList().FirstOrDefault();
 
@@ -327,7 +567,7 @@ namespace DDD_2024.Services
             }
             else
             {
-                var ProjectDO = _projectDOontext.Project_DO.Where(e => e.DoID == DoId).ToList().FirstOrDefault();
+                var ProjectDO = _projectDOContext.Project_DO.Where(e => e.DoID == DoId).ToList().FirstOrDefault();
 
                 if (ProjectDO != null)
                 {
@@ -338,8 +578,8 @@ namespace DDD_2024.Services
                     else
                     {
                         ProjectDO.Status = "R";  // Do狀態改為審核拒絕
-                        _projectDOontext.Update(ProjectDO);
-                        _projectDOontext.SaveChanges();
+                        _projectDOContext.Update(ProjectDO);
+                        _projectDOContext.SaveChanges();
 
                         var ProjectM = _projectMContext.ProjectM.Where(e => e.ProjectID == ProjectDO.ProjectID).ToList().FirstOrDefault();
 
@@ -379,13 +619,13 @@ namespace DDD_2024.Services
                         continue;
                     }
 
-                    var ProjectDO = _projectDOontext.Project_DO.Where(e => e.DoID == doId).ToList().FirstOrDefault();
+                    var ProjectDO = _projectDOContext.Project_DO.Where(e => e.DoID == doId).ToList().FirstOrDefault();
 
                     if (ProjectDO != null)
                     {
                         ProjectDO.Status = "R";  // 狀態改為審核拒絕
-                        _projectDOontext.Update(ProjectDO);
-                        _projectDOontext.SaveChanges();
+                        _projectDOContext.Update(ProjectDO);
+                        _projectDOContext.SaveChanges();
 
                         var ProjectM = _projectMContext.ProjectM.Where(e => e.ProjectID == ProjectDO.ProjectID).ToList().FirstOrDefault();
 
@@ -470,7 +710,7 @@ namespace DDD_2024.Services
 
         public string GetDOID(string date)
         {
-            var DoID = _projectDOontext.Project_DO.Where(e => e.DoID != null && e.DoID.Substring(2, 8) == date)
+            var DoID = _projectDOContext.Project_DO.Where(e => e.DoID != null && e.DoID.Substring(2, 8) == date)
                 .Select(e => e.DoID).ToList();
 
             if (DoID.Count == 0)
@@ -504,6 +744,21 @@ namespace DDD_2024.Services
                 else
                 {
                     return _projectEmpContext.Project_Emp.Max(e => e.SEQ) + 1;
+                }
+            }
+        }
+
+        public int NewProjectDOASSEQ
+        {
+            get
+            {
+                if (_project_DOASUpdateContext.Project_DOASUpdate.Count() == 0)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return _project_DOASUpdateContext.Project_DOASUpdate.Max(e => e.SEQ) + 1;
                 }
             }
         }
@@ -551,7 +806,7 @@ namespace DDD_2024.Services
             return selectListItems;
         }
 
-        public string GetTradingStatusName(string TradingStatus)
+        public string GetTradingStatusName(string TradingStatus) 
         {
             string TradingStatusName = string.Empty;
 
@@ -565,6 +820,88 @@ namespace DDD_2024.Services
             }
 
             return TradingStatusName;
+        }
+
+        public List<DOASU_Upload_ViewModel> ImportDOASU(List<DOASU_Upload_ViewModel> list_Upload)
+        {
+            List<DOASU_Upload_ViewModel> DOASU_Upload_ViewModels = new List<DOASU_Upload_ViewModel>();
+
+            if (list_Upload.Count > 0)
+            {
+                foreach(var item in list_Upload)
+                {
+                    //搜尋DoID
+                    var DoID = _projectDOContext.Project_DO.Where(e => e.ProjectID == item.ProjectID).Select(e => e.DoID).FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(DoID))
+                    {
+                       
+                        //2月進度
+                        Project_DOASUpdate model2 = new Project_DOASUpdate()
+                        {
+                            SEQ = NewProjectDOASSEQ,
+                            DoID = DoID,
+                            DoUDate = "202402",
+                            DoUAction = item.DoUAction,
+                            DoUStatus = item.DoUStatus2
+                        };
+                        _project_DOASUpdateContext.Project_DOASUpdate.Add(model2);
+                        _project_DOASUpdateContext.SaveChanges();
+
+                        DOASU_Upload_ViewModel modelVM = new DOASU_Upload_ViewModel()
+                        {
+                            ProjectID = item.ProjectID,
+                            DoUDate = "2024/02",
+                            DoUAction = item.DoUAction,
+                            DoUStatus = item.DoUStatus2,
+                            UploadStatus = "Success"
+                        };
+                        DOASU_Upload_ViewModels.Add(modelVM);
+
+                        //3月進度
+                        Project_DOASUpdate model3 = new Project_DOASUpdate()
+                        {
+                            SEQ = NewProjectDOASSEQ,
+                            DoID = DoID,
+                            DoUDate = "202403",
+                            DoUStatus = item.DoUStatus3
+                        };
+                        _project_DOASUpdateContext.Project_DOASUpdate.Add(model3);
+                        _project_DOASUpdateContext.SaveChanges();
+
+                        modelVM = new DOASU_Upload_ViewModel()
+                        {
+                            ProjectID = item.ProjectID,
+                            DoUDate = "2024/03",
+                            DoUStatus = item.DoUStatus3,
+                            UploadStatus = "Success"
+                        };
+                        DOASU_Upload_ViewModels.Add(modelVM);
+
+                        //4月進度
+                        Project_DOASUpdate model4 = new Project_DOASUpdate()
+                        {
+                            SEQ = NewProjectDOASSEQ,
+                            DoID = DoID,
+                            DoUDate = "202404",
+                            DoUStatus = item.DoUStatus4
+                        };
+                        _project_DOASUpdateContext.Project_DOASUpdate.Add(model4);
+                        _project_DOASUpdateContext.SaveChanges();
+
+                        modelVM = new DOASU_Upload_ViewModel()
+                        {
+                            ProjectID = item.ProjectID,
+                            DoUDate = "2024/04",
+                            DoUStatus = item.DoUStatus4,
+                            UploadStatus = "Success"
+                        };
+                        DOASU_Upload_ViewModels.Add(modelVM);
+                    }
+                }
+            }
+
+            return DOASU_Upload_ViewModels;
         }
     }
 }

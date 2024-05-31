@@ -1,0 +1,32 @@
+﻿@model IEnumerable<DDD_2024.Models.CusReportViewModel>
+
+<table class="table" id="tableCusVendor">
+    <tbody id="tableBody">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DBSource)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CusID)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CusName)
+                </td>
+                @if (item.DBSource != "Auto")
+                {
+                    <td>
+                        <a asp-action="Suspend" asp-route-DBSource="@item.DBSource" asp-route-CusID="@item.CusID" asp-route-CusName="@item.CusName" class="btn btn-warning">停用</a>
+                    </td>
+                }
+                else
+                {
+                    <td>
+                        <a asp-action="Edit" asp-route-DBSource="@item.DBSource" asp-route-CusID="@item.CusID" asp-route-CusName="@item.CusName" class="btn btn-primary ">編輯</a>
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

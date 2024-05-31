@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DDD_2024.Services
@@ -50,217 +51,27 @@ namespace DDD_2024.Services
             };
         }
 
-        //取Ascend供應商資料:V開頭
-        public async Task<List<WD2SU01>> vendorlistAscend()
-        {           
-            var model = await _contextAscend.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("V"))
-                .ToListAsync();
-
-            return model;
-        }
-
-        //取Ascend客戶資料:B開頭
-        public async Task<List<WD2SU01>> cuslistAscend()
-        {
-            var model = await _contextAscend.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("B"))
-                .ToListAsync();
-
-            return model;
-        }
-
-        //取ATI供應商資料:VAM開頭
-        public async Task<List<WD2SU01>> vendorlistATI()
-        {
-            var model = await _contextATI.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("VAM"))
-                .ToListAsync();
-
-            return model;
-        }
-
-        //取ATI客戶資料:CAM開頭
-        public async Task<List<WD2SU01>> cuslistATI()
-        {
-            var model = await _contextATI.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("CAM"))
-                .ToListAsync();
-
-            return model;
-        }
-
-        //取KIR1N供應商資料:VKI開頭
-        public async Task<List<WD2SU01>> vendorlistKIR1N()
-        {
-            var model = await _contextKIR1N.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("VKI"))
-                .ToListAsync();
-
-            return model;
-        }
-
-        //取KIR1N客戶資料:CKI開頭
-        public async Task<List<WD2SU01>> cuslistKIR1N()
-        {
-            var model = await _contextKIR1N.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("CKI"))
-                .ToListAsync();
-
-            return model;
-        }
-
-        //取INTERTEK供應商資料:VIT開頭
-        public async Task<List<WD2SU01>> vendorlistINTERTEK()
-        {
-            var model = await _contextINTERTEK.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("VIT"))
-                .ToListAsync();
-
-            return model;
-        }
-
-        //取INTERTEK客戶資料:CIT開頭
-        public async Task<List<WD2SU01>> cuslistINTERTEK()
-        {
-            var model = await _contextINTERTEK.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("CIT"))
-                .ToListAsync();
-
-            return model;
-        }
-
-        //取TESTB供應商資料:V開頭
-        public async Task<List<WD2SU01>> vendorlistTESTB()
-        {
-            var model = await _contextTESTB.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("V"))
-                .ToListAsync();
-
-            return model;
-        }
-
-        //取TESTB客戶資料:B開頭
-        public async Task<List<WD2SU01>> cuslistTESTB()
-        {
-            var model = await _contextTESTB.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("T"))
-                .ToListAsync();
-
-            return model;
-        }
-
-        public async Task<IEnumerable<SelectListItem>> Ascendvendor_SelectList()
-        {
-            var vendors = await _contextAscend.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("V"))
-                .ToListAsync();
-
-            var selectList = vendors.Select(vendor => new SelectListItem
-            {
-                Value = vendor.SU01001, 
-                Text = vendor.SU01003
-            }).ToList();
-
-            return selectList;
-        }
-
-        public List<SelectListItem> GetAscendvendorList()
-        {
-            var vendors = _contextAscend.WD2SU01.Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("V")).ToList();
-            return vendors.Select(e => new SelectListItem
-            {
-                Value = e.SU01001,
-                Text = e.SU01003
-            }).ToList();
-        }
-
-        public List<SelectListItem> GetTESTBvendorList()
-        {
-            var vendors = _contextTESTB.WD2SU01.Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("V")).ToList();
-            return vendors.Select(e => new SelectListItem
-            {
-                Value = e.SU01001,
-                Text = e.SU01003
-            }).ToList();
-        }
-
-        public List<SelectListItem> GetCusItem_Amico()
-        {
-            var vendors = _contextATI.WD2SU01.Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("CAM")).ToList();
-
-            return vendors.Select(e => new SelectListItem
-            {
-                Value = e.SU01001,
-                Text = e.SU01003
-            }).ToList();
-        }
-
-        public List<SelectListItem> GetCusItem_Ascend()
-        {
-            var vendors = _contextAscend.WD2SU01.Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("B")).ToList();
-
-            return vendors.Select(e => new SelectListItem
-            {
-                Value = e.SU01001,
-                Text = e.SU01003
-            }).ToList();
-        }
-
-        public List<SelectListItem> GetCusItem_Intetek()
-        {
-            var vendors = _contextINTERTEK.WD2SU01.Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("CIT")).ToList();
-
-            return vendors.Select(e => new SelectListItem
-            {
-                Value = e.SU01001,
-                Text = e.SU01003
-            }).ToList();
-        }
-
-        public List<SelectListItem> GetCusItem_Kir1n()
-        {
-            var vendors = _contextKIR1N.WD2SU01.Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("CKI")).ToList();
-
-            return vendors.Select(e => new SelectListItem
-            {
-                Value = e.SU01001,
-                Text = e.SU01003
-            }).ToList();
-        }
-
-        public List<SelectListItem> GetCusItem_TestB()
-        {
-            var vendors = _contextTESTB.WD2SU01.Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("T")).ToList();
-
-            return vendors.Select(e => new SelectListItem
-            {
-                Value = e.SU01001,
-                Text = e.SU01003
-            }).ToList();
-        }
-
         public string GetvendorName(string dbSource,string vendorID)
         {
-            string vendorName = string.Empty;
+            string vendorName = string.Empty;             
             
             if (!string.IsNullOrEmpty(dbSource) && !string.IsNullOrEmpty(vendorID))
             {
                 switch (dbSource)
                 {
-                    case "ASCEND":
+                    case "Ascend":
                         vendorName = _contextAscend.WD2SU01.Where(item => item.SU01001 == vendorID).Select(item => item.SU01003).FirstOrDefault() ?? "";
                         break;
                     case "ATI":
                         vendorName = _contextATI.WD2SU01.Where(item => item.SU01001 == vendorID).Select(item => item.SU01003).FirstOrDefault() ?? "";
                         break;
-                    case "INTERTEK":
+                    case "Intertek":
                         vendorName = _contextINTERTEK.WD2SU01.Where(item => item.SU01001 == vendorID).Select(item => item.SU01003).FirstOrDefault() ?? "";
                         break;
                     case "KIR1N":
                         vendorName = _contextKIR1N.WD2SU01.Where(item => item.SU01001 == vendorID).Select(item => item.SU01003).FirstOrDefault() ?? "";
                         break;
-                    case "TEST-B":
+                    case "TestB":
                         vendorName = _contextTESTB.WD2SU01.Where(item => item.SU01001 == vendorID).Select(item => item.SU01003).FirstOrDefault() ?? "";
                         break;
                     case "Auto":
@@ -271,7 +82,7 @@ namespace DDD_2024.Services
                 }
             }
             return vendorName;
-        }
+        } 
 
         public (string DBScource, string CusCode) GetCusCode(string CusName)
         {
@@ -279,7 +90,7 @@ namespace DDD_2024.Services
             string CusCode = string.Empty;
 
             var code = _contextAscend.WD2SU01.FirstOrDefault(e => !string.IsNullOrEmpty(e.SU01004) && e.SU01004.Contains(CusName) && 
-            !string.IsNullOrEmpty(e.SU01001) && e.SU01001.StartsWith("B"))?.SU01001;
+            !string.IsNullOrEmpty(e.SU01001) && (e.SU01001.StartsWith("A") || e.SU01001.StartsWith("B")))?.SU01001;
             
             if (!string.IsNullOrEmpty(code))
             {
@@ -375,6 +186,37 @@ namespace DDD_2024.Services
             }
         }
 
+        public string GetNewCusID()
+        {
+            string nextCusVenID = string.Empty;
+
+            //檢查是否有客戶資料
+            var Chk_Cus = _cusVendorContext.CusVendor.Where(e => e.CusVenID != null && e.CusVenID.StartsWith("C")).ToList();
+
+            if (Chk_Cus.Count == 0)
+            {
+                nextCusVenID = "C0001";
+            }
+            else
+            {            
+                string maxCusVenID = Chk_Cus.Max(e => e.CusVenID);
+
+                if (!string.IsNullOrEmpty(maxCusVenID))
+                {
+                    // 提取數字部分
+                    string numberPart = maxCusVenID.Substring(1);
+
+                    // 將數字部分轉換為整數並加1
+                    int nextNumber = int.Parse(numberPart) + 1;
+
+                    // 生成下一個CusVenID
+                    nextCusVenID = "C" + nextNumber.ToString("0000");
+                }
+            }
+
+            return nextCusVenID;
+        }
+
         public string CreateNewCusID(string CusVenName)
         {
             //1.比對有無重複
@@ -382,7 +224,6 @@ namespace DDD_2024.Services
             //3.取最新的代號
             //4.InsertTo table cusVendor
 
-            string OldCusName = string.Empty;
             string nextCusVenID = string.Empty;
 
             //比對有無重複的客戶名稱
@@ -510,58 +351,6 @@ namespace DDD_2024.Services
 
             string DBScource = string.Empty;
             string CusID = string.Empty;
-
-            (DBScource, CusID) = SearchCusID(CusName);
-
-            if(string.IsNullOrEmpty(DBScource) && string.IsNullOrEmpty(CusID))
-            {
-                string maxCusVenID = _cusVendorContext.CusVendor.Where(e => e.CusVenID.StartsWith("C")).Max(e => e.CusVenID) ?? string.Empty;
-                string nextCusVenID = string.Empty;
-
-                if (string.IsNullOrEmpty(maxCusVenID))
-                {
-                    nextCusVenID = "C0001";
-                }
-                else
-                {
-                    // 提取數字部分
-                    string numberPart = maxCusVenID.Substring(1);
-
-                    // 將數字部分轉換為整數並加1
-                    int nextNumber = int.Parse(numberPart) + 1;
-
-                    // 生成下一個CusVenID
-                    nextCusVenID = "C" + nextNumber.ToString("0000");
-                }
-
-                if (!string.IsNullOrEmpty(nextCusVenID))
-                {
-                    //InsertTo table cusVendor
-                    var model = new CusVendor
-                    {
-                        CusVenID = nextCusVenID,
-                        CusVenName = CusName.Trim(),
-                        DBSource = "Auto",
-                        IsUse = "Y",
-                        UpdateDate = DateTime.Now
-                    };
-
-                    _cusVendorContext.Add(model);
-                    _cusVendorContext.SaveChanges();
-                }
-
-                return ("Auto", nextCusVenID);
-            }
-            else
-            {
-                return (DBScource, CusID);
-            }
-        }
-
-        public (string DBScource, string CusID) SearchCusID (string CusName)
-        {
-            string DBScource = string.Empty;
-            string CusID = string.Empty;
             string CusCode = string.Empty;
 
             CusCode = _contextAscend.WD2SU01.FirstOrDefault(e => !string.IsNullOrEmpty(e.SU01004) && e.SU01004.Contains(CusName) &&
@@ -569,7 +358,7 @@ namespace DDD_2024.Services
 
             if (!string.IsNullOrEmpty(CusCode))
             {
-                DBScource = "ASCEND";
+                DBScource = "Ascend";
                 CusID = CusCode;
                 return (DBScource, CusID);
             }
@@ -581,7 +370,7 @@ namespace DDD_2024.Services
 
                 if (!string.IsNullOrEmpty(CusCode))
                 {
-                    DBScource = "INTERTEK";
+                    DBScource = "Intertek";
                     CusID = CusCode;
                     return (DBScource, CusID);
                 }
@@ -594,7 +383,7 @@ namespace DDD_2024.Services
 
                 if (!string.IsNullOrEmpty(CusCode))
                 {
-                    DBScource = "TEST-B";
+                    DBScource = "TestB";
                     CusID = CusCode;
                     return (DBScource, CusID);
                 }
@@ -644,55 +433,6 @@ namespace DDD_2024.Services
         {
             string VenID = string.Empty;
 
-            VenID = SearchVenID(VendorName);
-
-            if (string.IsNullOrEmpty(VenID))
-            {
-                string maxCusVenID = _cusVendorContext.CusVendor.Where(e => e.CusVenID.StartsWith("V")).Max(e => e.CusVenID) ?? string.Empty;
-                string nextCusVenID = string.Empty;
-
-                if (string.IsNullOrEmpty(maxCusVenID))
-                {
-                    nextCusVenID = "V0001";
-                }
-                else
-                {
-                    // 提取數字部分
-                    string numberPart = maxCusVenID.Substring(1);
-
-                    // 將數字部分轉換為整數並加1
-                    int nextNumber = int.Parse(numberPart) + 1;
-
-                    // 生成下一個CusVenID
-                    nextCusVenID = "V" + nextNumber.ToString("0000");
-                }
-
-                if (!string.IsNullOrEmpty(nextCusVenID))
-                {
-                    //InsertTo table cusVendor
-                    var model = new CusVendor
-                    {
-                        CusVenID = nextCusVenID,
-                        CusVenName = VendorName.Trim(),
-                        DBSource = "Auto",
-                        IsUse = "Y",
-                        UpdateDate = DateTime.Now
-                    };
-
-                    _cusVendorContext.Add(model);
-                    _cusVendorContext.SaveChanges();
-                }
-
-                return nextCusVenID;
-            }
-            else
-            {
-                return VenID;
-            }
-        }
-
-        public string SearchVenID(string VendorName)
-        {
             if (!string.IsNullOrEmpty(VendorName))
             {
                 var VendorCode = _contextAscend.WD2SU01.FirstOrDefault(e => !string.IsNullOrEmpty(e.SU01003) && e.SU01003.ToUpper() == VendorName.ToUpper() &&
@@ -704,6 +444,520 @@ namespace DDD_2024.Services
                 }
 
                 return VendorCode;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        public string GetNewVenID()
+        {
+            string nextCusVenID = string.Empty;
+
+            //檢查是否有客戶資料
+            var Chk_Cus = _cusVendorContext.CusVendor.Where(e => e.CusVenID != null && e.CusVenID.StartsWith("V")).ToList();
+
+            if (Chk_Cus.Count == 0)
+            {
+                nextCusVenID = "V0001";
+            }
+            else
+            {
+                string maxCusVenID = Chk_Cus.Max(e => e.CusVenID);
+
+                if (!string.IsNullOrEmpty(maxCusVenID))
+                {
+                    // 提取數字部分
+                    string numberPart = maxCusVenID.Substring(1);
+
+                    // 將數字部分轉換為整數並加1
+                    int nextNumber = int.Parse(numberPart) + 1;
+
+                    // 生成下一個CusVenID
+                    nextCusVenID = "V" + nextNumber.ToString("0000");
+                }
+            }
+
+            return nextCusVenID;
+        }
+
+        public bool CheckCusVenName(string cusVenName)
+        {
+            var vendors = _cusVendorContext.CusVendor.ToList();
+            return vendors.Any(v => v.CusVenName == cusVenName);
+        }
+
+        public async Task<List<CusReportViewModel>> GetAllCus()
+        {
+            List<CusReportViewModel> list_AllCus = new List<CusReportViewModel>();
+            List<WD2SU01>list_WD2SU01 = new List<WD2SU01>();
+            List<CusVendor>list_CusVendor = new List<CusVendor>();
+            List<CusVendor>list_CusVendorSuspend = new List<CusVendor>();
+
+            list_CusVendorSuspend = await _cusVendorContext.CusVendor.Where(e => !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.Substring(0,1) == "D").ToListAsync();
+
+            //取Ascend-Cus
+            list_WD2SU01 = _contextAscend.WD2SU01
+                .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && (item.SU01001.StartsWith("A") || item.SU01001.StartsWith("B")))
+                .ToList();
+
+            if(list_WD2SU01.Count > 0)
+            {
+                foreach(var item in list_WD2SU01)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "Ascend",
+                        CusID = item.SU01001,
+                        CusName = item.SU01003
+                    };
+
+                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
+                    if (!exists)
+                    {
+                        list_AllCus.Add(modelVM);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                list_WD2SU01.Clear();
+            }
+
+            //取ATI-Cus
+            list_WD2SU01 = _contextATI.WD2SU01
+                .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("CAM"))
+                .ToList();
+
+            if (list_WD2SU01.Count > 0)
+            {
+                foreach (var item in list_WD2SU01)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "ATI",
+                        CusID = item.SU01001,
+                        CusName = item.SU01003
+                    };
+
+                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
+                    if (!exists)
+                    {
+                        list_AllCus.Add(modelVM);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                list_WD2SU01.Clear();
+            }
+
+            //取Kirin-Cus
+            list_WD2SU01 = _contextKIR1N.WD2SU01
+                .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("CKI"))
+                .ToList();
+
+            if (list_WD2SU01.Count > 0)
+            {
+                foreach (var item in list_WD2SU01)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "Kirin",
+                        CusID = item.SU01001,
+                        CusName = item.SU01003
+                    };
+
+                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
+                    if (!exists)
+                    {
+                        list_AllCus.Add(modelVM);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                list_WD2SU01.Clear();
+            }
+
+            //取TestB-Cus
+            list_WD2SU01 = _contextKIR1N.WD2SU01
+                .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("T"))
+                .ToList();
+
+            if (list_WD2SU01.Count > 0)
+            {
+                foreach (var item in list_WD2SU01)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "TestB",
+                        CusID = item.SU01001,
+                        CusName = item.SU01003
+                    };
+
+                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
+                    if (!exists)
+                    {
+                        list_AllCus.Add(modelVM);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                list_WD2SU01.Clear();
+            }
+
+            //取Auto-Cus
+            list_CusVendor = _cusVendorContext.CusVendor.Where(e => e.IsUse == "Y" && !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.StartsWith("C")).ToList();
+
+            if (list_CusVendor.Count > 0)
+            {
+                foreach (var item in list_CusVendor)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "Auto",
+                        CusID = item.CusVenID,
+                        CusName = item.CusVenName
+                    };
+                    list_AllCus.Add(modelVM);
+                }
+                list_CusVendor.Clear();
+            }
+
+            return list_AllCus;
+        }
+        public async Task<List<CusReportViewModel>> GetAllVendor()
+        {
+            List<CusReportViewModel> list_AllVendor = new List<CusReportViewModel>();
+            List<WD2SU01> list_WD2SU01 = new List<WD2SU01>();
+            List<CusVendor> list_CusVendor = new List<CusVendor>();
+            List<CusVendor> list_CusVendorSuspend = new List<CusVendor>();
+
+            list_CusVendorSuspend = await _cusVendorContext.CusVendor.Where(e => !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.Substring(0, 1) == "D").ToListAsync();
+
+            //取Ascend-Cus
+            list_WD2SU01 = _contextAscend.WD2SU01
+                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("V"))
+                .ToList();
+
+            if (list_WD2SU01.Count > 0)
+            {
+                foreach (var item in list_WD2SU01)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "Ascend",
+                        CusID = item.SU01001,
+                        CusName = item.SU01003
+                    };
+
+                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
+                    if (!exists)
+                    {
+                        list_AllVendor.Add(modelVM);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                list_WD2SU01.Clear();
+            }
+
+            //取ATI-Cus
+            list_WD2SU01 = _contextATI.WD2SU01
+                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("VAM"))
+                .ToList();
+
+            if (list_WD2SU01.Count > 0)
+            {
+                foreach (var item in list_WD2SU01)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "ATI",
+                        CusID = item.SU01001,
+                        CusName = item.SU01003
+                    };
+
+                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
+                    if (!exists)
+                    {
+                        list_AllVendor.Add(modelVM);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                list_WD2SU01.Clear();
+            }
+
+            //取Kirin-Cus
+            list_WD2SU01 = _contextKIR1N.WD2SU01
+                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("VKI"))
+                .ToList();
+
+            if (list_WD2SU01.Count > 0)
+            {
+                foreach (var item in list_WD2SU01)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "Kirin",
+                        CusID = item.SU01001,
+                        CusName = item.SU01003
+                    };
+
+                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
+                    if (!exists)
+                    {
+                        list_AllVendor.Add(modelVM);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                list_WD2SU01.Clear();
+            }
+
+            //取TestB-Cus
+            list_WD2SU01 = _contextKIR1N.WD2SU01
+                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("VIT"))
+                .ToList();
+
+            if (list_WD2SU01.Count > 0)
+            {
+                foreach (var item in list_WD2SU01)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "TestB",
+                        CusID = item.SU01001,
+                        CusName = item.SU01003
+                    };
+
+                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
+                    if (!exists)
+                    {
+                        list_AllVendor.Add(modelVM);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                list_WD2SU01.Clear();
+            }
+
+            //取Auto-Cus
+            list_CusVendor = _cusVendorContext.CusVendor.Where(e => e.IsUse == "Y" && !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.StartsWith("V")).ToList();
+
+            if (list_CusVendor.Count > 0)
+            {
+                foreach (var item in list_CusVendor)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "Auto",
+                        CusID = item.CusVenID,
+                        CusName = item.CusVenName
+                    };
+                    list_AllVendor.Add(modelVM);
+                }
+                list_CusVendor.Clear();
+            }
+
+            return list_AllVendor;
+        }
+
+        public async Task <List<SelectListItem>> GetAllCus_Selector()
+        {
+            var model = await GetAllCus();
+
+            return model.Select(e => new SelectListItem
+            {
+                Value = e.CusID,
+                Text = e.CusName
+            }).ToList();
+        }
+        public async Task<List<SelectListItem>> GetAllVendor_Selector()
+        {
+            var model = await GetAllVendor();
+
+            return model.Select(e => new SelectListItem
+            {
+                Value = e.CusID,
+                Text = e.CusName
+            }).ToList();
+        }
+
+        public async Task<List<CusReportViewModel>> GetAutoCusVen(string type)
+        {
+            if(type == "C")
+            {
+                return await GetAllCus();                               
+            }
+            else
+            {
+                return await GetAllVendor();          
+            }                            
+        }
+        public List<CusVendor> GetAutoVen()
+        {
+            return _cusVendorContext.CusVendor.Where(e => e.IsUse == "Y" && !string.IsNullOrEmpty(e.CusVenName) && e.CusVenName.StartsWith("V")).ToList();
+        }
+
+        public List<SelectListItem> GetCusVenType
+        {
+            get
+            {
+                List<SelectListItem> CusVenType = new List<SelectListItem>
+        {
+            new SelectListItem {Text = "客戶" , Value = "C"},
+            new SelectListItem {Text = "供應商" , Value = "V"},
+        };
+                return CusVenType;
+            }
+        }
+
+        public List<SelectListItem> GetDBSource
+        {
+            get
+            {
+                List<SelectListItem> Region = new List<SelectListItem>
+        {
+            new SelectListItem {Text = "Ascend" , Value = "Ascend"},
+            new SelectListItem {Text = "ATI" , Value = "ATI"},
+            new SelectListItem {Text = "Kirin" , Value = "Kirin"},
+            new SelectListItem {Text = "TestB" , Value = "TestB"},
+            new SelectListItem {Text = "Auto" , Value = "Auto"}
+        };
+                return Region;
+            }
+        }
+
+        public async Task EditAutoCusVen(CusVendor model)
+        {
+            if(model != null)
+            {
+                if(!string.IsNullOrEmpty(model.DBSource) && model.DBSource != "Auto")
+                {
+                    model.IsUse = "N";
+                }
+                
+                model.UpdateDate = DateTime.Now;
+                
+                _cusVendorContext.Update(model);
+                await _cusVendorContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task SuspendCusVen(CusVendor model)
+        {
+            if (model != null)
+            {
+                model.CusVenID = GetSuspendCusVenID();
+                model.IsUse = "N";
+                model.UpdateDate = DateTime.Now;
+
+                _cusVendorContext.Add(model);
+                await _cusVendorContext.SaveChangesAsync();
+            }
+        }
+
+        public string GetSuspendCusVenID()
+        {
+            var CusVenID = _cusVendorContext.CusVendor.Where(e => !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.Substring(0,1) == "D").Select(e => e.CusVenID).ToList();
+
+            if (CusVenID.Count == 0)
+            {
+                return "D001";
+            }
+            else
+            {
+                var maxCusVenID = CusVenID.Max();
+                int maxID;
+
+                if (!string.IsNullOrEmpty(maxCusVenID) && int.TryParse(maxCusVenID.Substring(1), out maxID))
+                {
+                    return "D" + (maxID + 1).ToString().PadLeft(4, '0');
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }
+        }
+
+        public async Task<List<CusReportViewModel>> GetSuspendList()
+        {
+            List<CusReportViewModel> list_CusVendorSuspend = new List<CusReportViewModel>();
+            List<CusVendor> list_CusVendor = new List<CusVendor>();
+
+            list_CusVendor = await _cusVendorContext.CusVendor.Where(e => !string.IsNullOrEmpty(e.IsUse) && e.IsUse == "N").
+                ToListAsync();
+
+            foreach(var item in list_CusVendor)
+            {
+                var model = new CusReportViewModel()
+                {
+                    DBSource = item.DBSource,
+                    CusID = item.CusVenCode,
+                    CusName = item.CusVenName
+                };
+                list_CusVendorSuspend.Add(model);
+            }
+
+            return list_CusVendorSuspend;
+        }
+
+        public async Task<string> GetCusDBName(string CusID)
+        {
+            var model = await GetAllCus();
+
+            var DBSource = model.Where(e => e.CusID == CusID).Select(e => e.DBSource).FirstOrDefault();
+            if (!string.IsNullOrEmpty(DBSource))
+            {
+                return DBSource;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        public async Task<string> GetCusName(string CusID)
+        {
+            var model = await GetAllCus();
+
+            var CusName = model.Where(e => e.CusID == CusID).Select(e => e.CusName).FirstOrDefault();
+            if (!string.IsNullOrEmpty(CusName))
+            {
+                return CusName;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        public async Task<string> GetVenName(string CusID)
+        {
+            var model = await GetAllVendor();
+
+            var CusName = model.Where(e => e.CusID == CusID).Select(e => e.CusName).FirstOrDefault();
+            if (!string.IsNullOrEmpty(CusName))
+            {
+                return CusName;
             }
             else
             {

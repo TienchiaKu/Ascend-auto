@@ -1,0 +1,72 @@
+﻿@model DDD_2024.Models.DOASUViewModel
+@inject DDD_2024.Interfaces.IEmployeeService EmployeeService
+@inject DDD_2024.Interfaces.ICusVendoeService CusVendoeService
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Do進度建立</h1>
+
+<form asp-action="DOASCreate">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="DoID" class="control-label"></label>
+                <input asp-for="DoID" class="form-control" readonly />
+                <span asp-validation-for="DoID" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="vmDoUDate" class="control-label"></label>
+                <input asp-for="vmDoUDate" class="form-control" type="date" />
+            </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="DoUAction" class="control-label"></label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="DoUStatus" class="control-label"></label>
+            </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <textarea asp-for="DoUAction" rows="8" cols="42"><</textarea>
+                <span asp-validation-for="DoUAction" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <textarea asp-for="DoUStatus" rows="8" cols="42"><</textarea>
+                <span asp-validation-for="DoUStatus" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+    </div>
+    <div class="form-group">
+        <input type="submit" value="確認建立" class="btn btn-primary" />
+    </div>
+</form>
+
+<div>
+    <a asp-action="Index">返回Do清單</a>
+    <a asp-action="DoASIndex">返回Do進度清單</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

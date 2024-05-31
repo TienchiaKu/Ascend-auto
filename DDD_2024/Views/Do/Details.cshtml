@@ -60,70 +60,121 @@
     </div>
 </div>
 
-<div style="margin-top: 10px">
-    <input type="hidden" id="str_doID" value="@Model.DoID" />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.ProjectID)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.ProjectID)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.vmCreateDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.vmCreateDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CusName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CusName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.VendorName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.VendorName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PartNo)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PartNo)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.ProApp)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.ProApp)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.ApplicantName)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.ApplicantName)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.TradeStatus)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.TradeStatus)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.StatusName)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.StatusName)
-        </dd>
-    </dl>
+<div class="row" style="margin-top:6px">
+    <div class="col-md-12">
+        <input type="hidden" asp-for="DOStatus" />
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.ProjectID">編輯</a> |
-    <a asp-action="Index">返回清單</a>
+<div class="row" style="margin-top:6px">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="ProjectID" class="control-label"></label>
+            <input asp-for="ProjectID" id="str_doID" class="form-control" readonly />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="vmCreateDate" class="control-label">申請日期</label>
+            <input asp-for="vmCreateDate" class="form-control" readonly />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="CusName" class="control-label"></label>
+            <input asp-for="CusName" class="form-control" readonly />
+        </div>
+    </div>
 </div>
-
+<div class="row" style="margin-top:6px">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="VendorName" class="control-label"></label>
+            <input asp-for="VendorName" id="str_doID" class="form-control" readonly />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="PartNo" class="control-label"></label>
+            <input asp-for="PartNo" class="form-control" readonly />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="ProApp" class="control-label"></label>
+            <input asp-for="ProApp" class="form-control" readonly />
+        </div>
+    </div>
+</div>
+<div class="row" style="margin-top:6px">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="Applicant" class="control-label"></label>
+            <input asp-for="Applicant" id="str_doID" class="form-control" readonly />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="Approver" class="control-label"></label>
+            <input asp-for="Approver" class="form-control" readonly />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="TradeStatus" class="control-label"></label>
+            <input asp-for="TradeStatus" class="form-control" readonly />
+        </div>
+    </div>
+</div>
+<div class="row" style="margin-top:6px">
+    <div class="col-md-4">
+        <div class="form-group">
+            <div class="form-group">
+                <label asp-for="StatusName" class="control-label"></label>
+                <input asp-for="StatusName" class="form-control" readonly />
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+    </div>
+</div>
+<div class="row" style="margin-top:6px">
+    <div class="col-md-4">
+        <div class="form-group">
+            <div class="form-group">
+                <label asp-for="DoUDate" class="control-label"></label>
+                <input asp-for="DoUDate" class="form-control" readonly />
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row" style="margin-top:6px">
+    <div class="col-md-4">
+        <div class="form-group">
+            <div class="form-group">
+                <label asp-for="DoUAction" class="control-label"></label>
+                <textarea asp-for="DoUAction" rows="8" cols="42" readonly><</textarea>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label asp-for="DoUStatus" class="control-label"></label>
+            <textarea asp-for="DoUStatus" rows="8" cols="42" readonly><</textarea>
+        </div>
+    </div>
+    <div class="col-md-4">
+    </div>
+</div>
+<div class="row" style="margin-top:6px">
+    <div class="col-md-6">
+        <a asp-action="Edit" asp-route-ProjectID="@Model?.ProjectID" class="btn btn-secondary">編輯</a>
+        <a asp-action="Index" class="btn btn-secondary">返回清單</a>
+        <a asp-action="DoASCreate" asp-route-DoID="@Model.DoID" class="btn btn-warning">新增Do進度</a>
+        <a asp-action="DoASIndex" asp-route-DoID="@Model.DoID" class="btn btn-warning">查看Do歷史進度</a>
+    </div>
+    <div class="col-md-6">
+    </div>
+</div>
 <script>
     var btn_agree = document.getElementById('btn_agree');
     var btn_disagree = document.getElementById('btn_disagree');

@@ -24,14 +24,16 @@ builder.Services.AddDbContext<DDD_DutyContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DDD_DutyContext") ?? throw new InvalidOperationException("Connection string 'DDD_DutyContext' not found.")));
 builder.Services.AddDbContext<DoContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DoContext") ?? throw new InvalidOperationException("Connection string 'DoContext' not found.")));
+builder.Services.AddDbContext<Project_DOASUpdateContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Project_DOASUpdateContext") ?? throw new InvalidOperationException("Connection string 'Project_DOASUpdateContext' not found.")));
 builder.Services.AddDbContext<DDD_EmployeeContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DDD_EmployeeContext") ?? throw new InvalidOperationException("Connection string 'DDD_EmployeeContext' not found.")));
 builder.Services.AddDbContext<ProjectMContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ProjectMContext") ?? throw new InvalidOperationException("Connection string 'ProjectMContext' not found.")));
 builder.Services.AddDbContext<ProjectDContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ProjectDContext") ?? throw new InvalidOperationException("Connection string 'ProjectDContext' not found.")));
-builder.Services.AddDbContext<ProjectDOontext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ProjectDOontext") ?? throw new InvalidOperationException("Connection string 'ProjectDOontext' not found.")));
+builder.Services.AddDbContext<ProjectDOContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ProjectDOContext") ?? throw new InvalidOperationException("Connection string 'ProjectDOContext' not found.")));
 builder.Services.AddDbContext<Project_DIDWContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Project_DIDWContext") ?? throw new InvalidOperationException("Connection string 'Project_DIDWContext' not found.")));
 builder.Services.AddDbContext<Project_EmpContext>(options =>
