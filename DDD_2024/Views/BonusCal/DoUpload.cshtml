@@ -1,0 +1,77 @@
+﻿@model IEnumerable<DDD_2024.Models.DoViewModel>
+
+<form id="dataForm" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="file">選擇Excel：</label>
+        <input type="file" name="Excelfile" class="form-control-file" accept=".xlsx,.xls" />
+        <button type="submit" class="btn btn-warning">匯入Do</button>
+    </div>
+</form>
+
+@functions {
+    bool AnyFieldIsNull(DoViewModel item)
+    {
+        return string.IsNullOrEmpty(item.vmCreateDate)
+            || string.IsNullOrEmpty(item.CusName)
+            || string.IsNullOrEmpty(item.Cus_DB)
+            || string.IsNullOrEmpty(item.CusID)
+            || string.IsNullOrEmpty(item.VendorName)
+            || string.IsNullOrEmpty(item.VendorID)
+            || string.IsNullOrEmpty(item.PartNo)
+            || string.IsNullOrEmpty(item.ProApp)
+            || string.IsNullOrEmpty(item.Applicant)
+            || item.ApplicantID == 0;
+    }
+}
+
+@if (Model != null)
+{
+    <table>
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.ProjectID)</th>
+                <th>@Html.DisplayNameFor(model => model.vmCreateDate)</th>
+                <th>@Html.DisplayNameFor(model => model.CusName)</th>
+                <th>@Html.DisplayNameFor(model => model.VendorName)</th>
+                <th>@Html.DisplayNameFor(model => model.PartNo)</th>
+                <th>@Html.DisplayNameFor(model => model.ProApp)</th>
+                <th>@Html.DisplayNameFor(model => model.Applicant)</th>
+                <th>@Html.DisplayNameFor(model => model.UploadStatus)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                var rowClass = item.UploadStatus != "Success" ? "lightgray-background" : "";
+
+                <tr class="@rowClass">
+                    <td>@Html.DisplayFor(modelItem => item.ProjectID)</td>
+                    <td>@Html.DisplayFor(modelItem => item.vmCreateDate)</td>
+                    <td>@Html.DisplayFor(modelItem => item.CusName)</td>
+                    <td>@Html.DisplayFor(modelItem => item.VendorName)</td>
+                    <td>@Html.DisplayFor(modelItem => item.PartNo)</td>
+                    <td>@Html.DisplayFor(modelItem => item.ProApp)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Applicant)</td>
+                    <td>@Html.DisplayFor(modelItem => item.UploadStatus)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+    }
+
+    .lightgray-background {
+        background-color: lightgray;
+    }
+</style>

@@ -7,6 +7,102 @@
 
 <h1>獎金計算</h1>
 
+<div class="accordion" id="accordionConditon">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConOne" aria-expanded="true" aria-controls="collapseOne">
+                篩選條件
+            </button>
+        </h2>
+        <div id="collapseConOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConditon">
+            <div class="accordion-body">
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <label>月份</label>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202401" id="month1" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month1">2024年1月</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202402" id="month2" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month2">2024年2月</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202403" id="month3" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month3">2024年3月</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202404" id="month4" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month4">2024年4月</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202405" id="month5" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month5">2024年5月</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202406" id="month6" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month6">2024年6月</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202407" id="month7" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month7">2024年7月</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202408" id="month8" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month8">2024年8月</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202409" id="month9" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month9">2024年9月</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202410" id="month10" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month10">2024年10月</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202411" id="month11" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month11">2024年11月</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="202412" id="month12" onchange="onDatabaseChange()">
+                                    <label class="form-check-label" for="month12">2024年12月</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="accordion" id="accordionFunction">
     <div class="accordion-item">
         <h2 class="accordion-header" id="headingOne">
@@ -16,25 +112,14 @@
         </h2>
         <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
             <div class="accordion-body">
-                <div class="row">
-                    <div class="col-md-2">
-                        <button id="btn_check_all" class="btn btn-warning">全選</button>
+                <div class="row mb-3">
+                    <div class="col-md-2 mx-1">
+                        <button id="btn_check_all" class="btn btn-warning mb-2 mr-2">全選</button>
+                        <button id="btn_uncheck_all" class="btn btn-warning mb-2 mr-2">取消全選</button>
                     </div>
-                    <div class="col-md-2">
-                        <button id="btn_uncheck_all" class="btn btn-warning">取消全選</button>
-                    </div>
-                    <div class="col-md-8">
-                    </div>
-                </div>
-                <div class="row" style="margin-top:6px; background-color:lightgray">
-                    <div class="col-md-8">
-                        <h2>Do</h2>
-                    </div>
-                    <div class="col-md-2">
-                        <button id="btn_deliver" class="btn btn-warning">獎金預覽</button>
-                    </div>
-                    <div class="col-md-2">
-                        <button id="btn_deliver" class="btn btn-warning">獎金發放</button>
+                    <div class="col-md-3 mx-1">
+                        <button id="btn_PreviewDo" class="btn btn-dark mr-2">Do獎金預覽</button>
+                        <a asp-action="DoUpload" asp-controller="BonusCal mr-2" class="btn btn-dark">上傳Do獎金</a>
                     </div>
                 </div>
                 @if (contxt.HttpContext != null)
@@ -86,10 +171,7 @@
                 <th></th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <th colspan="2">Do</th>
-            </tr>
+        <tbody id="tableBody">
             @foreach (var item in Model)
             {
                 @if (item.Status == "DO")
@@ -98,7 +180,7 @@
                         <td>
                             @if (item.ProjectID != null)
                             {
-                                <input type="checkbox" id="chk_@item.ProjectID+@item.Status" />
+                                <input type="checkbox" id="@item.ProjectID" class="table-checkbox" />
                             }
                         </td>
                         <td>
@@ -135,19 +217,54 @@
 </style>
 
 <script>
-document.getElementById("btn_check_all").addEventListener("click", function () {
-    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    checkboxes.forEach(function (checkbox) {
-        checkbox.checked = true;
+    document.getElementById("btn_check_all").addEventListener("click", function () {
+        var checkboxes = document.querySelectorAll('#tableBody .table-checkbox');
+        checkboxes.forEach(function (checkbox) {
+            checkbox.checked = true;
+        });
     });
-});
 
-document.getElementById("btn_uncheck_all").addEventListener("click", function () {
-    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    checkboxes.forEach(function (checkbox) {
-        checkbox.checked = false;
+    document.getElementById("btn_uncheck_all").addEventListener("click", function () {
+        var checkboxes = document.querySelectorAll('#tableBody .table-checkbox');
+        checkboxes.forEach(function (checkbox) {
+            checkbox.checked = false;
+        });
     });
-});
+
+    // 監聽全部同意按鈕的點擊事件
+    document.getElementById('btn_PreviewDo').addEventListener('click', function () {
+        var projectIds = [];
+
+        // 找到所有被勾選的勾選框
+        var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+
+        checkboxes.forEach(function (checkbox) {
+            projectIds.push(checkbox.id.replace('chk_', ''));
+        });
+
+        fetch('/BonusCal/PreviewDo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(projectIds) // 將 doIds 陣列轉換為 JSON 字串並傳遞給 controller
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 處理成功回應
+                console.log('Status changed successfully:', data);
+                alert('Do報表匯出成功');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Do報表匯出失敗，請稍後再試');
+            });
+    });
 
     // 監聽全部同意按鈕的點擊事件
     document.getElementById('btn_deliver').addEventListener('click', function () {
@@ -175,4 +292,61 @@ document.getElementById("btn_uncheck_all").addEventListener("click", function ()
                 console.error('Error:', error);
             });
     });
+
+    // 處理select元素的更改事件
+    function onDatabaseChange() {
+        var selectedMonths = [];
+
+        $('input[type="checkbox"]:checked').each(function () {
+            selectedMonths.push($(this).val());
+        });
+
+        // 清除当前表格的所有数据
+        clearTable();
+
+        // 發送 AJAX 請求並更新表格資料
+        fetchData('/BonusCal/DoIndexFilter', selectedMonths);
+    }
+
+    // 清除当前表格的所有数据
+    function clearTable() {
+        // 找到表格
+        var table = document.querySelector('table');
+
+        // 找到表格主体
+        var tbody = table.querySelector('tbody');
+
+        // 清空表格主体的内容
+        tbody.innerHTML = '';
+    }
+
+    // 發送 AJAX 請求並更新表格資料
+    function fetchData(url, months) {
+        $.ajax({
+            url: url,
+            type: 'GET',
+            traditional: true, // 這行確保數組正確傳遞
+            data: { months: months },
+            success: function (data) {
+                $('#tableBody').html(data);
+            },
+            error: function (error) {
+                handleAjaxError(error);
+            }
+        });
+    }
+
+    // 處理 AJAX 請求錯誤
+    function handleAjaxError(error) {
+        console.error('Error fetching data:', error);
+    }
+
+    // 當文檔準備好後綁定事件
+    $(document).ready(function () {
+        $('input[type="checkbox"]').change(onDatabaseChange);
+
+        // 初始加載
+        onDatabaseChange();
+    });
+
 </script>

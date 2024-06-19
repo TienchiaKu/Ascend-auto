@@ -17,9 +17,9 @@ namespace DDD_2024.Controllers
         private readonly BizAutoContext _context;
         private readonly IDutyService _dutyService;
         private readonly IEmployeeService _employeeService;
-        private readonly ICusVendoeService _cusVendoeService;
+        private readonly ICusVendorService _cusVendoeService;
 
-        public DDD_DutyController(BizAutoContext context, IDutyService dutyService, IEmployeeService employeeService, ICusVendoeService cusVendoeService)
+        public DDD_DutyController(BizAutoContext context, IDutyService dutyService, IEmployeeService employeeService, ICusVendorService cusVendoeService)
         {
             _context = context;
             _dutyService = dutyService;

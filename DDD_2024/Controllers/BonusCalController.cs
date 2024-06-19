@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DDD_2024.Data;
 using DDD_2024.Models;
-using Microsoft.DotNet.Scaffolding.Shared.ProjectModel;
 using Microsoft.CodeAnalysis;
-using Microsoft.IdentityModel.Tokens;
 using DDD_2024.Interfaces;
 using MiniExcelLibs;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Build.Evaluation;
 using DDD_2024.Services;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DDD_2024.Controllers
 {
@@ -27,14 +23,14 @@ namespace DDD_2024.Controllers
         private readonly Project_DIDWContext _project_DIDWContext;
         private readonly Project_EmpContext _empContext;
         private readonly IDoService _doService;
-        private readonly ICusVendoeService _cusVendoeService;
+        private readonly ICusVendorService _cusVendoeService;
         private readonly IEmployeeService _employeeService;
         private readonly IBounsCalService _bounsCalService;
         private readonly IWebHostEnvironment _env;
 
         public BonusCalController(ProjectMContext projectMContext, ProjectDContext projectDContext, Project_DIDWContext project_DIDWContext, 
             DoContext doContext, ProjectDOContext projectDOContext, Project_EmpContext project_EmpContext,
-            IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService,
+            IDoService doService, ICusVendorService cusVendoeService, IEmployeeService employeeService,
             IBounsCalService bounsCalService, IWebHostEnvironment env)
         {
             _projectMContext = projectMContext;
@@ -50,10 +46,10 @@ namespace DDD_2024.Controllers
             _env = env;
         }
 
-        // GET: BonusCal
+        // GET: DoIndex
         public async Task<IActionResult> DoIndex()
         {
-            var model = await _bounsCalService.GetProjects_DO();
+            var model = await _bounsCalService.GetProjects_Do();
 
             if (model != null)
             {
@@ -63,6 +59,21 @@ namespace DDD_2024.Controllers
             {
                 ViewBag.Message = "No match data.";
                 return View();
+            }
+        }
+
+        // GET: DoIndexFilter
+        public async Task<IActionResult> DoIndexFilter(List<string> months)
+        {
+            var model = await _bounsCalService.GetProjects_DoFilter(months);
+
+            if (model != null)
+            {
+                return PartialView("_DoIndexPartial", model);
+            }
+            else
+            {
+                return Problem("Entity set is null.");
             }
         }
 
@@ -208,32 +219,34 @@ namespace DDD_2024.Controllers
         //}
 
         [HttpPost]
-        public ActionResult PreviewDo([FromBody] string[] projectIds)
+        public async Task<IActionResult> PreviewDo([FromBody] string[] projectIds)
         {
-            var model = _bounsCalService.BonusConfirm(projectIds);
+            var Report = await _bounsCalService.GetDoBonus(projectIds);
 
-            if (model != null)
+            if (Report.Item1 != null && Report.Item2 != null && Report.Item1.Count > 0 && Report.Item2.Count > 0)
             {
-                var empDIDWBonusModel = _bounsCalService.GetDIDWBonusbyEmployee(model);
-                var empDOBonusModel = _bounsCalService.GetDOBonusbyEmployee(model);
-
                 var sheets = new Dictionary<string, object>
                 {
-                    ["各專案獎金"] = model,
-                    ["員工Do獎金"] = empDOBonusModel,
-                    ["員工DIDW獎金"] = empDIDWBonusModel
+                    ["Do"] = Report.Item1,
+                    ["依業務計算"] = Report.Item2
                 };
 
-                string path = @"D:\獎金報表_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx";
-
-                if (!System.IO.File.Exists(path))
+                //20240604 Excel改存到桌面，原方式不知為何有時無法成功匯出
+                var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                var filePath = Path.Combine(desktopPath, "Do獎金預覽_" + DateTime.Now.ToString("yyyyMMdd_HHmm") + ".xlsx");
+                
+                using (var memoryStream = new MemoryStream())
                 {
-                    MiniExcel.SaveAs(path, sheets);
-
-                    ViewBag.Message = "Excel匯出完成！";
+                    MiniExcel.SaveAs(memoryStream, sheets);
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                
+                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                    {
+                        memoryStream.CopyTo(fileStream);
+                    }
                 }
-
-                return View("Index", model);
+                // Returning a JSON result to indicate success
+                return Json(new { success = true });
             }
             else
             {
@@ -278,6 +291,90 @@ namespace DDD_2024.Controllers
         private bool BonusCalViewModelExists(string id)
         {
           return (_projectMContext.BonusCalViewModel?.Any(e => e.ProjectID == id)).GetValueOrDefault();
+        }
+
+        // GET: Do/Upload
+        public IActionResult DoUpload()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult DoUpload(IFormFile Excelfile)
+        {
+            var stream = new MemoryStream();
+            if (Excelfile != null)
+            {
+                Excelfile.CopyTo(stream);
+
+                // 讀取stream中的所有資料
+                var streamData = MiniExcel.Query(stream, true, startCell: "A1").ToList();
+
+                // 檢查是否有資料
+                if (streamData.Count > 0)
+                {
+                    List<DoReportUpload> list_DoUpdate = new List<DoReportUpload>();
+
+                    for (int i = 0; i < streamData.Count; i++)
+                    {
+                        var rowData = streamData[i];
+
+                        var UploadModel = new DoReportUpload();
+
+                        foreach (var cellValue in rowData)
+                        {
+                            if (cellValue.Key == "專案編號")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    UploadModel.ProjectID = cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "獎金/狀態更新")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    UploadModel.StatusUpdate = cellValue.Value;
+                                }
+                            }
+                        }
+                        if (!string.IsNullOrEmpty(UploadModel.ProjectID) && !string.IsNullOrEmpty(UploadModel.StatusUpdate))
+                        {
+                            list_DoUpdate.Add(UploadModel);
+                        }
+                    }
+                    var model = _doService.UpdateDoStatus(list_DoUpdate);
+
+                    if (model != null)
+                    {
+                        var sheets = new Dictionary<string, object>
+                        {
+                            ["Do狀態更新"] = model
+                        };
+
+                        var memoryStream = new MemoryStream();
+                        memoryStream.SaveAs(sheets);
+                        memoryStream.Seek(0, SeekOrigin.Begin);
+                        return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                        {
+                            FileDownloadName = "Do狀態更新_" + DateTime.Now.ToString("yyyyMMdd_HHmm") + ".xlsx"
+                        };
+                    }
+                    else
+                    {
+                        return Content("Excel導出錯誤");
+                    }
+                }
+            }
+            return View();
         }
     }
 }

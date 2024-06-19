@@ -60,7 +60,6 @@ namespace DDD_2024.Models
 
         [StringLength(500)]
         [Display(Name = "進度")]
-        [Required]
         public string? DoUStatus { get; set; }
     }
 
@@ -110,14 +109,14 @@ namespace DDD_2024.Models
         public string? DoUStatus { get; set; }
 
         [StringLength(500)]
-        [Display(Name = "進度2月")]
+        [Display(Name = "進度")]
         [Required]
-        public string? DoUStatus2 { get; set; }
+        public string? DoUStatusCurrent { get; set; }
 
         [StringLength(500)]
-        [Display(Name = "進度3月")]
+        [Display(Name = "進度5月")]
         [Required]
-        public string? DoUStatus3 { get; set; }
+        public string? DoUStatus5 { get; set; }
 
         [StringLength(500)]
         [Display(Name = "進度4月")]

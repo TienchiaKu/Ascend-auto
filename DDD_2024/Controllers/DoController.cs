@@ -27,13 +27,13 @@ namespace DDD_2024.Controllers
         private readonly ProjectDContext _projectDContext;
         private readonly Project_DIDWContext _projectDIDWContext;
         private readonly IDoService _doService;
-        private readonly ICusVendoeService _cusVendoeService;
+        private readonly ICusVendorService _cusVendoeService;
         private readonly IEmployeeService _employeeService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
         public DoController(ProjectMContext projectMContext, ProjectDContext projectDContext, DoContext doContext, ProjectDOContext projectDOContext,
             Project_DIDWContext project_DIDWContext, 
-            IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService, 
+            IDoService doService, ICusVendorService cusVendoeService, IEmployeeService employeeService, 
             IWebHostEnvironment webHostEnvironment)
         {
             _projectMContext = projectMContext;
@@ -63,10 +63,10 @@ namespace DDD_2024.Controllers
             }
         }
 
-        // GET: Do
-        public async Task<IActionResult> IndexFilter([FromQuery] string projectStatus, [FromQuery] string applicant)
+        // GET: DoFilter
+        public async Task<IActionResult> IndexFilter([FromQuery] string projectStatus, [FromQuery] string applicant, List<string> months)
         {
-            var model = await _doService.GetDOsFilterAsync(projectStatus, applicant);
+            var model = await _doService.GetDOsFilterAsync(projectStatus, applicant,months);
 
             if (model != null)
             {
@@ -115,13 +115,17 @@ namespace DDD_2024.Controllers
         // POST: Do/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CreateDate,CusID,VendorID,PartNo,ProApp,ApplicantID,ApproverID,TradeStatus,DoUAction,DoUStatus")] DoViewModel doViewModel)
+        public async Task<IActionResult> Create([Bind("CreateDate,CusID,VendorID,PartNo,ProApp,ApplicantID,ApproverID,TradeStatus,DoUAction,DoUStatus")] DoCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
-                await _doService.CreateDO(doViewModel);
+                await _doService.CreateDO(model);
 
                 return RedirectToAction(nameof(Index));
+            }
+            else
+            {              
+                TempData["ErrorMessage"] = "表單資料驗證失敗。";
             }
             return View();
         }
@@ -165,42 +169,6 @@ namespace DDD_2024.Controllers
             return View(doViewModel);
         }
 
-        // POST: /ConfirmDOs
-        [HttpPost]
-        public IActionResult ConfirmDOs([FromBody] string[] DoIDs)
-        {
-            string msg = _doService.ConfiirmDos(DoIDs);
-
-            return RedirectToAction("Index");
-        }
-
-        // POST: /RejectDOs
-        [HttpPost]
-        public IActionResult RejectDOs([FromBody] string[] DoIDs)
-        {
-            string msg = _doService.RejectDos(DoIDs);
-
-            return RedirectToAction("Index");
-        }
-
-        // POST: /ConfirmDO
-        [HttpPost]
-        public IActionResult ConfirmDO([FromBody] string DoID)
-        {
-            string msg = _doService.ConfirmDo(DoID);
-
-            return RedirectToAction("Index");
-        }
-
-        // POST: /RejectDO
-        [HttpPost]
-        public IActionResult RejectDO([FromBody] string DoID)
-        {
-            string msg = _doService.RejectDO(DoID);
-
-            return RedirectToAction("Index");
-        }
-
         [HttpPost]
         public IActionResult TransDin([FromBody] string DoID)
         {
@@ -238,7 +206,7 @@ namespace DDD_2024.Controllers
                         foreach (var cellValue in rowData)
                         {
                             if (cellValue.Key == "Date")
-                            {                                                               
+                            {                 
                                 if(cellValue.Value == null)
                                 {
                                     DoViewModel.UploadStatus += "申請日期無資料;\n";
@@ -249,7 +217,7 @@ namespace DDD_2024.Controllers
                                     DoViewModel.vmCreateDate = Convert.ToDateTime(cellValue.Value).ToString("yyyy/MM/dd");
                                 }
                             }
-                            if (cellValue.Key == "Customer(中文)")
+                            if (cellValue.Key == "Customer")
                             {
                                 if (cellValue.Value == null)
                                 {
@@ -296,7 +264,7 @@ namespace DDD_2024.Controllers
                                     DoViewModel.VendorID = _cusVendoeService.GetVenID(DoViewModel.VendorName);
                                 }
 
-                                if (string.IsNullOrEmpty(DoViewModel.Cus_DB) || string.IsNullOrEmpty(DoViewModel.CusID))
+                                if (string.IsNullOrEmpty(DoViewModel.VendorID))
                                 {
                                     DoViewModel.UploadStatus += "找無相符合原廠資料;\n";
                                 }
@@ -383,27 +351,29 @@ namespace DDD_2024.Controllers
                                     DoViewModel.TradeStatus = string.Empty;
                                 }                                
                             }
+                            if(cellValue.Key == "Status")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DoViewModel.UploadStatus += "Status無資料;\n";
+                                    continue;
+                                }
+                                DoViewModel.DoUStatus = cellValue.Value.ToString();
+                            }
+                            if (cellValue.Key == "Action")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DoViewModel.UploadStatus += "Action無資料;\n";
+                                    continue;
+                                }
+                                DoViewModel.DoUAction = cellValue.Value.ToString();
+                            }
                         }
                         list_doViewModels.Add(DoViewModel);
                     }
-                    InsertDos(list_doViewModels);
-                    
-                    //匯出Excel
-                    var memoryStream = new MemoryStream();
-                    memoryStream.SaveAs(list_doViewModels);
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-                    new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-
-                    var filePath = "D:\\" + DateTime.Now.ToString("yyyyMMdd") + "ImportDo.xlsx"; // 你想要保存的文件路径
-                    if (System.IO.File.Exists(filePath))
-                    {
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            memoryStream.WriteTo(fileStream);                      
-                        }
-                    }
-
-                    return View(list_doViewModels);
+                    var model = _doService.ImportDo(list_doViewModels);
+                    return View(model);
                 }
             }            
             return View();
@@ -481,7 +451,7 @@ namespace DDD_2024.Controllers
             var DosModel = await _doService.GetDosReport(model);
 
             if (DosModel != null && DosModel.Count > 0)
-            {
+            {                                
                 var sheets = new Dictionary<string, object>
                 {
                     ["DO"] = DosModel
@@ -511,76 +481,6 @@ namespace DDD_2024.Controllers
                 return Content("匯出錯誤");
             }
 
-        }
-
-        private List<DoViewModel> InsertDos(List<DoViewModel> list_doViewModels)
-        {
-            if(list_doViewModels.Count > 0)
-            {
-                foreach(var item in list_doViewModels)
-                {
-                    if (!string.IsNullOrEmpty(item.UploadStatus))
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        item.UploadStatus = CheckDOInsert(item);
-                    }
-
-                    if (string.IsNullOrEmpty(item.UploadStatus))
-                    {                       
-                        string projectID = _doService.GetProjectID(DateTime.Now.ToString("yyyyMMdd"));
-                        string createDate = string.Empty;
-
-                        if (!string.IsNullOrEmpty(item.vmCreateDate))
-                        {
-                            createDate = item.vmCreateDate.Replace("/", "");
-                        }
-
-                        // Insert a record into ProjectM
-                        var modelprojectM = new ProjectM
-                        {
-                            ProjectID = projectID,
-                            Status = "DO", // Status: DO
-                            CreateDate = createDate,
-                            Cus_DB = item.Cus_DB,
-                            CusID = item.CusID,
-                            ProApp = item.ProApp
-                        };
-                        _projectMContext.Add(modelprojectM);
-                        _projectMContext.SaveChanges();
-
-                        // Insert a record into ProjectD
-                        var modelprojectD = new ProjectD
-                        {
-                            ProjectID = projectID,
-                            VendorID = item.VendorID,
-                            PartNo = item.PartNo,
-                            Stage = "DO"
-                        };
-                        _projectDContext.Add(modelprojectD);
-                        _projectDContext.SaveChanges();
-
-                        // Insert a record into Project_DO
-                        var modelprojectDO = new Project_DO
-                        {
-                            DoID = _doService.GetDOID(DateTime.Now.ToString("yyyyMMdd")),
-                            ProjectID = projectID,
-                            CreateDate = createDate,
-                            ApplicantID = item.ApplicantID,
-                            ApproverID = item.ApproverID,
-                            TradeStatus = item.TradeStatus,
-                            Status = "N" // Status: 新單
-                        };
-                        _Docontext.Add(modelprojectDO);
-                        _Docontext.SaveChanges();
-
-                        item.UploadStatus = "Success";
-                    }                                    
-                }               
-            }
-            return list_doViewModels;
         }
 
         // GET: Do
@@ -619,28 +519,6 @@ namespace DDD_2024.Controllers
                 return RedirectToAction("DoASIndex","Do",model.DoID);
             }
             return View();
-        }
-
-        private string CheckDOInsert(DoViewModel doViewModel)
-        {
-            string Message = string.Empty;
-
-            //檢查是否有重複Do資料
-            if (!string.IsNullOrEmpty(doViewModel.Cus_DB) && !string.IsNullOrEmpty(doViewModel.CusID))
-            {
-                var ProjectID = _projectMContext.ProjectM.Where(e => e.Cus_DB == doViewModel.Cus_DB && e.CusID == doViewModel.CusID && e.ProApp == doViewModel.ProApp).Select(e => e.ProjectID).FirstOrDefault();
-            
-                if(ProjectID != null)
-                {
-                    var ProjectD = _projectDContext.ProjectD.Where(e => e.ProjectID == ProjectID && e.VendorID == doViewModel.VendorID && e.PartNo == doViewModel.PartNo).ToList();
-            
-                    if (ProjectD.Count > 0)
-                    {
-                        Message += "Do資料重複;\n";
-                    }
-                }
-            }
-            return Message;
         }
 
         private bool Project_DOExists(string id)
@@ -692,25 +570,18 @@ namespace DDD_2024.Controllers
                                     UploadViewModel.ProjectID = cellValue.Value.ToString();
                                 }
                             }
-                            if (cellValue.Key == "Status")
+                            //if (cellValue.Key == "Status")
+                            //{
+                            //    if (cellValue.Value != null)
+                            //    {
+                            //        UploadViewModel.DoUStatusCurrent = cellValue.Value.ToString();
+                            //    }
+                            //}
+                            if (cellValue.Key == "Status Update-(5月更新)")
                             {
                                 if (cellValue.Value != null)
                                 {
-                                    UploadViewModel.DoUStatus2 = cellValue.Value.ToString();
-                                }
-                            }
-                            if (cellValue.Key == "Status Update-(3月更新)")
-                            {
-                                if (cellValue.Value != null)
-                                {
-                                    UploadViewModel.DoUStatus3 = cellValue.Value.ToString();
-                                }
-                            }
-                            if (cellValue.Key == "Status Update-(4月更新)")
-                            {
-                                if (cellValue.Value != null)
-                                {
-                                    UploadViewModel.DoUStatus4 = cellValue.Value.ToString();
+                                    UploadViewModel.DoUStatus5 = cellValue.Value.ToString();
                                 }
                             }
                             if (cellValue.Key == "Action")

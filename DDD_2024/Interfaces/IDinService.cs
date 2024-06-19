@@ -4,7 +4,7 @@ namespace DDD_2024.Interfaces
 {
     public interface IDinService
     {
-        List<DinViewModel> ReadExcel(IFormFile Excelfile);
+        List<DinViewModel> ImportDin(IFormFile Excelfile);
 
         Task<List<DinViewModel>> GetDinsAsync();
         Task<DinViewModel> GetDinAsync(string? ProjectID);

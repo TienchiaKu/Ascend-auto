@@ -22,14 +22,14 @@ namespace DDD_2024.Services
         private readonly INTERTEKContext _IntertekContext;
         private readonly TESTBContext _TestbContext;
         private readonly IEmployeeService _employeeService;
-        private readonly ICusVendoeService _cusVendoeService;
+        private readonly ICusVendorService _cusVendoeService;
         private readonly IProjectEmpService _projectEmpService;
         private readonly IDoService _doService;
 
         public DinService(ProjectMContext projectMContext, ProjectDContext projectDContext, ProjectDOContext projectDOContext,
             Project_DIDWContext project_DIDWContext,
             Project_EmpContext project_EmpContext, ASCENDContext aSCENDContext, ATIContext aTIContext, KIR1NContext kIR1NContext,
-            INTERTEKContext iNTERTEKContext, TESTBContext tESTBContext, IEmployeeService employeeService, ICusVendoeService cusVendoeService,
+            INTERTEKContext iNTERTEKContext, TESTBContext tESTBContext, IEmployeeService employeeService, ICusVendorService cusVendoeService,
             IDoService doService, IProjectEmpService projectEmpService)
         {
             _projectMContext = projectMContext;
@@ -224,9 +224,10 @@ namespace DDD_2024.Services
             return model;
         }
 
-        public List<DinViewModel> ReadExcel(IFormFile Excelfile)
+        //匯入Din
+        public List<DinViewModel> ImportDin(IFormFile Excelfile)
         {
-            List<DinViewModel> list = new List<DinViewModel>();
+            List<DinViewModel> list_Dins = new List<DinViewModel>();
 
             var stream = new MemoryStream();
             if (Excelfile != null)
@@ -243,210 +244,398 @@ namespace DDD_2024.Services
                     {
                         var rowData = streamData[i];
 
-                        //檢查是否有資料
-                        bool hasData = false;
-
-                        foreach (var cellValue in rowData)
-                        {
-                            if (cellValue.Key == "供應商" && cellValue.Value != null)
-                            {
-                                hasData = true;
-                                break;
-                            }
-                        }
-
-                        if (!hasData)
-                        {
-                            continue;
-                        }
-
                         var DinViewModel = new DinViewModel();
 
                         foreach (var cellValue in rowData)
                         {
-                            //測試用
                             if(cellValue.Key == "項目")
                             {
                                 continue;
                             }
-                                                        
                             if (cellValue.Key == "Type" && cellValue.Value != null)
                             {
-                                if (cellValue.Value == "DIN")
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "Type無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    if(!string.IsNullOrEmpty(cellValue.Value) && cellValue.Value == "DIN")
+                                    {
+                                        DinViewModel.ProjectStatus = cellValue.Value.ToString();
+                                    }
+                                }
+                            }
+                            if (cellValue.Key == "立項日期\n( YYYY/MM/DD )")
+                            {
+                                if(cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "立項日期無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.vmCreateDate = Convert.ToDateTime(cellValue.Value).ToString("yyyy/MM/dd");
+                                }
+                            }
+                            if (cellValue.Key == "供應商")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "供應商無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.VendorName = cellValue.Value.ToString();
+
+                                    if (!string.IsNullOrEmpty(DinViewModel.VendorName))
+                                    {
+                                        DinViewModel.VendorID = _cusVendoeService.GetVenID(DinViewModel.VendorName);
+                                    }
+                                }
+                            }
+                            if (cellValue.Key == "品名料號")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "品名料號無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.PartNo = cellValue.Value.ToString();
+                                }
+                            }
+                            if (cellValue.Key == "客戶名稱")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "客戶名稱無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.CusName = cellValue.Value.ToString();
+
+                                    if (!string.IsNullOrEmpty(DinViewModel.CusName))
+                                    {
+                                        (DinViewModel.Cus_DB, DinViewModel.CusID) = _cusVendoeService.GetCusID(DinViewModel.CusName);
+
+                                        if (string.IsNullOrEmpty(DinViewModel.Cus_DB) || string.IsNullOrEmpty(DinViewModel.CusID))
+                                        {
+                                            DinViewModel.UploadStatus += "找無相符合客戶資料;\n";
+                                        }
+                                    }
+                                }
+                            }
+                            if (cellValue.Key == "最終客戶")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "最終客戶無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.EndCus = cellValue.Value.ToString();
+                                }
+                            }
+                            if (cellValue.Key == "產品應用")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "產品應用無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.ProApp = cellValue.Value.ToString();
+                                }
+                            }
+                            if (cellValue.Key == "產品型號")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "產品型號無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.ProModel = cellValue.Value.ToString();
+                                }
+                            }
+                            if (cellValue.Key == "預估量產年度\n( YYYY )")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "預估量產年度無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.EProduceYS = cellValue.Value.ToString();
+                                }
+                            }
+                            if (cellValue.Key == "預估量產季度\n( Q1 - Q4)")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "預估量產季度無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    if (!string.IsNullOrEmpty(DinViewModel.EProduceYS))
+                                    {
+                                        DinViewModel.EProduceYS += cellValue.Value.ToString();
+                                    }
+                                }
+                            }
+                            if (cellValue.Key == "預估第一年\n( 數量 )")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "預估第一年數量無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.EFirstYQty = (int)(double)cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "預估第二年\n( 數量 )")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "預估第二年數量無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.ESecondYQty = (int)(double)cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "預估第三年\n( 數量 )")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "預估第三年數量無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.EThirdYQty = (int)(double)cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "單價_第一年")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "單價第一年無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.UFirstYPrice = (double)cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "單價_第二年")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "單價第二年無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.USecondYPrice = (double)cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "單價_第三年")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "單價第三年無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.UThirdYPrice = (double)cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "預估三年銷售額\n( LTR )")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "預估三年銷售額無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.ELTR = (int)(double)cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "毛利率\n( 預估 )")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    DinViewModel.UploadStatus += "毛利率無資料";
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.EGP = (double)cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "Integration")
+                            {
+                                if (cellValue.Value == null)
                                 {
                                     continue;
                                 }
-                            }
-                            
-                            if (cellValue.Key == "立項日期\n( YYYY/MM/DD )" && cellValue.Value != null)
-                            {
-                                DinViewModel.vmCreateDate = Convert.ToDateTime(cellValue.Value).ToString("yyyy/MM/dd");
-                            }
-                            if (cellValue.Key == "供應商" && cellValue.Value != null)
-                            {
-                                DinViewModel.VendorName = cellValue.Value.ToString();
-
-                                if (!string.IsNullOrEmpty(DinViewModel.VendorName))
+                                else
                                 {
-                                    DinViewModel.VendorID = _cusVendoeService.GetVenID(DinViewModel.VendorName);
+                                    if(!string.IsNullOrEmpty(cellValue.Value) && (cellValue.Value == "Y" || cellValue.Value == "N"))
+                                    {
+                                        if(cellValue.Value == "Y")
+                                        {
+                                            DinViewModel.IsInte = true;
+                                        }
+                                        else if (cellValue.Value == "N")
+                                        {
+                                            DinViewModel.IsInte = false;
+                                        }
+                                    }                                   
                                 }
                             }
-                            if (cellValue.Key == "品名料號" && cellValue.Value != null)
+                            if (cellValue.Key == "PM")
                             {
-                                DinViewModel.PartNo = cellValue.Value.ToString();
-                            }
-                            if (cellValue.Key == "客戶名稱" && cellValue.Value != null)
-                            {
-                                DinViewModel.CusName = cellValue.Value.ToString();
-
-                                if (!string.IsNullOrEmpty(DinViewModel.CusName))
+                                if (cellValue.Value == null)
                                 {
-                                    (DinViewModel.Cus_DB, DinViewModel.CusID) = _cusVendoeService.GetCusID(DinViewModel.CusName);
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.PM_EmpName = cellValue.Value.ToString();
+                                    if (!string.IsNullOrEmpty(DinViewModel.PM_EmpName))
+                                    {
+                                        DinViewModel.PMID = _employeeService.GetEmployeeID(DinViewModel.PM_EmpName);
+                                        DinViewModel.PM_Bonus = 0.2;
+                                    }
                                 }
                             }
-                            if (cellValue.Key == "最終客戶" && cellValue.Value != null)
+                            if (cellValue.Key == "Sales")
                             {
-                                DinViewModel.EndCus = cellValue.Value.ToString();
-                            }
-                            if (cellValue.Key == "產品應用" && cellValue.Value != null)
-                            {
-                                DinViewModel.ProApp = cellValue.Value.ToString();
-                            }
-                            if (cellValue.Key == "產品型號" && cellValue.Value != null)
-                            {
-                                DinViewModel.ProModel = cellValue.Value.ToString();
-                            }
-                            if (cellValue.Key == "預估量產年度\n( YYYY )" && cellValue.Value != null)
-                            {
-                                DinViewModel.EProduceYS = cellValue.Value.ToString();
-                            }
-                            if (cellValue.Key == "預估量產季度\n( Q1 - Q4)" && cellValue.Value != null)
-                            {
-                                DinViewModel.EProduceYS += cellValue.Value.ToString();
-                            }
-                            if (cellValue.Key == "預估第一年\n( 數量 )" && cellValue.Value != null)
-                            {
-                                DinViewModel.EFirstYQty = (int)(double)cellValue.Value;
-                            }
-                            if (cellValue.Key == "預估第二年\n( 數量 )" && cellValue.Value != null)
-                            {
-                                DinViewModel.ESecondYQty = (int)(double)cellValue.Value;
-                            }
-                            if (cellValue.Key == "預估第三年\n( 數量 )" && cellValue.Value != null)
-                            {
-                                DinViewModel.EThirdYQty = (int)(double)cellValue.Value;
-                            }
-                            if (cellValue.Key == "單價_第一年" && cellValue.Value != null)
-                            {
-                                DinViewModel.UFirstYPrice = (double)cellValue.Value;
-                            }
-                            if (cellValue.Key == "單價_第二年" && cellValue.Value != null)
-                            {
-                                DinViewModel.USecondYPrice = (double)cellValue.Value;
-                            }
-                            if (cellValue.Key == "單價_第三年" && cellValue.Value != null)
-                            {
-                                DinViewModel.UThirdYPrice = (double)cellValue.Value;
-                            }
-                            if (cellValue.Key == "預估三年銷售額\n( LTR )" && cellValue.Value != null)
-                            {
-                                DinViewModel.ELTR = (int)(double)cellValue.Value;
-                            }
-                            if (cellValue.Key == "毛利率\n( 預估 )" && cellValue.Value != null)
-                            {
-                                DinViewModel.EGP = (double)cellValue.Value;
-                            }
-                            if (cellValue.Key == "PM" && cellValue.Value != null)
-                            {
-                                DinViewModel.PM_EmpName = cellValue.Value.ToString();
-
-                                if (!string.IsNullOrEmpty(DinViewModel.PM_EmpName))
+                                if (cellValue.Value == null)
                                 {
-                                    DinViewModel.PMID = _employeeService.GetEmployeeID(DinViewModel.PM_EmpName);
-                                    DinViewModel.PM_Bonus = 0.2;
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.Sales_EmpName = cellValue.Value.ToString();
+                                    if (!string.IsNullOrEmpty(DinViewModel.Sales_EmpName))
+                                    {
+                                        DinViewModel.SalesID = _employeeService.GetEmployeeID(DinViewModel.Sales_EmpName);
+                                        DinViewModel.Sales_Bonus = 0.4;
+                                    }
                                 }
                             }
-                            if (cellValue.Key == "Sales" && cellValue.Value != null)
+                            if (cellValue.Key == "FAE1")
                             {
-                                DinViewModel.Sales_EmpName = cellValue.Value.ToString();
-
-                                if (!string.IsNullOrEmpty(DinViewModel.Sales_EmpName))
+                                if (cellValue.Value == null)
                                 {
-                                    DinViewModel.SalesID = _employeeService.GetEmployeeID(DinViewModel.Sales_EmpName);
-                                    DinViewModel.Sales_Bonus = 0.4;
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.FAE1_EmpName = cellValue.Value.ToString();
+                                    if (!string.IsNullOrEmpty(DinViewModel.FAE1_EmpName))
+                                    {
+                                        DinViewModel.FAE1ID = _employeeService.GetEmployeeID(DinViewModel.FAE1_EmpName);
+                                    }
                                 }
                             }
-                            if (cellValue.Key == "FAE1" && cellValue.Value != null)
+                            if (cellValue.Key == "FAE1%")
                             {
-                                DinViewModel.FAE1_EmpName = cellValue.Value.ToString();
-
-                                if (!string.IsNullOrEmpty(DinViewModel.FAE1_EmpName))
+                                if (cellValue.Value == null)
                                 {
-                                    DinViewModel.FAE1ID = _employeeService.GetEmployeeID(DinViewModel.FAE1_EmpName);
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.FAE1_Bonus = (double)cellValue.Value;
                                 }
                             }
-                            if (cellValue.Key == "FAE1%" && cellValue.Value != null)
+                            if (cellValue.Key == "FAE2")
                             {
-                                DinViewModel.FAE1_Bonus = cellValue.Value;
-                            }
-                            if (cellValue.Key == "FAE2" && cellValue.Value != null)
-                            {
-                                DinViewModel.FAE2_EmpName = cellValue.Value.ToString();
-
-                                if (!string.IsNullOrEmpty(DinViewModel.FAE2_EmpName))
+                                if (cellValue.Value == null)
                                 {
-                                    DinViewModel.FAE2ID = _employeeService.GetEmployeeID(DinViewModel.FAE2_EmpName);
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.FAE2_EmpName = cellValue.Value.ToString();
+                                    if (!string.IsNullOrEmpty(DinViewModel.FAE2_EmpName))
+                                    {
+                                        DinViewModel.FAE2ID = _employeeService.GetEmployeeID(DinViewModel.FAE2_EmpName);
+                                    }
                                 }
                             }
-                            if (cellValue.Key == "FAE2%" && cellValue.Value != null)
+                            if (cellValue.Key == "FAE2%")
                             {
-                                DinViewModel.FAE2_Bonus = cellValue.Value;
-                            }
-                            if (cellValue.Key == "FAE3" && cellValue.Value != null)
-                            {
-                                DinViewModel.FAE3_EmpName = cellValue.Value.ToString();
-
-                                if (!string.IsNullOrEmpty(DinViewModel.FAE3_EmpName))
+                                if (cellValue.Value == null)
                                 {
-                                    DinViewModel.FAE3ID = _employeeService.GetEmployeeID(DinViewModel.FAE3_EmpName);
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.FAE2_Bonus = (double)cellValue.Value;
                                 }
                             }
-                            if (cellValue.Key == "FAE3%" && cellValue.Value != null)
+                            if (cellValue.Key == "FAE3")
                             {
-                                DinViewModel.FAE3_Bonus = cellValue.Value;
+                                if (cellValue.Value == null)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.FAE3_EmpName = cellValue.Value.ToString();
+                                    if (!string.IsNullOrEmpty(DinViewModel.FAE3_EmpName))
+                                    {
+                                        DinViewModel.FAE3ID = _employeeService.GetEmployeeID(DinViewModel.FAE3_EmpName);
+                                    }
+                                }
                             }
+                            if (cellValue.Key == "FAE3%")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    DinViewModel.FAE3_Bonus = (double)cellValue.Value;
+                                }
+                            }                           
                         }
-                        list.Add(DinViewModel);
+                        list_Dins.Add(DinViewModel);
                     }
-                    InsertDins(list);
+                    InsertDins(list_Dins);
                 }
             }
-
-            return list;
+            return list_Dins;
         }
 
         private string CheckDinInsert(DinViewModel dinViewModel)
         {
             string Message = string.Empty;
 
-            if (string.IsNullOrEmpty(dinViewModel.Cus_DB) || string.IsNullOrEmpty(dinViewModel.CusID))
+            if (!string.IsNullOrEmpty(dinViewModel.ProApp) && dinViewModel.ProApp.Length > 40)
             {
-                Message += "找無相符合客戶資料;\n";
-            }
-
-            if (string.IsNullOrEmpty(dinViewModel.ProApp))
-            {
-                Message += "產品應用無資料;\n";
-            }
-
-            if (!string.IsNullOrEmpty(dinViewModel.ProApp) && dinViewModel.ProApp.Length > 20)
-            {
-                Message += "產品應用文字長度大於20個字;\n";
-            }
-
-            if (string.IsNullOrEmpty(dinViewModel.PartNo))
-            {
-                Message += "產品編號無資料;\n";
+                Message += "產品應用文字長度大於40個字;\n";
             }
 
             if (!string.IsNullOrEmpty(dinViewModel.PartNo) && dinViewModel.PartNo.Length > 25)
@@ -454,14 +643,9 @@ namespace DDD_2024.Services
                 Message += "產品編號長度大於25個字;\n";
             }
 
-            if (string.IsNullOrEmpty(dinViewModel.VendorID))
-            {
-                Message += "供應商無資料;\n";
-            }
-
             if (!string.IsNullOrEmpty(dinViewModel.vmCreateDate) && dinViewModel.vmCreateDate.Length > 10)
             {
-                Message += "申請時間無資料或格式錯誤;\n";
+                Message += "申請時間格式錯誤;\n";
             }
 
             if(!string.IsNullOrEmpty(dinViewModel.EProduceYS) && dinViewModel.EProduceYS.Length > 6)
@@ -480,24 +664,6 @@ namespace DDD_2024.Services
             }
 
             //檢查是否有Do資料----20240424待定義
-
-
-
-            //檢查是否有重複Din資料
-            //if (!string.IsNullOrEmpty(doViewModel.Cus_DB) && !string.IsNullOrEmpty(doViewModel.CusID))
-            //{
-            //    var ProjectID = _projectMContext.ProjectM.Where(e => e.Cus_DB == doViewModel.Cus_DB && e.CusID == doViewModel.CusID && e.ProApp == doViewModel.ProApp).Select(e => e.ProjectID).FirstOrDefault();
-            //
-            //    if (ProjectID != null)
-            //    {
-            //        var ProjectD = _projectDContext.ProjectD.Where(e => e.ProjectID == ProjectID && e.VendorID == doViewModel.VendorID && e.PartNo == doViewModel.PartNo).ToList();
-            //
-            //        if (ProjectD.Count > 0)
-            //        {
-            //            Message += "Do資料重複;\n";
-            //        }
-            //    }
-            //}
             return Message;
         }
 

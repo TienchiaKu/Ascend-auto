@@ -1,24 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using DDD_2024.Data;
 using DDD_2024.Models;
 using DDD_2024.Interfaces;
-using DDD_2024.Services;
 using MiniExcelLibs;
+using DDD_2024.Services;
 
 namespace DDD_2024.Controllers
 {
     public class CusVendorController : Controller
     {
-        private readonly ICusVendoeService _cusVendoeService;
+        private readonly ICusVendorService _cusVendoeService;
         private readonly CusVendorContext _cusVendorContext;
 
-        public CusVendorController(ICusVendoeService cusVendoeService, CusVendorContext cusVendorContext)
+        public CusVendorController(ICusVendorService cusVendoeService, CusVendorContext cusVendorContext)
         {
             _cusVendoeService = cusVendoeService;
             _cusVendorContext = cusVendorContext;
@@ -136,7 +131,6 @@ namespace DDD_2024.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Do
         public async Task<IActionResult> Recovery()
         {
             var model = await _cusVendoeService.GetSuspendList();
@@ -170,7 +164,6 @@ namespace DDD_2024.Controllers
             return View();
         }
 
-
         // POST: CusVendor/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -196,6 +189,97 @@ namespace DDD_2024.Controllers
                 }              
             }
             return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AllCus_Selector()
+        {
+            var selectListItems_Cus = await _cusVendoeService.GetAllCus_Selector();
+
+            return Content("");
+        }
+
+        // GET: CusVendor/Upload
+        public IActionResult Upload()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Upload(IFormFile Excelfile)
+        {
+            var stream = new MemoryStream();
+            if (Excelfile != null)
+            {
+                Excelfile.CopyTo(stream);
+
+                // 讀取stream中的所有資料
+                var streamData = MiniExcel.Query(stream, true, startCell: "A1").ToList();
+
+                // 檢查是否有資料
+                if (streamData.Count > 0)
+                {
+                    List<CusUploadViewModel> list_CusViewModels = new List<CusUploadViewModel>();
+
+                    for (int i = 0; i < streamData.Count; i++)
+                    {
+                        var rowData = streamData[i];
+
+                        var cusModel = new CusUploadViewModel();
+
+                        foreach (var cellValue in rowData)
+                        {
+                            if (cellValue.Key == "客戶代碼")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    cusModel.CusID = cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "客戶名稱")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    cusModel.CusName = cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "使用?")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    cusModel.CusStatus = cellValue.Value;
+                                }
+                            }
+                            if (cellValue.Key == "文中客戶代碼")
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    cusModel.ERPCusID = cellValue.Value;
+                                }
+                            }
+                        }
+                        list_CusViewModels.Add(cusModel);
+                    }
+                    _cusVendoeService.ImportCusVen(list_CusViewModels);
+                }
+            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }

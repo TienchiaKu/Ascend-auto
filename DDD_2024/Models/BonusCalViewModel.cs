@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MiniExcelLibs.Attributes;
+using System.ComponentModel.DataAnnotations;
 
 namespace DDD_2024.Models
 {
@@ -115,5 +116,38 @@ namespace DDD_2024.Models
 
         [Display(Name = "獎金")]
         public double Bonus { get; set; }
+    }
+
+    public class DoBonusViewModel
+    {
+        [ExcelColumn(Name ="區域")]
+        public string? Region { get; set; }
+
+        [ExcelColumn(Name = "申請人")]
+        public string? Owner { get; set; }
+
+        public decimal Active { get; set; }
+
+        public decimal New { get; set; }
+
+        [ExcelColumn(Name = "小計")]
+        public decimal Amount { get; set; }
+    }
+
+    public class DoReportUpload
+    {
+        [ExcelColumn(Name = "專案編號")]
+        [Display(Name = "專案編號")]
+        [Required]
+        public string? ProjectID { get; set; }
+
+        [ExcelColumn(Ignore = true)]
+        [Display(Name = "狀態更新")]
+        [Required]
+        public string? StatusUpdate { get; set; }
+
+        [ExcelColumn(Name = "更新訊息")]
+        [Display(Name = "更新訊息")]
+        public string? message { get; set; }
     }
 }

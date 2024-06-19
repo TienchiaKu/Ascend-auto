@@ -22,11 +22,11 @@ namespace DDD_2024.Controllers
         private readonly Project_EmpContext _project_EmpContext;
         private readonly IDoService _doService;
         private readonly IDwinService _dwinService;
-        private readonly ICusVendoeService _cusVendoeService;
+        private readonly ICusVendorService _cusVendoeService;
         private readonly IEmployeeService _employeeService;
 
         public DwinController(ProjectMContext projectMContext, ProjectDContext projectDContext, Project_DIDWContext project_DIDWContext, Project_EmpContext project_EmpContext,
-            IDoService doService, ICusVendoeService cusVendoeService, IEmployeeService employeeService, IDwinService dwinService)
+            IDoService doService, ICusVendorService cusVendoeService, IEmployeeService employeeService, IDwinService dwinService)
         {
             _projectMContext = projectMContext;
             _projectDContext = projectDContext;

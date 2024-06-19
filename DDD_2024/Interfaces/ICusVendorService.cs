@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DDD_2024.Interfaces
 {
-    public interface ICusVendoeService
+    public interface ICusVendorService
     {
         List<SelectListItem> DBSource { get; set; }
         List<SelectListItem> cusVendor { get; set; }
@@ -24,7 +24,6 @@ namespace DDD_2024.Interfaces
 
         Task<string> GetCusDBName(string CusID);
         Task<string> GetCusName(string CusID);
-        Task<string> GetVenName(string CusID);
 
         string GetvendorName(string dbSource, string vendorID);
         (string DBScource, string CusCode) GetCusCode(string CusName);
@@ -36,5 +35,8 @@ namespace DDD_2024.Interfaces
         string CreateNewVenID(string CusVenName);
         string GetVenID(string VendorName);
         bool CheckCusVenName(string cusVenName);
+        string GetVendorName(string CusID);
+
+        void ImportCusVen(List<CusUploadViewModel> list_CusViewModels);
     }
 }

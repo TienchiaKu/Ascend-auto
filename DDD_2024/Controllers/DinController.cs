@@ -25,11 +25,11 @@ namespace DDD_2024.Controllers
         private readonly Project_EmpContext _project_EmpContext;
         private readonly IDoService _doService;
         private readonly IDinService _dinService;
-        private readonly ICusVendoeService _cusVendoeService;
+        private readonly ICusVendorService _cusVendoeService;
         private readonly IEmployeeService _employeeService;
 
         public DinController(DoContext context, ProjectMContext projectMContext, ProjectDContext projectDContext, Project_DIDWContext project_DIDWContext, Project_EmpContext project_EmpContext,
-            IDoService doService, IDinService dinService, ICusVendoeService cusVendoeService, IEmployeeService employeeService)
+            IDoService doService, IDinService dinService, ICusVendorService cusVendoeService, IEmployeeService employeeService)
         {
             _context = context;
             _projectMContext = projectMContext;
@@ -357,7 +357,7 @@ namespace DDD_2024.Controllers
         [HttpPost]
         public IActionResult Upload(IFormFile Excelfile)
         {
-            List<DinViewModel> list = _dinService.ReadExcel(Excelfile);
+            List<DinViewModel> list = _dinService.ImportDin(Excelfile);
 
             return View(list);
         }

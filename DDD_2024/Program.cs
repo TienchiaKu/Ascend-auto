@@ -46,7 +46,7 @@ builder.Services.AddTransient<IDinService, DinService>();
 builder.Services.AddTransient<IDwinService, DwinService>();
 builder.Services.AddTransient<IProjectEmpService, ProjectEmpService>();
 builder.Services.AddTransient<IDutyService, DutyService>();
-builder.Services.AddTransient<ICusVendoeService, CusVendorService>();
+builder.Services.AddTransient<ICusVendorService, CusVendorService>();
 builder.Services.AddTransient<IBounsCalService, BonusCalService>();
 //builder.Services.AddSession();
 

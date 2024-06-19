@@ -16,30 +16,6 @@
         </h2>
         <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
             <div class="accordion-body">
-                @if (Model.DOStatus == "N")
-                {
-                    <div class="row">
-                        <div class="col-md-8">
-                        </div>
-                        <div class="col-md-2">
-                            <button id="btn_agree" class="btn btn-warning">審核同意</button>
-                        </div>
-                        <div class="col-md-2">
-                            <button id="btn_disagree" class="btn btn-warning">審核不同意</button>
-                        </div>
-                    </div>
-                }
-                @if (Model.DOStatus == "C" || Model.DOStatus == "X" || Model.DOStatus == "F")
-                {
-                    <div class="row">
-                        <div class="col-md-8">
-                        </div>
-                        <div class="col-md-4">
-                            <a asp-controller="Din" asp-action="Create" asp-route-projectID="@Model?.ProjectID" class="btn btn-warning">轉Din</a>
-                        </div>
-                    </div>
-                }
-
                 @if (contxt.HttpContext != null)
                 {
                     var empName = contxt.HttpContext.Session.GetString("EmpName");
@@ -176,42 +152,7 @@
     </div>
 </div>
 <script>
-    var btn_agree = document.getElementById('btn_agree');
-    var btn_disagree = document.getElementById('btn_disagree');
     var btn_transDin = document.getElementById('btn_transDin');
-
-    if (btn_agree) {
-        btn_agree.addEventListener('click', function () {
-            var doId = document.getElementById("str_doID").value;
-
-            fetch('/Do/ConfirmDO', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(doId)
-            })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-        });
-    }
-    if (btn_disagree) {
-        document.getElementById('btn_disagree').addEventListener('click', function () {
-            var doId = document.getElementById("str_doID").value;
-
-            fetch('/Do/RejectDO', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(doId)
-            })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-        });
-    }
 
     if (btn_transDin) {
         document.getElementById('btn_transDin').addEventListener('click', function () {

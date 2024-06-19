@@ -7,20 +7,22 @@ using Microsoft.DotNet.Scaffolding.Shared.ProjectModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DDD_2024.Services
 {
-    public class CusVendorService : ICusVendoeService
+    public class CusVendorService : ICusVendorService
     {
         private readonly ASCENDContext _contextAscend;
         private readonly ATIContext _contextATI;
         private readonly KIR1NContext _contextKIR1N;
-        private readonly INTERTEKContext _contextINTERTEK;
         private readonly TESTBContext _contextTESTB;
+        private readonly INTERTEKContext _contextINTERTEK;
         private readonly CusVendorContext _cusVendorContext;
         public List<SelectListItem> DBSource { get; set; }
         public List<SelectListItem> cusVendor { get; set; }
@@ -353,8 +355,8 @@ namespace DDD_2024.Services
             string CusID = string.Empty;
             string CusCode = string.Empty;
 
-            CusCode = _contextAscend.WD2SU01.FirstOrDefault(e => !string.IsNullOrEmpty(e.SU01004) && e.SU01004.Contains(CusName) &&
-           !string.IsNullOrEmpty(e.SU01001) && e.SU01001.StartsWith("B"))?.SU01001 ?? string.Empty;
+            CusCode = _contextAscend.WD2SU01.FirstOrDefault(e => !string.IsNullOrEmpty(e.SU01003) && e.SU01003.Contains(CusName) &&
+           !string.IsNullOrEmpty(e.SU01001) && (e.SU01001.StartsWith("A") || e.SU01001.StartsWith("B")))?.SU01001 ?? string.Empty;
 
             if (!string.IsNullOrEmpty(CusCode))
             {
@@ -584,6 +586,35 @@ namespace DDD_2024.Services
                 list_WD2SU01.Clear();
             }
 
+            //取Intertek-Cus
+            list_WD2SU01 = _contextINTERTEK.WD2SU01
+                .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("CIT"))
+                .ToList();
+
+            if (list_WD2SU01.Count > 0)
+            {
+                foreach (var item in list_WD2SU01)
+                {
+                    CusReportViewModel modelVM = new CusReportViewModel()
+                    {
+                        DBSource = "Intertek",
+                        CusID = item.SU01001,
+                        CusName = item.SU01003
+                    };
+
+                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
+                    if (!exists)
+                    {
+                        list_AllCus.Add(modelVM);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                list_WD2SU01.Clear();
+            }
+
             //取TestB-Cus
             list_WD2SU01 = _contextKIR1N.WD2SU01
                 .Where(item => (item.SU01002 == "0" || item.SU01002 == "2") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("T"))
@@ -671,66 +702,8 @@ namespace DDD_2024.Services
                 list_WD2SU01.Clear();
             }
 
-            //取ATI-Cus
-            list_WD2SU01 = _contextATI.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("VAM"))
-                .ToList();
-
-            if (list_WD2SU01.Count > 0)
-            {
-                foreach (var item in list_WD2SU01)
-                {
-                    CusReportViewModel modelVM = new CusReportViewModel()
-                    {
-                        DBSource = "ATI",
-                        CusID = item.SU01001,
-                        CusName = item.SU01003
-                    };
-
-                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
-                    if (!exists)
-                    {
-                        list_AllVendor.Add(modelVM);
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                list_WD2SU01.Clear();
-            }
-
-            //取Kirin-Cus
-            list_WD2SU01 = _contextKIR1N.WD2SU01
-                .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("VKI"))
-                .ToList();
-
-            if (list_WD2SU01.Count > 0)
-            {
-                foreach (var item in list_WD2SU01)
-                {
-                    CusReportViewModel modelVM = new CusReportViewModel()
-                    {
-                        DBSource = "Kirin",
-                        CusID = item.SU01001,
-                        CusName = item.SU01003
-                    };
-
-                    bool exists = list_CusVendorSuspend.Any(e => e.DBSource == modelVM.DBSource && e.CusVenCode == modelVM.CusID);
-                    if (!exists)
-                    {
-                        list_AllVendor.Add(modelVM);
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                list_WD2SU01.Clear();
-            }
-
-            //取TestB-Cus
-            list_WD2SU01 = _contextKIR1N.WD2SU01
+            //取Intertek-Cus
+            list_WD2SU01 = _contextINTERTEK.WD2SU01
                 .Where(item => (item.SU01002 == "0" || item.SU01002 == "1") && !string.IsNullOrEmpty(item.SU01001) && item.SU01001.StartsWith("VIT"))
                 .ToList();
 
@@ -740,7 +713,7 @@ namespace DDD_2024.Services
                 {
                     CusReportViewModel modelVM = new CusReportViewModel()
                     {
-                        DBSource = "TestB",
+                        DBSource = "Intertek",
                         CusID = item.SU01001,
                         CusName = item.SU01003
                     };
@@ -950,18 +923,194 @@ namespace DDD_2024.Services
             }
         }
 
-        public async Task<string> GetVenName(string CusID)
+        public string GetVendorName(string CusID)
         {
-            var model = await GetAllVendor();
+            string CusName = string.Empty;
 
-            var CusName = model.Where(e => e.CusID == CusID).Select(e => e.CusName).FirstOrDefault();
-            if (!string.IsNullOrEmpty(CusName))
+            if(string.IsNullOrEmpty(CusID))
             {
                 return CusName;
             }
-            else
+            
+            //搜尋Ascend 資料庫
+            CusName = _contextAscend.WD2SU01.Where(e => e.SU01001 == CusID).Select(e => e.SU01003).FirstOrDefault() ?? string.Empty;
+
+            if (string.IsNullOrEmpty(CusName))
+            {
+                //搜尋BizAuto資料庫
+                CusName  = _cusVendorContext.CusVendor.Where(e => e.CusVenID == CusID).Select(e => e.CusVenName).FirstOrDefault() ?? string.Empty;
+            }
+
+            return CusName;
+
+        }
+
+        public void ImportCusVen(List<CusUploadViewModel> list_CusViewModels)
+        {
+            if(list_CusViewModels.Count == 0)
+            {
+                return;
+            }
+
+            foreach(var item in list_CusViewModels)
+            {
+                string DBSource = string.Empty;
+
+                if (!string.IsNullOrEmpty(item.CusID))
+                {
+                    DBSource = GetDBSourcebyCusID(item.CusID);
+                }
+
+                switch (item.CusStatus)
+                {
+                    //使用
+                    case "Y":
+                        if (DBSource == "Auto")
+                        {
+                            var OriModel = _cusVendorContext.CusVendor.Where(e => !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.StartsWith("C") &&
+                                           e.CusVenID == item.CusID && string.IsNullOrEmpty(e.CusVenCode) && 
+                                           !string.IsNullOrEmpty(e.IsUse) && e.IsUse == "N").FirstOrDefault();
+                            //檢查是否存在且未對應到文中資料庫且已被停用
+                            if (OriModel != null)
+                            {
+                                OriModel.IsUse = "Y";
+                                OriModel.UpdateDate = DateTime.Now;
+
+                                _cusVendorContext.Update(OriModel);
+                                _cusVendorContext.SaveChanges();
+                            }
+                        }
+                        else
+                        {
+                            var OriModel = _cusVendorContext.CusVendor.Where(e => !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.StartsWith("D") &&
+                                           e.CusVenCode == item.CusID).FirstOrDefault();
+
+                            if(OriModel != null)
+                            {
+                                _cusVendorContext.Remove(OriModel);
+                                _cusVendorContext.SaveChanges();
+                            }
+                        }
+                        break;
+                    //停用客戶/供應商
+                    case "N":
+                        if(DBSource == "Auto")
+                        {
+                            var OriModel = _cusVendorContext.CusVendor.Where(e => !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.StartsWith("C") &&
+                                        e.CusVenID == item.CusID &&!string.IsNullOrEmpty(e.IsUse) && e.IsUse != "N").FirstOrDefault();
+                            //檢查是否存在且尚未被停用
+                            if(OriModel != null)
+                            {
+                                OriModel.IsUse = "N";
+                                OriModel.UpdateDate = DateTime.Now;
+
+                                _cusVendorContext.Update(OriModel);
+                                _cusVendorContext.SaveChanges();
+                            }
+                        }
+                        else
+                        {
+                            //檢查是否已經停用
+                            var ChkModel = _cusVendorContext.CusVendor.Where(e => !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.StartsWith("D") &&
+                                        e.CusVenCode == item.CusID).FirstOrDefault();
+                            //尚未被停用
+                            if (ChkModel == null)
+                            {
+                                var model = new CusVendor()
+                                {
+                                    CusVenID = GetSuspendCusVenID(),
+                                    CusVenName = item.CusName,
+                                    DBSource = DBSource,
+                                    CusVenCode = item.CusID,
+                                    IsUse = "N",
+                                    UpdateDate = DateTime.Now
+                                };
+                                _cusVendorContext.Add(model);
+                                _cusVendorContext.SaveChanges();
+                            }
+                        }
+                        break;
+                    //DBSource = Auto, 修改客戶名稱
+                    case "E":
+                        if (DBSource == "Auto")
+                        {
+                            var OriModel = _cusVendorContext.CusVendor.Where(e => !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.StartsWith("C") &&
+                                           e.CusVenID == item.CusID).FirstOrDefault();
+                            //檢查是否存在且尚未被停用
+                            if (OriModel != null && OriModel.IsUse != "N")
+                            {
+                                OriModel.CusVenName = item.CusName;
+                                OriModel.UpdateDate = DateTime.Now;
+
+                                _cusVendorContext.Update(OriModel);
+                                _cusVendorContext.SaveChanges();
+                            }
+                        }
+                        break;
+                    //DBSource = Auto, 停用Auto的資料,並寫入對應的文中DBSource及CusID
+                    case "C":
+                        if (DBSource == "Auto")
+                        {
+                            var OriModel = _cusVendorContext.CusVendor.Where(e => !string.IsNullOrEmpty(e.CusVenID) && e.CusVenID.StartsWith("C") &&
+                                           e.CusVenID == item.CusID).FirstOrDefault();
+                            //檢查是否存在且尚未被停用
+                            if (OriModel != null)
+                            {
+                                if (!string.IsNullOrEmpty(item.ERPCusID))
+                                {
+                                    OriModel.DBSource = GetDBSourcebyCusID(item.ERPCusID);
+                                    OriModel.CusVenCode = item.ERPCusID;
+                                    OriModel.IsUse = "N";
+                                    OriModel.UpdateDate = DateTime.Now;
+
+                                    _cusVendorContext.Update(OriModel);
+                                    _cusVendorContext.SaveChanges();
+                                }             
+                            }
+                        }
+                        break;
+                }
+            }
+
+        }
+        private string GetDBSourcebyCusID(string CusID)
+        {
+            if (string.IsNullOrEmpty(CusID))
             {
                 return string.Empty;
+            }
+            else
+            {
+                switch (CusID.Substring(0, 1))
+                {
+                    case "A":
+                        return "Ascend";
+                    case "B":
+                        return "Ascend";
+                    case "C":
+                        if(CusID.Length >= 3)
+                        {
+                            switch (CusID.Substring(0, 3))
+                            {
+                                case "CAM":
+                                    return "ATI";
+                                case "CKI":
+                                    return "Kirin";
+                                case "CIT":
+                                    return "Intertek";
+                            }
+                            // 檢查第二位或第三位是否為數字
+                            if (char.IsDigit(CusID[1]) && char.IsDigit(CusID[2]))
+                            {
+                                return "Auto";
+                            }
+                        }
+                        return string.Empty;
+                    case "T":
+                        return "TestB";
+                    default: 
+                        return string.Empty;
+                }               
             }
         }
     }

@@ -1,7 +1,7 @@
-﻿@model DDD_2024.Models.DoViewModel
+﻿@model DDD_2024.Models.DoCreateViewModel
 @inject IHttpContextAccessor contxt
 @inject DDD_2024.Interfaces.IEmployeeService EmployeeService
-@inject DDD_2024.Interfaces.ICusVendoeService CusVendoeService
+@inject DDD_2024.Interfaces.ICusVendorService CusVendorService
 
 @{
     ViewData["Title"] = "Create";
@@ -40,6 +40,16 @@
                         </div>
                     }
                 }
+                <div class="row">
+                    <div class="col-md-4">
+                    </div>
+                    <div class="col-md-4">
+                        <label>搜尋客戶</label>
+                        <input id="searchCusInput" type="text" />
+                    </div>
+                    <div class="col-md-4">
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -56,13 +66,13 @@
         </div>
         <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="CusName" class="control-label"></label>
+                <label asp-for="CusID" class="control-label"></label>
                 <select asp-for="CusID" asp-items="ViewBag.CustomerList" class="form-control" id="cusSelect"></select>
             </div>
         </div>
         <div class="col-md-4">
-            <label asp-for="VendorName" class="control-label"></label>
-            <select asp-for="VendorID" asp-items="ViewBag.VendorList" class="form-control" id="cusSelect"></select>
+            <label asp-for="VendorID" class="control-label"></label>
+            <select asp-for="VendorID" asp-items="ViewBag.VendorList" class="form-control " id="vendorSelect"></select>
         </div>
     </div>
     <div class="row" style="margin-top:6px">
@@ -88,13 +98,13 @@
         </div>
         <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="Applicant" class="control-label"></label>
+                <label asp-for="ApplicantID" class="control-label"></label>
                 <select asp-for="ApplicantID" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="Approver" class="control-label"></label>
+                <label asp-for="ApproverID" class="control-label"></label>
                 <select asp-for="ApproverID" asp-items="EmployeeService.GetEmployeeNameList" class="form-control"></select>
             </div>
         </div>

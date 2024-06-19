@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<DDD_2024.Models.CusReportViewModel>
 @inject IHttpContextAccessor contxt;
-@inject DDD_2024.Interfaces.ICusVendoeService CusVendoeService
+@inject DDD_2024.Interfaces.ICusVendorService CusVendoeService
 
 @{
     ViewData["Title"] = "Index";
@@ -38,28 +38,14 @@
         </h2>
         <div id="collapseConOne" class="accordion-collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConditon">
             <div class="accordion-body">
-                <div class="row" style="margin-top:6px">
-                    <form asp-action="CusVendorReport_Excel">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <input type="submit" value="匯出客供商報表" class="btn btn-warning" />
-                        </div>
-                    </div>
-                    </form>
-                    <div class="col-md-9">
-                    </div>
-                </div>
-                <div class="row" style="margin-top:6px">
-                    <div class="col-md-3">
+                <div class="row mb-3">
+                    <div class="col-md-3 mx-1">
                         <a asp-action="Create" asp-route-type="Cus" class="btn btn-warning">建立客戶</a>
-                    </div>
-                    <div class="col-md-3">
                         <a asp-action="Create" asp-route-type="Ven" class="btn btn-warning">建立供應商</a>
                     </div>
-                    <div class="col-md-3">
-                        <button onclick="onclick()" class="btn btn-warning">停用名單</button>
-                    </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4 mx-1">
+                        <input type="submit" value="匯出客供商報表" class="btn btn-dark" />
+                        <a asp-action="Upload" class="btn btn-dark">客供商資料更新(Excel)</a>
                     </div>
                 </div>
                 @if (contxt.HttpContext != null)

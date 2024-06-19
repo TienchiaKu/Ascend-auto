@@ -1,0 +1,9 @@
+﻿@model IEnumerable<DDD_2024.Models.CusUploadViewModel>
+
+<form id="dataForm" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="file">選擇Excel：</label>
+        <input type="file" name="Excelfile" class="form-control-file" accept=".xlsx,.xls" />
+        <button type="submit" class="btn btn-warning">更新客供商資料</button>
+    </div>
+</form>

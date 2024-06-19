@@ -22,14 +22,14 @@ namespace DDD_2024.Services
         private readonly INTERTEKContext _IntertekContext;
         private readonly TESTBContext _TestbContext;
         private readonly IEmployeeService _employeeService;
-        private readonly ICusVendoeService _cusVendoeService;
+        private readonly ICusVendorService _cusVendoeService;
         private readonly IProjectEmpService _projectEmpService;
         private readonly IDoService _doService;
 
         public DwinService(ProjectMContext projectMContext, ProjectDContext projectDContext, ProjectDOContext projectDOContext,
             Project_DIDWContext project_DIDWContext,
             Project_EmpContext project_EmpContext, ASCENDContext aSCENDContext, ATIContext aTIContext, KIR1NContext kIR1NContext,
-            INTERTEKContext iNTERTEKContext, TESTBContext tESTBContext, IEmployeeService employeeService, ICusVendoeService cusVendoeService,
+            INTERTEKContext iNTERTEKContext, TESTBContext tESTBContext, IEmployeeService employeeService, ICusVendorService cusVendoeService,
             IDoService doService, IProjectEmpService projectEmpService)
         {
             _projectMContext = projectMContext;

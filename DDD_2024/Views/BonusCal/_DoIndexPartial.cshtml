@@ -1,0 +1,40 @@
+﻿@model IEnumerable<DDD_2024.Models.BonusCalViewModel>
+
+<table class="table">
+    <tbody id="tableBody">
+        @foreach (var item in Model)
+        {
+            @if (item.Status == "DO")
+            {
+                <tr>
+                    <td>
+                        @if (item.ProjectID != null)
+                        {
+                            <input type="checkbox" id="@item.ProjectID" class="table-checkbox" />
+                        }
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ProjectID)
+                    </td>
+                    <td style="display: none;">
+                        @Html.DisplayFor(modelItem => item.Status)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.PartNo)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.VendorName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CusName)
+                    </td>
+                    <td>
+                        <form asp-action="TransProjectDetail" asp-route-ProjectID="@item.ProjectID" asp-route-Status="@item.Status">
+                            <button type="submit" class="btn btn-dark">詳細資料</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

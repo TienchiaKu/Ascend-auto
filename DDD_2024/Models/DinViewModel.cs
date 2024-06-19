@@ -22,6 +22,10 @@ namespace DDD_2024.Models
         public string? DinStatus { get; set; }
 
         //ProjectM
+        [StringLength(4)]
+        [Display(Name = "專案狀態")]
+        public string? ProjectStatus { get; set; }
+
         [StringLength(8)]
         [Display(Name = "客戶資料庫")]
         public string? Cus_DB { get; set; }

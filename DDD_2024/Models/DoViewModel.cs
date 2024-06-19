@@ -90,4 +90,46 @@ namespace DDD_2024.Models
         [Display(Name = "上傳狀態")]
         public string? UploadStatus { get; set; }
     }
+
+    public class DoCreateViewModel
+    {
+        [Required]
+        [Display(Name = "申請時間")]
+        public DateTime CreateDate { get; set; }
+
+        [Required]
+        [Display(Name = "客戶")]
+        public string? CusID { get; set; }
+
+        [Required]
+        [Display(Name = "供應商")]
+        public string? VendorID { get; set; }
+
+        [Required]
+        [Display(Name = "產品代號")]
+        public string? PartNo { get; set; }
+
+        [Display(Name = "產品應用")]
+        public string? ProApp { get; set; }
+
+        [Required]
+        [Display(Name = "是否為新客戶")]
+        public string? TradeStatus { get; set; }
+
+        [Required]
+        [Display(Name = "申請者")]
+        public int ApplicantID { get; set; }
+
+        [Required]
+        [Display(Name = "覆核者ID")]
+        public int ApproverID { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "Action")]
+        public string? DoUAction { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "Status")]
+        public string? DoUStatus { get; set; }
+    }
 }

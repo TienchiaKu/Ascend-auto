@@ -3,8 +3,11 @@ using DDD_2024.Interfaces;
 using DDD_2024.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Drawing;
 
 namespace DDD_2024.Services
 {
@@ -17,12 +20,12 @@ namespace DDD_2024.Services
         private readonly Project_DIDWContext _projectDIDWContext;
         private readonly Project_DOASUpdateContext _project_DOASUpdateContext;
         private readonly IEmployeeService _employeeService;
-        private readonly ICusVendoeService _cusVendoeService;
+        private readonly ICusVendorService _cusVendoeService;
         private readonly IDoService _doService;
 
         public BonusCalService(ProjectMContext projectMContext, ProjectDContext projectDContext, ProjectDOContext projectDOContext,
             Project_DIDWContext projectDIDWContext, Project_DOASUpdateContext project_DOASUpdateContext,
-            Project_EmpContext project_EmpContext, IEmployeeService employeeService, ICusVendoeService cusVendoeService, IDoService doService)
+            Project_EmpContext project_EmpContext, IEmployeeService employeeService, ICusVendorService cusVendoeService, IDoService doService)
         {
             _projectMContext = projectMContext;
             _projectDContext = projectDContext;
@@ -35,12 +38,13 @@ namespace DDD_2024.Services
             _project_DOASUpdateContext = project_DOASUpdateContext;
         }
 
-        public async Task<List<BonusCalViewModel>> GetProjects_DO()
+        public async Task<List<BonusCalViewModel>> GetProjects_Do()
         {
             List<BonusCalViewModel> list_BonusCal = new List<BonusCalViewModel>();
-
+            
             //加入DO資料
-            var modelDo = await _projectDOContext.Project_DO.Where(p => p.Status == "C").ToListAsync();
+            var modelDo = await _projectDOContext.Project_DO.Where(p => p.Status == "N" ).ToListAsync();
+
             foreach (var item in modelDo)
             {
                 var modelProjectM = _projectMContext.ProjectM.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
@@ -62,19 +66,101 @@ namespace DDD_2024.Services
 
                     if (!string.IsNullOrEmpty(modelProjectD.VendorID))
                     {
-                        model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
+                        model.VendorName = _cusVendoeService.GetVendorName(modelProjectD.VendorID);
+                        
                     }
 
                     list_BonusCal.Add(model);
                 }
             }
 
-            //加入Din資料
-            var modelDIn = await _projectDIDWContext.Project_DIDW.Where(p => p.DinStatus == "C").ToListAsync();
-            foreach (var item in modelDIn)
+            ////加入Din資料
+            //var modelDIn = await _projectDIDWContext.Project_DIDW.Where(p => p.DinStatus == "C").ToListAsync();
+            //foreach (var item in modelDIn)
+            //{
+            //    var modelProjectM = _projectMContext.ProjectM.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
+            //    var modelProjectD = _projectDContext.ProjectD.Where(p => p.ProjectID == item.ProjectID && p.Stage == "DIN").FirstOrDefault();
+            //
+            //    if (modelProjectM != null && modelProjectD != null)
+            //    {
+            //        var model = new BonusCalViewModel
+            //        {
+            //            ProjectID = item.ProjectID,
+            //            PartNo = modelProjectD.PartNo,
+            //            Status = "DIN"
+            //        };
+            //
+            //        if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
+            //        {
+            //            model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
+            //        }
+            //
+            //        if (!string.IsNullOrEmpty(modelProjectD.VendorID))
+            //        {
+            //            model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
+            //        }
+            //
+            //        list_BonusCal.Add(model);
+            //    }
+            //}
+            //
+            ////加入DWIN資料
+            //var modelDWin = await _projectDIDWContext.Project_DIDW.Where(p => p.DwinStatus == "C").ToListAsync();
+            //foreach (var item in modelDWin)
+            //{
+            //    var modelProjectM = _projectMContext.ProjectM.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
+            //    var modelProjectD = _projectDContext.ProjectD.Where(p => p.ProjectID == item.ProjectID && p.Stage == "DWIN").FirstOrDefault();
+            //
+            //    if (modelProjectM != null && modelProjectD != null)
+            //    {
+            //        var model = new BonusCalViewModel
+            //        {
+            //            ProjectID = item.ProjectID,
+            //            PartNo = modelProjectD.PartNo,
+            //            Status = "DWIN"
+            //        };
+            //
+            //        if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
+            //        {
+            //            model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
+            //        }
+            //
+            //        if (!string.IsNullOrEmpty(modelProjectD.VendorID))
+            //        {
+            //            model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
+            //        }
+            //
+            //        list_BonusCal.Add(model);
+            //    }
+            //}
+            return list_BonusCal;
+        }
+
+        public async Task<List<BonusCalViewModel>> GetProjects_DoFilter(List<string> list_months)
+        {
+            List<BonusCalViewModel> list_BonusCal = new List<BonusCalViewModel>();
+
+            //加入DO資料
+            var modelDo = await _projectDOContext.Project_DO.Where(p => p.Status == "N").ToListAsync();
+
+            if (list_months.Count > 0)
+            {
+                //如果list_months有多個值的話，先用List來儲存篩選結果，再把結果覆蓋list_ProjectDo
+                List<Project_DO> list_DoFilter = new List<Project_DO>();
+
+                foreach (var item in list_months)
+                {
+                    var FilterList = modelDo.Where(p => !string.IsNullOrEmpty(p.CreateDate) && p.CreateDate.Contains(item)).ToList();
+                    list_DoFilter.AddRange(FilterList);
+                }
+
+                modelDo = list_DoFilter;
+            }
+
+            foreach (var item in modelDo)
             {
                 var modelProjectM = _projectMContext.ProjectM.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
-                var modelProjectD = _projectDContext.ProjectD.Where(p => p.ProjectID == item.ProjectID && p.Stage == "DIN").FirstOrDefault();
+                var modelProjectD = _projectDContext.ProjectD.Where(p => p.ProjectID == item.ProjectID && p.Stage == "DO").FirstOrDefault();
 
                 if (modelProjectM != null && modelProjectD != null)
                 {
@@ -82,7 +168,7 @@ namespace DDD_2024.Services
                     {
                         ProjectID = item.ProjectID,
                         PartNo = modelProjectD.PartNo,
-                        Status = "DIN"
+                        Status = "DO"
                     };
 
                     if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
@@ -92,37 +178,7 @@ namespace DDD_2024.Services
 
                     if (!string.IsNullOrEmpty(modelProjectD.VendorID))
                     {
-                        model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
-                    }
-
-                    list_BonusCal.Add(model);
-                }
-            }
-
-            //加入DWIN資料
-            var modelDWin = await _projectDIDWContext.Project_DIDW.Where(p => p.DwinStatus == "C").ToListAsync();
-            foreach (var item in modelDWin)
-            {
-                var modelProjectM = _projectMContext.ProjectM.Where(p => p.ProjectID == item.ProjectID).FirstOrDefault();
-                var modelProjectD = _projectDContext.ProjectD.Where(p => p.ProjectID == item.ProjectID && p.Stage == "DWIN").FirstOrDefault();
-
-                if (modelProjectM != null && modelProjectD != null)
-                {
-                    var model = new BonusCalViewModel
-                    {
-                        ProjectID = item.ProjectID,
-                        PartNo = modelProjectD.PartNo,
-                        Status = "DWIN"
-                    };
-
-                    if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
-                    {
-                        model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
-                    }
-
-                    if (!string.IsNullOrEmpty(modelProjectD.VendorID))
-                    {
-                        model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
+                        model.VendorName = _cusVendoeService.GetVendorName(modelProjectD.VendorID);
                     }
 
                     list_BonusCal.Add(model);
@@ -158,7 +214,7 @@ namespace DDD_2024.Services
 
                     if (!string.IsNullOrEmpty(modelProjectD.VendorID))
                     {
-                        model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
+                        model.VendorName = _cusVendoeService.GetVendorName(modelProjectD.VendorID);
                     }
 
                     list_BonusCal.Add(model);
@@ -188,7 +244,7 @@ namespace DDD_2024.Services
 
                     if (!string.IsNullOrEmpty(modelProjectD.VendorID))
                     {
-                        model.VendorName = await _cusVendoeService.GetVenName(modelProjectD.VendorID);
+                        model.VendorName = _cusVendoeService.GetVendorName(modelProjectD.VendorID);
                     }
 
                     list_BonusCal.Add(model);
@@ -213,9 +269,6 @@ namespace DDD_2024.Services
 
                 switch (projectsStage)
                 {
-                    case "DO":
-                        model = GetDoBonus(projectID);
-                        break;
                     case "DIN":
                         model = GetDinBonus(projectID);
                         break;
@@ -229,53 +282,7 @@ namespace DDD_2024.Services
 
             return list_PBonus;
         }
-
-        private ProjectBonusViewModel GetDoBonus(string projectID)
-        {
-            var projectM = _projectMContext.ProjectM.Where(e => e.ProjectID == projectID).FirstOrDefault();
-            var projectDO = _projectDOContext.Project_DO.Where(e => e.ProjectID == projectID && e.Status == "C").FirstOrDefault();
-
-            var model = new ProjectBonusViewModel();
-
-            if (projectM != null && projectDO != null)
-            {                             
-                model.ProjectID = projectID;
-                model.Stage = "DO";
-                model.ApplicantID = projectDO.ApplicantID;
-                model.ApplicantName = _employeeService.GetEmployeeName(projectDO.ApplicantID);
-                model.TradeStatus = projectDO.TradeStatus;
-                model.Region = _employeeService.GetEmpRegion(projectDO.ApplicantID);
-
-                if (_employeeService.CheckOnDuty(model.ApplicantID, string.Empty))
-                {
-                    if (!string.IsNullOrEmpty(model.Region) && !string.IsNullOrEmpty(model.TradeStatus))
-                    {
-                        if (model.Region == "TW" && model.TradeStatus == "N")
-                        {
-                            model.DOBonus = 1000;
-                        }
-                        else if (model.Region == "TW" && model.TradeStatus == "A")
-                        {
-                            model.DOBonus = 500;
-                        }
-                        else if (model.Region == "CN" && model.TradeStatus == "N")
-                        {
-                            model.DOBonus = 200;
-                        }
-                        else if (model.Region == "CN" && model.TradeStatus == "A")
-                        {
-                            model.DOBonus = 100;
-                        }
-                    }
-                }
-                else
-                {
-                    model.DOBonus = 0;
-                }
-            }
-            return model;
-        }
-
+       
         private ProjectBonusViewModel GetDinBonus(string projectID)
         {
             var projectM = _projectMContext.ProjectM.Where(e => e.ProjectID == projectID).FirstOrDefault();
@@ -574,70 +581,152 @@ namespace DDD_2024.Services
             return list_EmpBonus;
         }
 
-        public async Task<List<DoReportViewModel>> GetDoReport()
+        private async Task<List<DoReportViewModel>> GetDoReport(string[] projectIds)
         {
             List<DoReportViewModel> list_DoReport = new List<DoReportViewModel>();
 
-            var model = _projectDOContext.Project_DO.Where(e => e.Status == "N").ToList();
-
-            foreach(var item in model)
+            foreach (var item in projectIds)
             {
-                var ItemModel = new DoReportViewModel();
+                var modelDo = await _projectDOContext.Project_DO.Where(e => e.ProjectID == item).FirstOrDefaultAsync();
 
-                //取資料Project_DO
-                ItemModel.ProjectID = item.ProjectID;
-
-                if (!string.IsNullOrEmpty(item.CreateDate))
+                if (modelDo != null)
                 {
-                    ItemModel.ApplicationDate = item.CreateDate.Substring(0, 4) + "/" + item.CreateDate.Substring(4, 2) + "/" + item.CreateDate.Substring(6, 2);
-                }
+                    var ItemModel = new DoReportViewModel();
 
-                ItemModel.Applicant = _employeeService.GetEmployeeName(item.ApplicantID);
-                ItemModel.Approver = _employeeService.GetEmployeeName(item.ApproverID);
+                    //取資料Project_DO
+                    ItemModel.ProjectID = modelDo.ProjectID;
 
-                if (!string.IsNullOrEmpty(item.TradeStatus))
-                {
-                    item.TradeStatus = _doService.GetTradingStatusName(item.TradeStatus);
-                }
-
-                //取資料ProjectM
-                var modelM = _projectMContext.ProjectM.Where(e => e.ProjectID == item.ProjectID).FirstOrDefault();
-
-                if(modelM != null)
-                {
-                    if(!string.IsNullOrEmpty(modelM.Cus_DB) && !string.IsNullOrEmpty(modelM.CusID))
+                    if (!string.IsNullOrEmpty(modelDo.CreateDate))
                     {
-                        ItemModel.CusName = _cusVendoeService.GetvendorName(modelM.Cus_DB,modelM.CusID);
+                        ItemModel.ApplicationDate = modelDo.CreateDate.Substring(0, 4) + "/" + modelDo.CreateDate.Substring(4, 2) + "/" + modelDo.CreateDate.Substring(6, 2);
                     }
 
-                    ItemModel.ProApp = modelM.ProApp;
-                }
+                    ItemModel.ApplicantID = modelDo.ApplicantID;
+                    ItemModel.Applicant = _employeeService.GetEmployeeName(modelDo.ApplicantID);
+                    ItemModel.Approver = _employeeService.GetEmployeeName(modelDo.ApproverID);
 
-                //取資料ProjectD
-                var modelD = _projectDContext.ProjectD.Where(e => e.ProjectID == item.ProjectID).FirstOrDefault();
-
-                if (modelD != null)
-                {
-                    if (!string.IsNullOrEmpty(modelD.VendorID))
+                    if (!string.IsNullOrEmpty(modelDo.TradeStatus))
                     {
-                        ItemModel.VendorName = await _cusVendoeService.GetVenName(modelD.VendorID);
+                        ItemModel.TradeStatus = _doService.GetTradingStatusName(modelDo.TradeStatus);
                     }
 
-                    ItemModel.PartNo = modelD.PartNo;
-                }
+                    //取資料ProjectM
+                    var modelM = await _projectMContext.ProjectM.Where(e => e.ProjectID == item).FirstOrDefaultAsync();
 
-                //取資料Project_DOASUpdate 還沒寫取最新的資料
-                var modelDOAS = _project_DOASUpdateContext.Project_DOASUpdate.Where(e => e.DoID == item.DoID).OrderByDescending(p => p.DoUDate).FirstOrDefault();
+                    if (modelM != null)
+                    {
+                        if (!string.IsNullOrEmpty(modelM.Cus_DB) && !string.IsNullOrEmpty(modelM.CusID))
+                        {
+                            ItemModel.CusName = _cusVendoeService.GetvendorName(modelM.Cus_DB, modelM.CusID);
+                        }
 
-                if(modelDOAS != null)
-                {
-                    ItemModel.DoUStatus = modelDOAS.DoUStatus;
-                    ItemModel.DoUAction = modelDOAS.DoUAction;
+                        ItemModel.ProApp = modelM.ProApp;
+                    }
+
+                    //取資料ProjectD
+                    var modelD = await _projectDContext.ProjectD.Where(e => e.ProjectID == item).FirstOrDefaultAsync();
+
+                    if (modelD != null)
+                    {
+                        if (!string.IsNullOrEmpty(modelD.VendorID))
+                        {
+                            ItemModel.VendorName = _cusVendoeService.GetVendorName(modelD.VendorID);
+                        }
+
+                        ItemModel.PartNo = modelD.PartNo;
+                    }
+
+                    //取資料Project_DOASUpdate 還沒寫取最新的資料
+                    if (!string.IsNullOrEmpty(modelDo.DoID))
+                    {
+                        var modelDOAS = _project_DOASUpdateContext.Project_DOASUpdate.
+                                        Where(e => e.DoID == modelDo.DoID).ToList() ?? null;
+
+                        if (modelDOAS != null)
+                        {
+                            var OrderDOAS = modelDOAS.OrderByDescending(p => p.DoUDate).FirstOrDefault();
+
+                            if (OrderDOAS != null)
+                            {
+                                ItemModel.DoUStatus = OrderDOAS.DoUStatus;
+                                ItemModel.DoUAction = OrderDOAS.DoUAction;
+                            }
+                        }
+                    }
+                    list_DoReport.Add(ItemModel);
                 }
             }
-
-            return list_DoReport;
+            return list_DoReport;            
         }
-       
+
+        public async Task<(List<DoReportViewModel>?,List<DoBonusViewModel>)> GetDoBonus(string[] projectIds)
+        {
+            var model = await GetDoReport(projectIds);
+            List<DoBonusViewModel> list_DoBouns = new List<DoBonusViewModel>();
+
+            if (model != null)
+            {
+                //儲存每個人的獎金用的字典
+                var EmpBonusTTL = new Dictionary<int, (int ActiveCount, int NewCount)>();
+
+                foreach (var item in model)
+                {
+                    if (EmpBonusTTL.ContainsKey(item.ApplicantID))
+                    {
+                        if (item.TradeStatus == "Active")
+                        {
+                            EmpBonusTTL[item.ApplicantID] = (EmpBonusTTL[item.ApplicantID].ActiveCount + 1, EmpBonusTTL[item.ApplicantID].NewCount);
+                        }
+                        else if(item.TradeStatus == "New")
+                        {
+                            EmpBonusTTL[item.ApplicantID] = (EmpBonusTTL[item.ApplicantID].ActiveCount, EmpBonusTTL[item.ApplicantID].NewCount + 1);
+                        }
+                    }
+                    else
+                    {
+                        if (item.TradeStatus == "Active")
+                        {
+                            EmpBonusTTL[item.ApplicantID] = (1, 0);
+                        }
+                        else if (item.TradeStatus == "New")
+                        {
+                            EmpBonusTTL[item.ApplicantID] = (0, 1);
+                        }
+                    }                   
+                }
+
+                if(EmpBonusTTL.Count > 0)
+                {                                        
+                    foreach(var item in EmpBonusTTL)
+                    {
+                        DoBonusViewModel doBonusViewModel = new DoBonusViewModel()
+                        {
+                            Region = _employeeService.GetEmpRegion(item.Key),
+                            Owner = _employeeService.GetEmployeeName_Onduty(item.Key),
+                            Active = item.Value.ActiveCount,
+                            New = item.Value.NewCount,
+                        };
+
+                        if (string.IsNullOrEmpty(doBonusViewModel.Owner))
+                        {
+                            continue;
+                        }
+                        
+                        if(doBonusViewModel.Region == "TW")
+                        {
+                            doBonusViewModel.Amount = doBonusViewModel.Active * 500 + doBonusViewModel.New * 1000;
+                        }
+                        else if (doBonusViewModel.Region == "CN")
+                        {
+                            doBonusViewModel.Amount = doBonusViewModel.Active * 100 + doBonusViewModel.New * 200;
+                        }
+
+                        list_DoBouns.Add(doBonusViewModel);
+                    }
+                    list_DoBouns = list_DoBouns.OrderBy(e => e.Region).ToList();
+                }
+            }
+            return (model,list_DoBouns);
+        }
     }
 }
