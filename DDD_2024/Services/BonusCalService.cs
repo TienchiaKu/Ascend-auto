@@ -3,11 +3,13 @@ using DDD_2024.Interfaces;
 using DDD_2024.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
+using System.Globalization;
 
 namespace DDD_2024.Services
 {
@@ -19,12 +21,13 @@ namespace DDD_2024.Services
         private readonly Project_EmpContext _projectEmpContext;
         private readonly Project_DIDWContext _projectDIDWContext;
         private readonly Project_DOASUpdateContext _project_DOASUpdateContext;
+        private readonly BizAutoContext _BizAutoContext;
         private readonly IEmployeeService _employeeService;
         private readonly ICusVendorService _cusVendoeService;
         private readonly IDoService _doService;
 
         public BonusCalService(ProjectMContext projectMContext, ProjectDContext projectDContext, ProjectDOContext projectDOContext,
-            Project_DIDWContext projectDIDWContext, Project_DOASUpdateContext project_DOASUpdateContext,
+            Project_DIDWContext projectDIDWContext, Project_DOASUpdateContext project_DOASUpdateContext, BizAutoContext bizAutoContext,
             Project_EmpContext project_EmpContext, IEmployeeService employeeService, ICusVendorService cusVendoeService, IDoService doService)
         {
             _projectMContext = projectMContext;
@@ -34,6 +37,7 @@ namespace DDD_2024.Services
             _projectEmpContext = project_EmpContext;
             _employeeService = employeeService;
             _cusVendoeService = cusVendoeService;
+            _BizAutoContext = bizAutoContext;
             _doService = doService;
             _project_DOASUpdateContext = project_DOASUpdateContext;
         }
@@ -581,50 +585,276 @@ namespace DDD_2024.Services
             return list_EmpBonus;
         }
 
-        private async Task<List<DoReportViewModel>> GetDoReport(string[] projectIds)
+        public async Task<List<BDoReportViewModel>> GetDoReport(BDoReportFilter filterModel)
         {
-            List<DoReportViewModel> list_DoReport = new List<DoReportViewModel>();
+            List<BDoReportViewModel> list_DoReport = new List<BDoReportViewModel>();
+
+            var doModel = await _projectDOContext.Project_DO.Where(e => e.Status == "N").ToListAsync();
+            var empModel = await _BizAutoContext.employeeM.ToListAsync();
+
+            //篩選條件Start------------------------------
+            if (filterModel.StartDate.HasValue)
+            {
+                doModel = doModel.Where(e =>
+                {
+                    DateTime createDate;
+                    return DateTime.TryParseExact(e.CreateDate, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out createDate) &&
+                           createDate >= filterModel.StartDate.Value;
+                }).ToList();
+            }
+
+            if (filterModel.EndDate.HasValue)
+            {
+                doModel = doModel.Where(e =>
+                {
+                    DateTime createDate;
+                    return DateTime.TryParseExact(e.CreateDate, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out createDate) &&
+                           createDate <= filterModel.EndDate.Value;
+                }).ToList();
+            }
+
+            if (filterModel.Region != "All")
+            {
+                var empIds = _BizAutoContext.employeeM
+                                 .Where(e => e.Region == filterModel.Region)
+                                 .Select(e => e.EmpID)
+                                 .ToList();
+                doModel = doModel.Where(e => empIds.Contains(e.ApplicantID)).ToList();
+            }
+            //篩選條件End------------------------------
+            int seq = 1;
+
+            if (doModel.Any())
+            {
+                var modelM = await _projectMContext.ProjectM.ToListAsync();
+                var modelD = await _projectDContext.ProjectD.ToListAsync();
+                var modelDoAS = await _project_DOASUpdateContext.Project_DOASUpdate.ToListAsync();
+                
+                foreach(var item in doModel)
+                {
+                    //取Project_DO資料
+                    var newModel = new BDoReportViewModel()
+                    {
+                        SEQ = seq,
+                        ProjectID = item.ProjectID,
+                        ApplicationDate = item.CreateDate?.Substring(0, 4) + "/" + item.CreateDate?.Substring(4, 2) + "/" + item.CreateDate?.Substring(6, 2) ?? string.Empty,
+                        ApplicantID = item.ApplicantID,
+                        Applicant = _employeeService.GetEmployeeName(item.ApplicantID),
+                        Approver = _employeeService.GetEmployeeName(item.ApproverID),
+                        NewActive = item.TradeStatus != null ? _doService.GetTradingStatusName(item.TradeStatus) : string.Empty
+                    };
+
+                    //加入ProjectM的資料
+                    if (modelM.Any())
+                    {
+                        var modelM_Filter = modelM.Where(e => e.ProjectID == item.ProjectID).FirstOrDefault();
+
+                        if(modelM_Filter != null)
+                        {
+                            if (!string.IsNullOrEmpty(modelM_Filter.Cus_DB) && !string.IsNullOrEmpty(modelM_Filter.CusID))
+                            {
+                                // 將 matchingProjectM 的資料設定給 Cus_DB 屬性
+                                newModel.CusName = _cusVendoeService.GetvendorName(modelM_Filter.Cus_DB, modelM_Filter.CusID);
+                            }
+                            newModel.ProApp = modelM_Filter.ProApp;
+                        }
+                    }
+
+                    // 加入ProjectD的資料
+                    if (modelD.Any())
+                    {
+                        var modelD_Filter = modelD.Where(e => e.ProjectID == item.ProjectID).FirstOrDefault();
+
+                        if (modelD_Filter != null)
+                        {
+                            newModel.VendorName = modelD_Filter.VendorID != null ? _cusVendoeService.GetVendorName(modelD_Filter.VendorID) : string.Empty;
+                            newModel.PartNo = modelD_Filter.PartNo;
+                        }
+                    }
+
+                    //加入Project_DOASUpdate的資料
+                    if (modelDoAS.Any())
+                    {
+                        var modelDoAS_Filter = modelDoAS.Where(e => e.DoID == item.DoID).OrderByDescending(e => e.DoUDate).FirstOrDefault();
+
+                        if (modelDoAS_Filter != null)
+                        {
+                            newModel.DoUAction = modelDoAS_Filter.DoUAction;
+                            newModel.DoStatus1 = modelDoAS_Filter.DoUStatus;
+                            newModel.DoStatusDate = modelDoAS_Filter.DoUDate;
+                        }
+                    }
+                    list_DoReport.Add(newModel);
+                    seq++;
+                }
+            }           
+            return list_DoReport;
+        }
+
+        public List<DoBonusViewModel> GetEmpBonus(List<BDoReportViewModel> list)
+        {
+            List<DoBonusViewModel> list_DoBouns = new List<DoBonusViewModel>();
+
+            if (list.Count > 0)
+            {
+                //儲存每個人的獎金用的字典
+                var EmpBonusTTL = new Dictionary<int, (int ActiveCount, int NewCount)>();
+
+                foreach (var item in list)
+                {
+                    if (EmpBonusTTL.ContainsKey(item.ApplicantID))
+                    {
+                        if (item.NewActive == "Active")
+                        {
+                            EmpBonusTTL[item.ApplicantID] = (EmpBonusTTL[item.ApplicantID].ActiveCount + 1, EmpBonusTTL[item.ApplicantID].NewCount);
+                        }
+                        else if(item.NewActive == "New")
+                        {
+                            EmpBonusTTL[item.ApplicantID] = (EmpBonusTTL[item.ApplicantID].ActiveCount, EmpBonusTTL[item.ApplicantID].NewCount + 1);
+                        }
+                    }
+                    else
+                    {
+                        if (item.NewActive == "Active")
+                        {
+                            EmpBonusTTL[item.ApplicantID] = (1, 0);
+                        }
+                        else if (item.NewActive == "New")
+                        {
+                            EmpBonusTTL[item.ApplicantID] = (0, 1);
+                        }
+                    }                   
+                }
+
+                if (EmpBonusTTL.Count > 0)
+                {
+                    List<DoBonusViewModel> list_CN = new List<DoBonusViewModel>();
+                    List<DoBonusViewModel> list_TW = new List<DoBonusViewModel>();
+
+                    foreach (var item in EmpBonusTTL)
+                    {
+                        string region = _employeeService.GetEmpRegion(item.Key);
+
+                        if (string.IsNullOrEmpty(region))
+                        {
+                            continue;
+                        }
+
+                        if (region == "CN")
+                        {
+                            list_CN.Add(new DoBonusViewModel
+                            {
+                                Region_CN = region,
+                                Owner_CN = _employeeService.GetEmployeeName_Onduty(item.Key),
+                                Active_CN = item.Value.ActiveCount,
+                                New_CN = item.Value.NewCount,
+                                Amount_CN = item.Value.ActiveCount * 100 + item.Value.NewCount * 200
+                            });
+                        }
+                        else
+                        {
+                            list_TW.Add(new DoBonusViewModel
+                            {
+                                Region_TW = region,
+                                Owner_TW = _employeeService.GetEmployeeName_Onduty(item.Key),
+                                Active_TW = item.Value.ActiveCount,
+                                New_TW = item.Value.NewCount,
+                                Amount_TW = item.Value.ActiveCount * 500 + item.Value.NewCount * 1000
+                            });
+                        }
+                    }
+
+                    // 計算每個區域的總額
+                    var cnTotal = new DoBonusViewModel
+                    {
+                        Region_CN = "CN",
+                        Owner_CN = "TTL",
+                        Active_CN = list_CN.Sum(e => e.Active_CN),
+                        New_CN = list_CN.Sum(e => e.New_CN),
+                        Amount_CN = list_CN.Sum(e => e.Amount_CN)
+                    };
+                    list_CN.Add(cnTotal);
+
+                    var twTotal = new DoBonusViewModel
+                    {
+                        Region_TW = "TW",
+                        Owner_TW = "TTL",
+                        Active_TW = list_TW.Sum(e => e.Active_TW),
+                        New_TW = list_TW.Sum(e => e.New_TW),
+                        Amount_TW = list_TW.Sum(e => e.Amount_TW)
+                    };
+                    list_TW.Add(twTotal);
+
+                    // 配對 CN 和 TW 的資料
+                    int maxCount = Math.Max(list_CN.Count, list_TW.Count);
+                    for (int i = 0; i < maxCount; i++)
+                    {
+                        var cnEntry = i < list_CN.Count ? list_CN[i] : new DoBonusViewModel();
+                        var twEntry = i < list_TW.Count ? list_TW[i] : new DoBonusViewModel();
+
+                        list_DoBouns.Add(new DoBonusViewModel
+                        {
+                            Region_CN = cnEntry.Region_CN,
+                            Owner_CN = cnEntry.Owner_CN,
+                            Active_CN = cnEntry.Active_CN,
+                            New_CN = cnEntry.New_CN,
+                            Amount_CN = cnEntry.Amount_CN,
+                            noted1 = "",
+                            Region_TW = twEntry.Region_TW,
+                            Owner_TW = twEntry.Owner_TW,
+                            Active_TW = twEntry.Active_TW,
+                            New_TW = twEntry.New_TW,
+                            Amount_TW = twEntry.Amount_TW
+                        });
+                    }
+                }
+            }
+            return list_DoBouns;
+        }
+
+        private async Task<List<DiDwReportViewModel>> GetDinReport(string[] projectIds)
+        {
+            List<DiDwReportViewModel> list_model= new List<DiDwReportViewModel> ();
 
             foreach (var item in projectIds)
             {
-                var modelDo = await _projectDOContext.Project_DO.Where(e => e.ProjectID == item).FirstOrDefaultAsync();
+                var modelDiDw = await _projectDIDWContext.Project_DIDW.Where(e => e.ProjectID == item).FirstOrDefaultAsync();
 
-                if (modelDo != null)
+                //先加入Din資料
+                if (modelDiDw != null) 
                 {
-                    var ItemModel = new DoReportViewModel();
+                    var ItemModel = new DiDwReportViewModel();
 
-                    //取資料Project_DO
-                    ItemModel.ProjectID = modelDo.ProjectID;
-
-                    if (!string.IsNullOrEmpty(modelDo.CreateDate))
+                    if (!string.IsNullOrEmpty(modelDiDw.DinDate))
                     {
-                        ItemModel.ApplicationDate = modelDo.CreateDate.Substring(0, 4) + "/" + modelDo.CreateDate.Substring(4, 2) + "/" + modelDo.CreateDate.Substring(6, 2);
+                        ItemModel.ApplicationDate = modelDiDw.DinDate.Substring(0, 4) + "/" + modelDiDw.DinDate.Substring(4, 2) + "/" + modelDiDw.DinDate.Substring(6, 2);
                     }
 
-                    ItemModel.ApplicantID = modelDo.ApplicantID;
-                    ItemModel.Applicant = _employeeService.GetEmployeeName(modelDo.ApplicantID);
-                    ItemModel.Approver = _employeeService.GetEmployeeName(modelDo.ApproverID);
+                    ItemModel.ProjectID = item;
 
-                    if (!string.IsNullOrEmpty(modelDo.TradeStatus))
-                    {
-                        ItemModel.TradeStatus = _doService.GetTradingStatusName(modelDo.TradeStatus);
-                    }
+                    var modelM = _projectMContext.ProjectM.Where(e => e.ProjectID == item ).FirstOrDefault();
 
-                    //取資料ProjectM
-                    var modelM = await _projectMContext.ProjectM.Where(e => e.ProjectID == item).FirstOrDefaultAsync();
-
-                    if (modelM != null)
+                    if(modelM != null)
                     {
                         if (!string.IsNullOrEmpty(modelM.Cus_DB) && !string.IsNullOrEmpty(modelM.CusID))
                         {
                             ItemModel.CusName = _cusVendoeService.GetvendorName(modelM.Cus_DB, modelM.CusID);
                         }
-
+                        ItemModel.EndCusName = modelM.EndCus;
                         ItemModel.ProApp = modelM.ProApp;
+                        ItemModel.ProModel = modelM.ProModel;
+
+                        if (!string.IsNullOrEmpty(modelM.EProduceYS) && modelM.EProduceYS.Length == 6)
+                        {
+                            ItemModel.PYear = modelM.EProduceYS.Substring(0, 4);
+                            ItemModel.PSeason = modelM.EProduceYS.Substring(4, 2);
+                        }
+
+
+
                     }
 
-                    //取資料ProjectD
-                    var modelD = await _projectDContext.ProjectD.Where(e => e.ProjectID == item).FirstOrDefaultAsync();
+                    var modelD = _projectDContext.ProjectD.Where(e => e.ProjectID == item && e.Stage == "DIN").FirstOrDefault();
 
                     if (modelD != null)
                     {
@@ -633,100 +863,31 @@ namespace DDD_2024.Services
                             ItemModel.VendorName = _cusVendoeService.GetVendorName(modelD.VendorID);
                         }
 
-                        ItemModel.PartNo = modelD.PartNo;
+                        ItemModel.PartName = modelD.PartNo;
+                        ItemModel.FirstQty = modelD.EFirstYQty;
+                        ItemModel.SecondQty = modelD.ESecondYQty;
+                        ItemModel.ThirdQty = modelD.EThirdYQty;
+                        ItemModel.FirstPrice = modelD.UFirstYPrice;
+                        ItemModel.SecondPrice = modelD.USecondYPrice;
+                        ItemModel.ThirdPrice = modelD.UThirdYPrice;
                     }
 
-                    //取資料Project_DOASUpdate 還沒寫取最新的資料
-                    if (!string.IsNullOrEmpty(modelDo.DoID))
-                    {
-                        var modelDOAS = _project_DOASUpdateContext.Project_DOASUpdate.
-                                        Where(e => e.DoID == modelDo.DoID).ToList() ?? null;
-
-                        if (modelDOAS != null)
-                        {
-                            var OrderDOAS = modelDOAS.OrderByDescending(p => p.DoUDate).FirstOrDefault();
-
-                            if (OrderDOAS != null)
-                            {
-                                ItemModel.DoUStatus = OrderDOAS.DoUStatus;
-                                ItemModel.DoUAction = OrderDOAS.DoUAction;
-                            }
-                        }
-                    }
-                    list_DoReport.Add(ItemModel);
                 }
             }
-            return list_DoReport;            
+            return list_model;
         }
 
-        public async Task<(List<DoReportViewModel>?,List<DoBonusViewModel>)> GetDoBonus(string[] projectIds)
+        public List<SelectListItem> GetRegion()
         {
-            var model = await GetDoReport(projectIds);
-            List<DoBonusViewModel> list_DoBouns = new List<DoBonusViewModel>();
+            List<SelectListItem> selectListItems = new List<SelectListItem>();
 
-            if (model != null)
+            selectListItems = new List<SelectListItem>
             {
-                //儲存每個人的獎金用的字典
-                var EmpBonusTTL = new Dictionary<int, (int ActiveCount, int NewCount)>();
-
-                foreach (var item in model)
-                {
-                    if (EmpBonusTTL.ContainsKey(item.ApplicantID))
-                    {
-                        if (item.TradeStatus == "Active")
-                        {
-                            EmpBonusTTL[item.ApplicantID] = (EmpBonusTTL[item.ApplicantID].ActiveCount + 1, EmpBonusTTL[item.ApplicantID].NewCount);
-                        }
-                        else if(item.TradeStatus == "New")
-                        {
-                            EmpBonusTTL[item.ApplicantID] = (EmpBonusTTL[item.ApplicantID].ActiveCount, EmpBonusTTL[item.ApplicantID].NewCount + 1);
-                        }
-                    }
-                    else
-                    {
-                        if (item.TradeStatus == "Active")
-                        {
-                            EmpBonusTTL[item.ApplicantID] = (1, 0);
-                        }
-                        else if (item.TradeStatus == "New")
-                        {
-                            EmpBonusTTL[item.ApplicantID] = (0, 1);
-                        }
-                    }                   
-                }
-
-                if(EmpBonusTTL.Count > 0)
-                {                                        
-                    foreach(var item in EmpBonusTTL)
-                    {
-                        DoBonusViewModel doBonusViewModel = new DoBonusViewModel()
-                        {
-                            Region = _employeeService.GetEmpRegion(item.Key),
-                            Owner = _employeeService.GetEmployeeName_Onduty(item.Key),
-                            Active = item.Value.ActiveCount,
-                            New = item.Value.NewCount,
-                        };
-
-                        if (string.IsNullOrEmpty(doBonusViewModel.Owner))
-                        {
-                            continue;
-                        }
-                        
-                        if(doBonusViewModel.Region == "TW")
-                        {
-                            doBonusViewModel.Amount = doBonusViewModel.Active * 500 + doBonusViewModel.New * 1000;
-                        }
-                        else if (doBonusViewModel.Region == "CN")
-                        {
-                            doBonusViewModel.Amount = doBonusViewModel.Active * 100 + doBonusViewModel.New * 200;
-                        }
-
-                        list_DoBouns.Add(doBonusViewModel);
-                    }
-                    list_DoBouns = list_DoBouns.OrderBy(e => e.Region).ToList();
-                }
-            }
-            return (model,list_DoBouns);
+                new SelectListItem{ Text = "全區域", Value ="All"},
+                new SelectListItem{ Text = "台灣區", Value ="TW"},
+                new SelectListItem{ Text = "大陸區", Value ="CN"}
+            };
+            return selectListItems;
         }
     }
 }

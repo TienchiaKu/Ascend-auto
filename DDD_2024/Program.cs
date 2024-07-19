@@ -20,8 +20,6 @@ builder.Services.AddDbContext<BizAutoContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BizAutoContext") ?? throw new InvalidOperationException("Connection string 'BizAutoContext' not found.")));
 builder.Services.AddDbContext<CusVendorContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("CusVendorContext") ?? throw new InvalidOperationException("Connection string 'CusVendorContext' not found.")));
-builder.Services.AddDbContext<DDD_DutyContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DDD_DutyContext") ?? throw new InvalidOperationException("Connection string 'DDD_DutyContext' not found.")));
 builder.Services.AddDbContext<DoContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DoContext") ?? throw new InvalidOperationException("Connection string 'DoContext' not found.")));
 builder.Services.AddDbContext<Project_DOASUpdateContext>(options =>
@@ -45,9 +43,9 @@ builder.Services.AddTransient<IDoService, DoService>();
 builder.Services.AddTransient<IDinService, DinService>();
 builder.Services.AddTransient<IDwinService, DwinService>();
 builder.Services.AddTransient<IProjectEmpService, ProjectEmpService>();
-builder.Services.AddTransient<IDutyService, DutyService>();
 builder.Services.AddTransient<ICusVendorService, CusVendorService>();
 builder.Services.AddTransient<IBounsCalService, BonusCalService>();
+builder.Services.AddTransient<ICommonService, CommonService>();
 //builder.Services.AddSession();
 
 //取得組態中資料庫連線設定

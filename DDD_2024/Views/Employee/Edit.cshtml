@@ -1,4 +1,4 @@
-﻿@model DDD_2024.Models.EmployeeM
+﻿@model DDD_2024.Models.EmpEditViewModel
 @inject DDD_2024.Interfaces.IEmployeeService EmployeeService
 
 @{
@@ -11,7 +11,7 @@
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="row" style="margin-top:6px">
         <div class="col-md-12">
-            <input type="hidden" asp-for="EmpID" />
+            <input type="hidden" asp-for="EmpId" />
         </div>
     </div>
     <div class="row" style="margin-top:6px">
@@ -37,7 +37,7 @@
             <div class="form-group">
                 <div class="form-group">
                     <label asp-for="Region" class="control-label"></label>
-                    <select asp-for="Region" asp-items="EmployeeService.GetRegion" class="form-control"></select>
+                    <select asp-for="Region" asp-items="EmployeeService.Region_selector" class="form-control"></select>
                     <span asp-validation-for="Region" class="text-danger"></span>
                 </div>
             </div>
@@ -55,8 +55,44 @@
     <div class="row" style="margin-top:6px">
         <div class="col-md-4">
             <div class="form-group">
-                <input type="submit" value="確認更新" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-warning">返回清單</a>
+                <label asp-for="isSales" class="control-label"></label>
+                <select asp-for="isSales" asp-items="EmployeeService.YesNo" class="form-control"></select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="isPM" class="control-label"></label>
+                <select asp-for="isPM" asp-items="EmployeeService.YesNo" class="form-control"></select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="isFAE" class="control-label"></label>
+                <select asp-for="isFAE" asp-items="EmployeeService.YesNo" class="form-control"></select>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="isRBU" class="control-label"></label>
+                <select asp-for="isRBU" asp-items="EmployeeService.YesNo" class="form-control"></select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="Auth" class="control-label"></label>
+                <select asp-for="Auth" asp-items="EmployeeService.Auth_selector" class="form-control"></select>
+            </div>
+        </div>
+        <div class="col-md-4">
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="submit" value="確認更新" class="btn btn-warning" />
+                <a asp-action="Index" class="btn btn-dark">返回清單</a>
             </div>
         </div>
         <div class="col-md-8">

@@ -37,6 +37,10 @@ namespace DDD_2024.Models
 
         [Display(Name = "覆核者")]
         public int ApproverID { get; set; }
+
+        [StringLength(1)]
+        [Display(Name = "是否結案")]
+        public string? IsFinish { get; set; }
     }
 
     public class Project_DOASUpdate
@@ -86,48 +90,51 @@ namespace DDD_2024.Models
         public string? DoUStatus { get; set; }
     }
 
-    public class DOASU_Upload_ViewModel
+    public class DoEditViewModel
     {
-        [StringLength(13)]
         [Required]
         public string? DoID { get; set; }
 
-        [Display(Name = "更新時間")]
         [Required]
-        public DateTime vmDoUDate { get; set; }
+        [Display(Name = "專案編號")]
+        public string? ProjectID { get; set; }
+
+        [Display(Name = "申請日期")]
+        public DateTime CreateDate { get; set; }
+
+        [Display(Name = "客戶")]
+        public string? CusName { get; set; }
+
+        [Display(Name = "供應商")]
+        public string? VendorName { get; set; }
+
+        [Display(Name = "產品代號")]
+        public string? PartNo { get; set; }
+
+        [Display(Name = "產品應用")]
+        public string? ProApp { get; set; }
+
+        [Display(Name = "申請者")]
+        [Required]
+        public int ApplicantID { get; set; }
+
+        [Display(Name = "覆核者")]
+        [Required]
+        public int ApproverID { get; set; }
+
+        [Display(Name = "交易狀態")]
+        public string? TradeStatus { get; set; }
 
         [Display(Name = "更新時間")]
         public string? DoUDate { get; set; }
 
-        [StringLength(500)]
-        [Display(Name = "動作")]
+        [StringLength(500, ErrorMessage = "字串長度過長")]
+        [Display(Name = "DoAction")]
         public string? DoUAction { get; set; }
 
-        [StringLength(500)]
-        [Display(Name = "進度")]
+        [StringLength(500,ErrorMessage ="字串長度過長")]
+        [Display(Name = "DoStatus")]
         [Required]
         public string? DoUStatus { get; set; }
-
-        [StringLength(500)]
-        [Display(Name = "進度")]
-        [Required]
-        public string? DoUStatusCurrent { get; set; }
-
-        [StringLength(500)]
-        [Display(Name = "進度5月")]
-        [Required]
-        public string? DoUStatus5 { get; set; }
-
-        [StringLength(500)]
-        [Display(Name = "進度4月")]
-        [Required]
-        public string? DoUStatus4 { get; set; }
-
-        [StringLength(12)]
-        [Display(Name = "專案編號")]
-        public string? ProjectID { get; set; }
-
-        [Display(Name = "上傳狀態")]
-        public string? UploadStatus { get; set; }
     }
 }

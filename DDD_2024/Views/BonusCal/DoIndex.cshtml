@@ -113,9 +113,9 @@
         <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
             <div class="accordion-body">
                 <div class="row mb-3">
-                    <div class="col-md-2 mx-1">
+                    <div class="col-md-3 mx-1">
                         <button id="btn_check_all" class="btn btn-warning mb-2 mr-2">全選</button>
-                        <button id="btn_uncheck_all" class="btn btn-warning mb-2 mr-2">取消全選</button>
+                        <button id="btn_uncheck_all" class="btn btn-warning mb-2 mr-2">取消全選</button> 
                     </div>
                     <div class="col-md-3 mx-1">
                         <button id="btn_PreviewDo" class="btn btn-dark mr-2">Do獎金預覽</button>
@@ -231,7 +231,6 @@
         });
     });
 
-    // 監聽全部同意按鈕的點擊事件
     document.getElementById('btn_PreviewDo').addEventListener('click', function () {
         var projectIds = [];
 
@@ -242,12 +241,19 @@
             projectIds.push(checkbox.id.replace('chk_', ''));
         });
 
-        fetch('/BonusCal/PreviewDo', {
-            method: 'POST',
+        if (projectIds.length === 0) {
+            alert('請選擇至少一個項目');
+            return;
+        }
+
+        var queryString = projectIds.map(id => `projectIds=${encodeURIComponent(id)}`).join('&');
+        var url = `/BonusCal/PreviewDo?${queryString}`;
+
+        fetch(url, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(projectIds) // 將 doIds 陣列轉換為 JSON 字串並傳遞給 controller
+            }
         })
             .then(response => {
                 if (!response.ok) {
@@ -263,33 +269,6 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('Do報表匯出失敗，請稍後再試');
-            });
-    });
-
-    // 監聽全部同意按鈕的點擊事件
-    document.getElementById('btn_deliver').addEventListener('click', function () {
-        var projectIds = [];
-
-        // 找到所有被勾選的勾選框
-        var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-
-        checkboxes.forEach(function (checkbox) {
-            projectIds.push(checkbox.id.replace('chk_', ''));
-        });
-
-        fetch('/BonusCal/BonusConfirm', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(projectIds) // 將 doIds 陣列轉換為 JSON 字串並傳遞給 controller
-        })
-            .then(response => {
-                // 處理回應，可能需要做一些錯誤處理或者確認操作成功
-                console.log('Status changed successfully');
-            })
-            .catch(error => {
-                console.error('Error:', error);
             });
     });
 
@@ -313,7 +292,7 @@
         // 找到表格
         var table = document.querySelector('table');
 
-        // 找到表格主体
+        // 找到表格主體
         var tbody = table.querySelector('tbody');
 
         // 清空表格主体的内容

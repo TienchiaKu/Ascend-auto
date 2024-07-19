@@ -3,9 +3,12 @@ using DDD_2024.Interfaces;
 using DDD_2024.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Scaffolding.Shared.ProjectModel;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.IO;
 
 namespace DDD_2024.Services
 {
@@ -48,20 +51,18 @@ namespace DDD_2024.Services
             _doService = doService;
         }
 
-        public async Task<List<DinViewModel>> GetDinsAsync()
+        public async Task<List<DinIndexViewModel>> GetDinsAsync()
         {
-            var modelDIn = await _projectDIDWContext.Project_DIDW.ToListAsync();
+            var modelDin = await _projectDIDWContext.Project_DIDW.Where(e => e.DinStatus == "N") .ToListAsync();
 
             //加入modelDin的資料
-            List<DinViewModel> list_dinViewModel = new List<DinViewModel>();
-            foreach (var item in modelDIn)
+            List<DinIndexViewModel> listModel = new List<DinIndexViewModel>();
+            foreach (var item in modelDin)
             {
-                var model = new DinViewModel
+                var model = new DinIndexViewModel
                 {
-                    DoID = item.DoID,
                     ProjectID = item.ProjectID,
-                    StatusName = _doService.GetStatusName(item.DinStatus),
-                    DinStatus = item.DinStatus
+                    DinStatus = _doService.GetStatusName(item.DinStatus)
                 };
 
                 if (!string.IsNullOrEmpty(item.DinDate) && item.DinDate.Length == 8)
@@ -78,9 +79,6 @@ namespace DDD_2024.Services
                     {
                         model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
                     }
-
-                    model.ProApp = modelProjectM.ProApp;
-                    model.ProModel = modelProjectM.ProModel;
                 }
                 else
                 {
@@ -94,12 +92,7 @@ namespace DDD_2024.Services
                 {
                     if (!string.IsNullOrEmpty(modelProjectD.VendorID))
                     {
-                        model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
-
-                        if (string.IsNullOrEmpty(model.VendorName))
-                        {
-                            model.VendorName = _cusVendoeService.GetvendorName("Auto", modelProjectD.VendorID);
-                        }
+                        model.VendorName = _cusVendoeService.GetVendorName(modelProjectD.VendorID);
                     }
 
                     model.PartNo = modelProjectD.PartNo;
@@ -109,21 +102,9 @@ namespace DDD_2024.Services
                     continue;
                 }
 
-
-                if (!string.IsNullOrEmpty(model.VendorID))
-                {
-                    model.VendorName = _cusVendoeService.GetvendorName("ASCEND", model.VendorID);
-                }
-
-                if (!string.IsNullOrEmpty(model.Cus_DB) && !string.IsNullOrEmpty(model.CusID))
-                {
-                    model.VendorName = _cusVendoeService.GetvendorName(model.Cus_DB, model.CusID);
-                }
-
-                list_dinViewModel.Add(model);
+                listModel.Add(model);
             }
-
-            return list_dinViewModel;
+            return listModel;
         }
 
         public async Task<DinViewModel> GetDinAsync(string? ProjectID)
@@ -166,17 +147,13 @@ namespace DDD_2024.Services
                     if(modelProjectD != null)
                     {
                         if (!string.IsNullOrEmpty(modelProjectD.VendorID))
-                        {
-                            model.VendorName = _cusVendoeService.GetvendorName("ASCEND", modelProjectD.VendorID);
-
-                            if (string.IsNullOrEmpty(model.VendorName))
-                            {
-                                model.VendorName = _cusVendoeService.GetvendorName("Auto", modelProjectD.VendorID);
-                            }
+                        {                           
+                            model.VendorName = _cusVendoeService.GetVendorName(modelProjectD.VendorID);
                         }
                         model.PartNo = modelProjectD.PartNo;
                         model.ELTR = modelProjectD.ELTR;
                         model.EGP = modelProjectD.EGP;
+                        model.LTP = modelProjectD.ELTR * modelProjectD.EGP;
                         model.EFirstYQty = modelProjectD.EFirstYQty;
                         model.ESecondYQty = modelProjectD.ESecondYQty;
                         model.EThirdYQty = modelProjectD.EThirdYQty;
@@ -224,10 +201,10 @@ namespace DDD_2024.Services
             return model;
         }
 
-        //匯入Din
-        public List<DinViewModel> ImportDin(IFormFile Excelfile)
+        //匯入Din/Dwin
+        public List<DinUploadViewModel> ImportDIDW(IFormFile Excelfile)
         {
-            List<DinViewModel> list_Dins = new List<DinViewModel>();
+            List<DinUploadViewModel> list_DiDws = new List<DinUploadViewModel>();
 
             var stream = new MemoryStream();
             if (Excelfile != null)
@@ -237,14 +214,14 @@ namespace DDD_2024.Services
                 // 讀取stream中的所有資料
                 var streamData = MiniExcel.Query(stream, true, startCell: "A4").ToList();
 
-                // 檢查是否有資料
-                if (streamData.Count > 0)
+                    // 檢查是否有資料
+                    if (streamData.Count > 0)
                 {
                     for (int i = 0; i < streamData.Count; i++)
                     {
                         var rowData = streamData[i];
 
-                        var DinViewModel = new DinViewModel();
+                        var dinsVM = new DinUploadViewModel();
 
                         foreach (var cellValue in rowData)
                         {
@@ -252,47 +229,64 @@ namespace DDD_2024.Services
                             {
                                 continue;
                             }
-                            if (cellValue.Key == "Type" && cellValue.Value != null)
+                            if (cellValue.Key == "DIDWType" && cellValue.Value != null)
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "Type無資料";
+                                    dinsVM.UploadStatus += "無Din/Dwin類別";
                                     continue;
                                 }
                                 else
                                 {
                                     if(!string.IsNullOrEmpty(cellValue.Value) && cellValue.Value == "DIN")
                                     {
-                                        DinViewModel.ProjectStatus = cellValue.Value.ToString();
+                                        dinsVM.DIDWType = cellValue.Value.ToString();
                                     }
+
+                                    if (!string.IsNullOrEmpty(cellValue.Value) && cellValue.Value == "DWIN")
+                                    {
+                                        dinsVM.DIDWType = cellValue.Value.ToString();
+                                    }
+                                }
+                            }
+                            if(cellValue.Key == "專案編號")
+                            {
+                                if (cellValue.Value != null)
+                                {
+                                    dinsVM.ProjectID = cellValue.Value.ToString();
                                 }
                             }
                             if (cellValue.Key == "立項日期\n( YYYY/MM/DD )")
                             {
                                 if(cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "立項日期無資料";
+                                    dinsVM.UploadStatus += "立項日期無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.vmCreateDate = Convert.ToDateTime(cellValue.Value).ToString("yyyy/MM/dd");
+                                    dinsVM.CreateDate = Convert.ToDateTime(cellValue.Value).ToString("yyyy/MM/dd");
                                 }
                             }
                             if (cellValue.Key == "供應商")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "供應商無資料";
+                                    dinsVM.UploadStatus += "供應商無資料;";
                                     continue;
                                 }
                                 else
-                                {
-                                    DinViewModel.VendorName = cellValue.Value.ToString();
+                                {                                   
+                                    dinsVM.VendorName = cellValue.Value.ToString();
 
-                                    if (!string.IsNullOrEmpty(DinViewModel.VendorName))
+                                    if (!string.IsNullOrEmpty(dinsVM.VendorName))
                                     {
-                                        DinViewModel.VendorID = _cusVendoeService.GetVenID(DinViewModel.VendorName);
+                                        dinsVM.VendorID = _cusVendoeService.GetVenID(dinsVM.VendorName);
+                                    }
+
+                                    if (string.IsNullOrEmpty(dinsVM.VendorID))
+                                    {
+                                        dinsVM.UploadStatus += "找無相符合原廠資料-" + dinsVM.VendorName + "\n;";
                                     }
                                 }
                             }
@@ -300,32 +294,32 @@ namespace DDD_2024.Services
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "品名料號無資料";
+                                    dinsVM.UploadStatus += "品名料號無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.PartNo = cellValue.Value.ToString();
+                                    dinsVM.PartNo = cellValue.Value.ToString();
                                 }
                             }
                             if (cellValue.Key == "客戶名稱")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "客戶名稱無資料";
+                                    dinsVM.UploadStatus += "客戶名稱無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.CusName = cellValue.Value.ToString();
+                                    dinsVM.CusName = cellValue.Value.ToString();
 
-                                    if (!string.IsNullOrEmpty(DinViewModel.CusName))
+                                    if (!string.IsNullOrEmpty(dinsVM.CusName))
                                     {
-                                        (DinViewModel.Cus_DB, DinViewModel.CusID) = _cusVendoeService.GetCusID(DinViewModel.CusName);
+                                        (dinsVM.CusDB, dinsVM.CusID) = _cusVendoeService.GetCusID(dinsVM.CusName);
 
-                                        if (string.IsNullOrEmpty(DinViewModel.Cus_DB) || string.IsNullOrEmpty(DinViewModel.CusID))
+                                        if (string.IsNullOrEmpty(dinsVM.CusDB) || string.IsNullOrEmpty(dinsVM.CusID))
                                         {
-                                            DinViewModel.UploadStatus += "找無相符合客戶資料;\n";
+                                            dinsVM.UploadStatus += "找無相符合客戶資料-" + dinsVM.CusName + "\n;";
                                         }
                                     }
                                 }
@@ -334,159 +328,156 @@ namespace DDD_2024.Services
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "最終客戶無資料";
+                                    dinsVM.UploadStatus += "最終客戶無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.EndCus = cellValue.Value.ToString();
+                                    dinsVM.EndCusName = cellValue.Value.ToString();
                                 }
                             }
                             if (cellValue.Key == "產品應用")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "產品應用無資料";
+                                    dinsVM.UploadStatus += "產品應用無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.ProApp = cellValue.Value.ToString();
+                                    dinsVM.ProApp = cellValue.Value.ToString();
                                 }
                             }
                             if (cellValue.Key == "產品型號")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "產品型號無資料";
+                                    dinsVM.UploadStatus += "產品型號無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.ProModel = cellValue.Value.ToString();
+                                    dinsVM.ProModel = cellValue.Value.ToString();
                                 }
                             }
                             if (cellValue.Key == "預估量產年度\n( YYYY )")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "預估量產年度無資料";
+                                    dinsVM.UploadStatus += "預估量產年度無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.EProduceYS = cellValue.Value.ToString();
+                                    dinsVM.EProduceYear = cellValue.Value.ToString();
                                 }
                             }
                             if (cellValue.Key == "預估量產季度\n( Q1 - Q4)")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "預估量產季度無資料";
+                                    dinsVM.UploadStatus += "預估量產季度無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    if (!string.IsNullOrEmpty(DinViewModel.EProduceYS))
-                                    {
-                                        DinViewModel.EProduceYS += cellValue.Value.ToString();
-                                    }
+                                    dinsVM.EProduceSeason = cellValue.Value.ToString();
                                 }
                             }
                             if (cellValue.Key == "預估第一年\n( 數量 )")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "預估第一年數量無資料";
+                                    dinsVM.UploadStatus += "預估第一年(數量)無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.EFirstYQty = (int)(double)cellValue.Value;
+                                    dinsVM.EFirstYQty = (int)(double)cellValue.Value;
                                 }
                             }
                             if (cellValue.Key == "預估第二年\n( 數量 )")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "預估第二年數量無資料";
+                                    dinsVM.UploadStatus += "預估第二年(數量)無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.ESecondYQty = (int)(double)cellValue.Value;
+                                    dinsVM.ESecondYQty = (int)(double)cellValue.Value;
                                 }
                             }
                             if (cellValue.Key == "預估第三年\n( 數量 )")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "預估第三年數量無資料";
+                                    dinsVM.UploadStatus += "預估第三年(數量)無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.EThirdYQty = (int)(double)cellValue.Value;
+                                    dinsVM.EThirdYQty = (int)(double)cellValue.Value;
                                 }
                             }
                             if (cellValue.Key == "單價_第一年")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "單價第一年無資料";
+                                    dinsVM.UploadStatus += "單價第一年無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.UFirstYPrice = (double)cellValue.Value;
+                                    dinsVM.UFirstYPrice = (double)cellValue.Value;
                                 }
                             }
                             if (cellValue.Key == "單價_第二年")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "單價第二年無資料";
+                                    dinsVM.UploadStatus += "單價第二年無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.USecondYPrice = (double)cellValue.Value;
+                                    dinsVM.USecondYPrice = (double)cellValue.Value;
                                 }
                             }
                             if (cellValue.Key == "單價_第三年")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "單價第三年無資料";
+                                    dinsVM.UploadStatus += "單價第三年無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.UThirdYPrice = (double)cellValue.Value;
+                                    dinsVM.UThirdYPrice = (double)cellValue.Value;
                                 }
                             }
                             if (cellValue.Key == "預估三年銷售額\n( LTR )")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "預估三年銷售額無資料";
+                                    dinsVM.UploadStatus += "預估三年銷售額無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.ELTR = (int)(double)cellValue.Value;
+                                    dinsVM.ELTR = (int)(double)cellValue.Value;
                                 }
                             }
                             if (cellValue.Key == "毛利率\n( 預估 )")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    DinViewModel.UploadStatus += "毛利率無資料";
+                                    dinsVM.UploadStatus += "毛利率無資料";
                                     continue;
                                 }
                                 else
                                 {
-                                    DinViewModel.EGP = (double)cellValue.Value;
+                                    dinsVM.EGP = (double)cellValue.Value;
                                 }
                             }
                             if (cellValue.Key == "Integration")
@@ -501,11 +492,11 @@ namespace DDD_2024.Services
                                     {
                                         if(cellValue.Value == "Y")
                                         {
-                                            DinViewModel.IsInte = true;
+                                            dinsVM.IsInte = true;
                                         }
                                         else if (cellValue.Value == "N")
                                         {
-                                            DinViewModel.IsInte = false;
+                                            dinsVM.IsInte = false;
                                         }
                                     }                                   
                                 }
@@ -518,11 +509,11 @@ namespace DDD_2024.Services
                                 }
                                 else
                                 {
-                                    DinViewModel.PM_EmpName = cellValue.Value.ToString();
-                                    if (!string.IsNullOrEmpty(DinViewModel.PM_EmpName))
+                                    dinsVM.PM_EmpName = cellValue.Value.ToString();
+                                    if (!string.IsNullOrEmpty(dinsVM.PM_EmpName))
                                     {
-                                        DinViewModel.PMID = _employeeService.GetEmployeeID(DinViewModel.PM_EmpName);
-                                        DinViewModel.PM_Bonus = 0.2;
+                                        dinsVM.PMID = _employeeService.GetEmployeeID(dinsVM.PM_EmpName);
+                                        dinsVM.PM_Bonus = 0.2;
                                     }
                                 }
                             }
@@ -534,11 +525,11 @@ namespace DDD_2024.Services
                                 }
                                 else
                                 {
-                                    DinViewModel.Sales_EmpName = cellValue.Value.ToString();
-                                    if (!string.IsNullOrEmpty(DinViewModel.Sales_EmpName))
+                                    dinsVM.Sales_EmpName = cellValue.Value.ToString();
+                                    if (!string.IsNullOrEmpty(dinsVM.Sales_EmpName))
                                     {
-                                        DinViewModel.SalesID = _employeeService.GetEmployeeID(DinViewModel.Sales_EmpName);
-                                        DinViewModel.Sales_Bonus = 0.4;
+                                        dinsVM.SalesID = _employeeService.GetEmployeeID(dinsVM.Sales_EmpName);
+                                        dinsVM.Sales_Bonus = 0.4;
                                     }
                                 }
                             }
@@ -550,10 +541,10 @@ namespace DDD_2024.Services
                                 }
                                 else
                                 {
-                                    DinViewModel.FAE1_EmpName = cellValue.Value.ToString();
-                                    if (!string.IsNullOrEmpty(DinViewModel.FAE1_EmpName))
+                                    dinsVM.FAE1_EmpName = cellValue.Value.ToString();
+                                    if (!string.IsNullOrEmpty(dinsVM.FAE1_EmpName))
                                     {
-                                        DinViewModel.FAE1ID = _employeeService.GetEmployeeID(DinViewModel.FAE1_EmpName);
+                                        dinsVM.FAE1ID = _employeeService.GetEmployeeID(dinsVM.FAE1_EmpName);
                                     }
                                 }
                             }
@@ -565,7 +556,7 @@ namespace DDD_2024.Services
                                 }
                                 else
                                 {
-                                    DinViewModel.FAE1_Bonus = (double)cellValue.Value;
+                                    dinsVM.FAE1_Bonus = (double)cellValue.Value;
                                 }
                             }
                             if (cellValue.Key == "FAE2")
@@ -576,10 +567,10 @@ namespace DDD_2024.Services
                                 }
                                 else
                                 {
-                                    DinViewModel.FAE2_EmpName = cellValue.Value.ToString();
-                                    if (!string.IsNullOrEmpty(DinViewModel.FAE2_EmpName))
+                                    dinsVM.FAE2_EmpName = cellValue.Value.ToString();
+                                    if (!string.IsNullOrEmpty(dinsVM.FAE2_EmpName))
                                     {
-                                        DinViewModel.FAE2ID = _employeeService.GetEmployeeID(DinViewModel.FAE2_EmpName);
+                                        dinsVM.FAE2ID = _employeeService.GetEmployeeID(dinsVM.FAE2_EmpName);
                                     }
                                 }
                             }
@@ -591,7 +582,7 @@ namespace DDD_2024.Services
                                 }
                                 else
                                 {
-                                    DinViewModel.FAE2_Bonus = (double)cellValue.Value;
+                                    dinsVM.FAE2_Bonus = (double)cellValue.Value;
                                 }
                             }
                             if (cellValue.Key == "FAE3")
@@ -602,10 +593,10 @@ namespace DDD_2024.Services
                                 }
                                 else
                                 {
-                                    DinViewModel.FAE3_EmpName = cellValue.Value.ToString();
-                                    if (!string.IsNullOrEmpty(DinViewModel.FAE3_EmpName))
+                                    dinsVM.FAE3_EmpName = cellValue.Value.ToString();
+                                    if (!string.IsNullOrEmpty(dinsVM.FAE3_EmpName))
                                     {
-                                        DinViewModel.FAE3ID = _employeeService.GetEmployeeID(DinViewModel.FAE3_EmpName);
+                                        dinsVM.FAE3ID = _employeeService.GetEmployeeID(dinsVM.FAE3_EmpName);
                                     }
                                 }
                             }
@@ -617,206 +608,829 @@ namespace DDD_2024.Services
                                 }
                                 else
                                 {
-                                    DinViewModel.FAE3_Bonus = (double)cellValue.Value;
+                                    dinsVM.FAE3_Bonus = (double)cellValue.Value;
                                 }
-                            }                           
+                            }                       
                         }
-                        list_Dins.Add(DinViewModel);
+                        list_DiDws.Add(dinsVM);
                     }
-                    InsertDins(list_Dins);
+                    InsertDiDws(list_DiDws); 
                 }
             }
-            return list_Dins;
+            return list_DiDws;
         }
 
-        private string CheckDinInsert(DinViewModel dinViewModel)
+        private string CheckInsert(DinUploadViewModel viewModel)
         {
             string Message = string.Empty;
 
-            if (!string.IsNullOrEmpty(dinViewModel.ProApp) && dinViewModel.ProApp.Length > 40)
+            if (!string.IsNullOrEmpty(viewModel.ProApp) && viewModel.ProApp.Length > 40)
             {
                 Message += "產品應用文字長度大於40個字;\n";
             }
 
-            if (!string.IsNullOrEmpty(dinViewModel.PartNo) && dinViewModel.PartNo.Length > 25)
+            if (!string.IsNullOrEmpty(viewModel.ProModel) && viewModel.ProModel.Length > 20)
             {
-                Message += "產品編號長度大於25個字;\n";
+                Message += "產品型號文字長度大於20個字;\n";
             }
 
-            if (!string.IsNullOrEmpty(dinViewModel.vmCreateDate) && dinViewModel.vmCreateDate.Length > 10)
+            if (!string.IsNullOrEmpty(viewModel.PartNo) && viewModel.PartNo.Length > 50)
             {
-                Message += "申請時間格式錯誤;\n";
+                Message += "品名料號長度大於50個字;\n";
             }
 
-            if(!string.IsNullOrEmpty(dinViewModel.EProduceYS) && dinViewModel.EProduceYS.Length > 6)
+            if (!string.IsNullOrEmpty(viewModel.CreateDate) && viewModel.CreateDate.Length > 10)
             {
-                Message += "預估量產時間文字長度超過6個字;\n";
+                Message += "時間格式錯誤;\n";
             }
 
-            if (dinViewModel.PMID == 0)
+            if(!string.IsNullOrEmpty(viewModel.EProduceYear) && viewModel.EProduceYear.Length > 4)
             {
-                Message += "PM資料未建立;\n";
+                Message += "預估量產年份文字長度超過4個字;\n";
             }
 
-            if (dinViewModel.SalesID == 0)
+            if (!string.IsNullOrEmpty(viewModel.EProduceSeason) && viewModel.EProduceSeason.Length > 2)
             {
-                Message += "Sales資料未建立;\n";
+                Message += "預估量產季度文字長度超過2個字;\n";
             }
 
-            //檢查是否有Do資料----20240424待定義
+            if (!string.IsNullOrEmpty(viewModel.EndCusName) && viewModel.EndCusName.Length > 20)
+            {
+                Message += "最終客戶文字長度超過20個字;\n";
+            }
+
             return Message;
         }
 
-        private List<DinViewModel> InsertDins(List<DinViewModel> list_dinViewModels)
+        private List<DinUploadViewModel> InsertDiDws(List<DinUploadViewModel> list_uploads)
         {
-            if (list_dinViewModels.Count > 0)
+            List<DinUploadViewModel> list_Result = new List<DinUploadViewModel>();
+            
+            if (list_uploads.Count > 0)
             {
-                foreach (var item in list_dinViewModels)
+                foreach (var item in list_uploads) 
                 {
-                    item.UploadStatus = CheckDinInsert(item);
+                    item.UploadStatus = CheckInsert(item);
 
                     if (string.IsNullOrEmpty(item.UploadStatus))
                     {
-                        string projectID = _doService.GetProjectID(DateTime.Now.ToString("yyyyMMdd"));
-                        string createDate = string.Empty;
-
-                        if (!string.IsNullOrEmpty(item.vmCreateDate))
+                        if (!string.IsNullOrEmpty(item.CreateDate))
                         {
-                            createDate = item.vmCreateDate.Replace("/", "");
+                            item.CreateDate = item.CreateDate.Replace("/", "");
                         }
 
-                        // Insert a record into ProjectM
-                        var modelprojectM = new ProjectM
-                        {
-                            ProjectID = projectID,
-                            Status = "DIN", // Status: DIN
-                            CreateDate = createDate,
-                            Cus_DB = item.Cus_DB,
-                            CusID = item.CusID,
-                            EndCus = item.EndCus,
-                            ProApp = item.ProApp,
-                            ProModel = item.ProModel,
-                            EProduceYS = item.EProduceYS
+                        //如果有ProjectID:Update ProjectM 、 ProjectD ; Insert Project DIDW
+                        //如果沒有ProjectID: Insert ProjectM 、 ProjectD、Project DIDW
+                        DinUploadViewModel NewModel = new DinUploadViewModel();
 
-                        };
-                        _projectMContext.Add(modelprojectM);
-                        _projectMContext.SaveChanges();
-
-                        // Insert a record into ProjectD
-                        var modelprojectD = new ProjectD
+                        if (!string.IsNullOrEmpty(item.ProjectID))
                         {
-                            ProjectID = projectID,
-                            VendorID = item.VendorID,
-                            PartNo = item.PartNo,
-                            Stage = "DIN",
-                            ELTR = item.ELTR,
-                            EGP = item.EGP,
-                            EFirstYQty = item.EFirstYQty,
-                            ESecondYQty = item.ESecondYQty,
-                            EThirdYQty = item.EThirdYQty,
-                            UFirstYPrice = item.UFirstYPrice,
-                            USecondYPrice = item.USecondYPrice,
-                            UThirdYPrice = item.UThirdYPrice
-                        };
-                        _projectDContext.Add(modelprojectD);
-                        _projectDContext.SaveChanges();
-
-                        // Insert a record into Project_DIDW
-                        var modelprojectDIDW = new Project_DIDW
-                        {
-                            ProjectID = projectID,
-                            DinDate = createDate,
-                            DinStatus = "N"
-                        };
-                        _projectDIDWContext.Add(modelprojectDIDW);
-                        _projectDIDWContext.SaveChanges();
-
-                        //檢查PM和Sales是否為同一人，if true PM獎金比例 = 0%
-                        if(item.PMID != 0 && item.SalesID != 0 && item.PMID == item.SalesID)
-                        {
-                            item.PM_Bonus = 0;
-                        }
-
-                        //Insert a record into Project_Emp(PM)
-                        if(item.PMID != 0)
-                        {
-                            var modelprojectEmp_PM = new Project_Emp
+                            if (!string.IsNullOrEmpty(item.DIDWType) && item.DIDWType == "DIN")
                             {
-                                SEQ = _projectEmpService.NewSEQ,
-                                ProjectID = projectID,
-                                EmpID = item.PMID,
-                                BonusP = item.PM_Bonus,
-                                Duty = "PM"
-                            };
-                            _projectEmpContext.Add(modelprojectEmp_PM);
-                            _projectEmpContext.SaveChanges();
-                        }
+                                NewModel = UpdateDin(item);
+                            }
 
-                        //Insert a record into Project_Emp(Sales)
-                        if (item.SalesID != 0)
-                        {
-                            var modelprojectEmp_Sales = new Project_Emp
+                            if (!string.IsNullOrEmpty(item.DIDWType) && item.DIDWType == "DWIN")
                             {
-                                SEQ = _projectEmpService.NewSEQ,
-                                ProjectID = projectID,
-                                EmpID = item.SalesID,
-                                BonusP = item.Sales_Bonus,
-                                Duty = "Sales"
-                            };
-                            _projectEmpContext.Add(modelprojectEmp_Sales);
-                            _projectEmpContext.SaveChanges();
+                                NewModel = UpdateDwin(item);
+                            }
+                            list_Result.Add(NewModel);
                         }
-
-                        //Insert a record into Project_Emp(FAE1)
-                        if (item.FAE1ID != 0)
+                        else
                         {
-                            var modelprojectEmp_FAE1 = new Project_Emp
-                            {
-                                SEQ = _projectEmpService.NewSEQ,
-                                ProjectID = projectID,
-                                EmpID = item.FAE1ID,
-                                BonusP = item.FAE1_Bonus,
-                                Duty = "FAE1"
-                            };
-                            _projectEmpContext.Add(modelprojectEmp_FAE1);
-                            _projectEmpContext.SaveChanges();
-                        }
+                            item.ProjectID = _doService.GetProjectID(DateTime.Now.ToString("yyyyMMdd"));
 
-                        //Insert a record into Project_Emp(FAE2)
-                        if (item.FAE2ID != 0)
-                        {
-                            var modelprojectEmp_FAE2 = new Project_Emp
+                            if (!string.IsNullOrEmpty(item.DIDWType) && item.DIDWType == "DIN")
                             {
-                                SEQ = _projectEmpService.NewSEQ,
-                                ProjectID = projectID,
-                                EmpID = item.FAE2ID,
-                                BonusP = item.FAE2_Bonus,
-                                Duty = "FAE2"
-                            };
-                            _projectEmpContext.Add(modelprojectEmp_FAE2);
-                            _projectEmpContext.SaveChanges();
-                        }
+                                NewModel = InsertDin(item);
+                            }
 
-                        //Insert a record into Project_Emp(FAE3)
-                        if (item.FAE3ID != 0)
-                        {
-                            var modelprojectEmp_FAE3 = new Project_Emp
+                            if (!string.IsNullOrEmpty(item.DIDWType) && item.DIDWType == "DWIN")
                             {
-                                SEQ = _projectEmpService.NewSEQ,
-                                ProjectID = projectID,
-                                EmpID = item.FAE3ID,
-                                BonusP = item.FAE3_Bonus,
-                                Duty = "FAE3"
-                            };
-                            _projectEmpContext.Add(modelprojectEmp_FAE3);
-                            _projectEmpContext.SaveChanges();
+                                NewModel = InsertDwin(item);
+                            }
+                            list_Result.Add(NewModel);
                         }
-
-                        item.UploadStatus = "Success";
                     }
                 }
             }
-            return list_dinViewModels;
+            return list_Result;
+        }
+
+        private DinUploadViewModel InsertDin(DinUploadViewModel model)
+        {
+            try
+            {
+                // Insert a record into ProjectM
+                var modelprojectM = new ProjectM
+                {
+                    ProjectID = model.ProjectID,
+                    Status = "DIN", // Status: DIN
+                    CreateDate = model.CreateDate,
+                    Cus_DB = model.CusDB,
+                    CusID = model.CusID,
+                    EndCus = model.EndCusName,
+                    ProApp = model.ProApp,
+                    ProModel = model.ProModel
+                };
+                if(!string.IsNullOrEmpty(model.EProduceYear) && !string.IsNullOrEmpty(model.EProduceSeason))
+                {
+                    modelprojectM.EProduceYS = model.EProduceYear + model.EProduceSeason;
+                }
+                _projectMContext.Add(modelprojectM);
+                _projectMContext.SaveChanges();
+
+                // Insert a record into ProjectD
+                var modelprojectD = new ProjectD
+                {
+                    ProjectID = model.ProjectID,
+                    VendorID = model.VendorID,
+                    PartNo = model.PartNo,
+                    Stage = "DIN",
+                    ELTR = model.ELTR,
+                    EGP = model.EGP,
+                    EFirstYQty = model.EFirstYQty,
+                    ESecondYQty = model.ESecondYQty,
+                    EThirdYQty = model.EThirdYQty,
+                    UFirstYPrice = model.UFirstYPrice,
+                    USecondYPrice = model.USecondYPrice,
+                    UThirdYPrice = model.UThirdYPrice
+                };
+                _projectDContext.Add(modelprojectD);
+                _projectDContext.SaveChanges();
+
+                // Insert a record into Project_DIDW
+                var modelprojectDIDW = new Project_DIDW
+                {
+                    ProjectID = model.ProjectID,
+                    DinDate = model.CreateDate,
+                    DinStatus = "N"
+                };
+                if (!string.IsNullOrEmpty(model.ProjectID))
+                {
+                    modelprojectDIDW.DoID = _doService.QueryDoID(model.ProjectID);
+                }
+                _projectDIDWContext.Add(modelprojectDIDW);
+                _projectDIDWContext.SaveChanges();
+
+                //檢查PM和Sales是否為同一人，if true PM獎金比例 = 0%
+                if (model.PMID != 0 && model.SalesID != 0 && model.PMID == model.SalesID)
+                {
+                    model.PM_Bonus = 0;
+                }
+
+                //Insert a record into Project_Emp(PM)
+                if (model.PMID != 0)
+                {
+                    var modelprojectEmp_PM = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.PMID,
+                        BonusP = model.PM_Bonus,
+                        Duty = "PM"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_PM);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(Sales)
+                if (model.SalesID != 0)
+                {
+                    var modelprojectEmp_Sales = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.SalesID,
+                        BonusP = model.Sales_Bonus,
+                        Duty = "Sales"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_Sales);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(FAE1)
+                if (model.FAE1ID != 0)
+                {
+                    var modelprojectEmp_FAE1 = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.FAE1ID,
+                        BonusP = model.FAE1_Bonus,
+                        Duty = "FAE1"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_FAE1);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(FAE2)
+                if (model.FAE2ID != 0)
+                {
+                    var modelprojectEmp_FAE2 = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.FAE2ID,
+                        BonusP = model.FAE2_Bonus,
+                        Duty = "FAE2"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_FAE2);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(FAE3)
+                if (model.FAE3ID != 0)
+                {
+                    var modelprojectEmp_FAE3 = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.FAE3ID,
+                        BonusP = model.FAE3_Bonus,
+                        Duty = "FAE3"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_FAE3);
+                    _projectEmpContext.SaveChanges();
+                }
+                model.UploadStatus = "Success";
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerException = ex.InnerException;
+                if (innerException != null)
+                {
+                    // 記錄詳細的 SQL 錯誤訊息
+                    model.UploadStatus = $"SQL Error: {innerException.Message}";
+                }
+                else
+                {
+                    // 記錄其他資料庫更新錯誤
+                    model.UploadStatus = $"Database Update Error: {ex.Message}";
+                }
+            }
+            catch (Exception ex)
+            {
+                // 記錄一般錯誤
+                model.UploadStatus = $"General Error: {ex.Message}";
+            }
+
+            return model;
+        }
+        private DinUploadViewModel InsertDwin(DinUploadViewModel model)
+        {
+            try
+            {
+                // Insert a record into ProjectM
+                var modelprojectM = new ProjectM
+                {
+                    ProjectID = model.ProjectID,
+                    Status = "DWIN", // Status: DIN
+                    CreateDate = model.CreateDate,
+                    Cus_DB = model.CusDB,
+                    CusID = model.CusID,
+                    EndCus = model.EndCusName,
+                    ProApp = model.ProApp,
+                    ProModel = model.ProModel
+                };
+                if (!string.IsNullOrEmpty(model.EProduceYear) && !string.IsNullOrEmpty(model.EProduceSeason))
+                {
+                    modelprojectM.EProduceYS = model.EProduceYear + model.EProduceSeason;
+                }
+                _projectMContext.Add(modelprojectM);
+                _projectMContext.SaveChanges();
+
+                // Insert a record into ProjectD
+                var modelprojectD = new ProjectD
+                {
+                    ProjectID = model.ProjectID,
+                    VendorID = model.VendorID,
+                    PartNo = model.PartNo,
+                    Stage = "DWIN",
+                    ELTR = model.ELTR,
+                    EGP = model.EGP,
+                    EFirstYQty = model.EFirstYQty,
+                    ESecondYQty = model.ESecondYQty,
+                    EThirdYQty = model.EThirdYQty,
+                    UFirstYPrice = model.UFirstYPrice,
+                    USecondYPrice = model.USecondYPrice,
+                    UThirdYPrice = model.UThirdYPrice
+                };
+                _projectDContext.Add(modelprojectD);
+                _projectDContext.SaveChanges();
+
+                // Insert a record into Project_DIDW
+                var modelprojectDIDW = new Project_DIDW
+                {
+                    ProjectID = model.ProjectID,
+                    DwinDate = model.CreateDate,
+                    DwinStatus = "N"
+                };
+                if (!string.IsNullOrEmpty(model.ProjectID))
+                {
+                    modelprojectDIDW.DoID = _doService.QueryDoID(model.ProjectID);
+                }
+                _projectDIDWContext.Add(modelprojectDIDW);
+                _projectDIDWContext.SaveChanges();
+
+                //檢查PM和Sales是否為同一人，if true PM獎金比例 = 0%
+                if (model.PMID != 0 && model.SalesID != 0 && model.PMID == model.SalesID)
+                {
+                    model.PM_Bonus = 0;
+                }
+
+                //Insert a record into Project_Emp(PM)
+                if (model.PMID != 0)
+                {
+                    var modelprojectEmp_PM = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.PMID,
+                        BonusP = model.PM_Bonus,
+                        Duty = "PM"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_PM);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(Sales)
+                if (model.SalesID != 0)
+                {
+                    var modelprojectEmp_Sales = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.SalesID,
+                        BonusP = model.Sales_Bonus,
+                        Duty = "Sales"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_Sales);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(FAE1)
+                if (model.FAE1ID != 0)
+                {
+                    var modelprojectEmp_FAE1 = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.FAE1ID,
+                        BonusP = model.FAE1_Bonus,
+                        Duty = "FAE1"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_FAE1);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(FAE2)
+                if (model.FAE2ID != 0)
+                {
+                    var modelprojectEmp_FAE2 = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.FAE2ID,
+                        BonusP = model.FAE2_Bonus,
+                        Duty = "FAE2"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_FAE2);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(FAE3)
+                if (model.FAE3ID != 0)
+                {
+                    var modelprojectEmp_FAE3 = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.FAE3ID,
+                        BonusP = model.FAE3_Bonus,
+                        Duty = "FAE3"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_FAE3);
+                    _projectEmpContext.SaveChanges();
+                }
+                model.UploadStatus = "Success";
+            }
+            catch (Exception ex)
+            {
+                model.UploadStatus = ex.ToString();
+            }
+
+            return model;
+        }
+        private DinUploadViewModel UpdateDin(DinUploadViewModel model)
+        {
+            try
+            {
+                //Update record from ProjectM
+                var modelprojectM = _projectMContext.ProjectM.Where(e => e.ProjectID == model.ProjectID).FirstOrDefault();
+                var modelprojectD = _projectDContext.ProjectD.Where(e => e.ProjectID == model.ProjectID).FirstOrDefault();
+
+                if (modelprojectM != null && modelprojectD != null)
+                {
+                    if(modelprojectM.Status != "DO")
+                    {
+                        model.UploadStatus += "專案狀態不為Do，不可更新Din";
+                        return model;
+                    }
+                    else
+                    {
+                        modelprojectM.Status = "DIN";
+                        modelprojectM.UpdateDate = model.CreateDate;
+                        modelprojectM.EndCus = model.EndCusName;
+                        modelprojectM.ProApp = model.ProApp;
+                        modelprojectM.ProModel = model.ProModel;
+                        modelprojectM.IsInte = model.IsInte;
+                    }
+                    if (!string.IsNullOrEmpty(model.EProduceYear) && !string.IsNullOrEmpty(model.EProduceSeason))
+                    {
+                        modelprojectM.EProduceYS = model.EProduceYear + model.EProduceSeason;
+                    }
+                    _projectMContext.SaveChanges();
+
+                    //Update record from ProjectD
+                    modelprojectD.PartNo = model.PartNo;
+                    modelprojectD.ELTR = model.ELTR;
+                    modelprojectD.EGP = model.EGP;
+                    modelprojectD.EFirstYQty = model.EFirstYQty;
+                    modelprojectD.ESecondYQty = model.ESecondYQty;
+                    modelprojectD.EThirdYQty = model.EThirdYQty;
+                    modelprojectD.UFirstYPrice = model.UFirstYPrice;
+                    modelprojectD.USecondYPrice = model.USecondYPrice;
+                    modelprojectD.UThirdYPrice = model.UThirdYPrice;
+                    modelprojectD.Stage = "DIN";
+
+                    _projectDContext.SaveChanges();
+                }
+                else
+                {
+                    model.UploadStatus += "找不到專案檔，不能更新資料";
+                    return model;
+                }
+
+                // Insert a record into Project_DIDW
+                var modelprojectDIDW = new Project_DIDW
+                {
+                    ProjectID = model.ProjectID,
+                    DinDate = model.CreateDate,
+                    DinStatus = "N"
+                };
+                if (!string.IsNullOrEmpty(model.ProjectID))
+                {
+                    modelprojectDIDW.DoID = _doService.QueryDoID(model.ProjectID);
+                }
+                _projectDIDWContext.Add(modelprojectDIDW);
+                _projectDIDWContext.SaveChanges();
+
+                //檢查PM和Sales是否為同一人，if true PM獎金比例 = 0%
+                if (model.PMID != 0 && model.SalesID != 0 && model.PMID == model.SalesID)
+                {
+                    model.PM_Bonus = 0;
+                }
+
+                //Insert a record into Project_Emp(PM)
+                if (model.PMID != 0)
+                {
+                    var modelprojectEmp_PM = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.PMID,
+                        BonusP = model.PM_Bonus,
+                        Duty = "PM"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_PM);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(Sales)
+                if (model.SalesID != 0)
+                {
+                    var modelprojectEmp_Sales = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.SalesID,
+                        BonusP = model.Sales_Bonus,
+                        Duty = "Sales"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_Sales);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(FAE1)
+                if (model.FAE1ID != 0)
+                {
+                    var modelprojectEmp_FAE1 = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.FAE1ID,
+                        BonusP = model.FAE1_Bonus,
+                        Duty = "FAE1"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_FAE1);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(FAE2)
+                if (model.FAE2ID != 0)
+                {
+                    var modelprojectEmp_FAE2 = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.FAE2ID,
+                        BonusP = model.FAE2_Bonus,
+                        Duty = "FAE2"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_FAE2);
+                    _projectEmpContext.SaveChanges();
+                }
+
+                //Insert a record into Project_Emp(FAE3)
+                if (model.FAE3ID != 0)
+                {
+                    var modelprojectEmp_FAE3 = new Project_Emp
+                    {
+                        SEQ = _projectEmpService.NewSEQ,
+                        ProjectID = model.ProjectID,
+                        EmpID = model.FAE3ID,
+                        BonusP = model.FAE3_Bonus,
+                        Duty = "FAE3"
+                    };
+                    _projectEmpContext.Add(modelprojectEmp_FAE3);
+                    _projectEmpContext.SaveChanges();
+                }
+                model.UploadStatus = "Success";
+            }
+            catch (Exception ex)
+            {
+                model.UploadStatus = ex.ToString();
+            }
+
+            return model;
+        }
+        private DinUploadViewModel UpdateDwin(DinUploadViewModel model)
+        {
+            try
+            {
+                //Update record from ProjectM、Project_DIDW
+                var modelprojectM = _projectMContext.ProjectM.Where(e => e.ProjectID == model.ProjectID).FirstOrDefault();
+                var modelprojectDIDW = _projectDIDWContext.Project_DIDW.Where(e => e.ProjectID == model.ProjectID).FirstOrDefault();
+
+                if (modelprojectM != null && modelprojectDIDW != null)
+                {
+                    if (modelprojectM.Status != "DIN")
+                    {
+                        model.UploadStatus += "專案狀態不為Din，不可更新Din";
+                        return model;
+                    }
+                    else
+                    {
+                        modelprojectM.Status = "DWIN";
+                        modelprojectM.UpdateDate = model.CreateDate;
+                    }
+                    _projectMContext.SaveChanges();
+
+                    modelprojectDIDW.DwinDate = model.CreateDate;
+                    modelprojectDIDW.DwinStatus = "N";
+
+                    _projectDIDWContext.SaveChanges();
+                }
+                else
+                {
+                    model.UploadStatus += "找不到專案檔，不能更新資料";
+                    return model;
+                }
+
+                // Insert a record into ProjectD
+                var modelprojectD = new ProjectD
+                {
+                    ProjectID = model.ProjectID,
+                    VendorID = model.VendorID,
+                    PartNo = model.PartNo,
+                    Stage = "DWIN",
+                    ELTR = model.ELTR,
+                    EGP = model.EGP,
+                    EFirstYQty = model.EFirstYQty,
+                    ESecondYQty = model.ESecondYQty,
+                    EThirdYQty = model.EThirdYQty,
+                    UFirstYPrice = model.UFirstYPrice,
+                    USecondYPrice = model.USecondYPrice,
+                    UThirdYPrice = model.UThirdYPrice
+                };
+                _projectDContext.Add(modelprojectD);
+                _projectDContext.SaveChanges();
+
+                //檢查PM和Sales是否為同一人，if true PM獎金比例 = 0%
+                if (model.PMID != 0 && model.SalesID != 0 && model.PMID == model.SalesID)
+                {
+                    model.PM_Bonus = 0;
+                }
+
+                if (model.PMID != 0)
+                {
+                    var chkPM = _projectEmpContext.Project_Emp.Where(e => e.ProjectID == model.ProjectID && e.Duty == "PM").FirstOrDefault();
+
+                    if (chkPM == null)
+                    {
+                        //Insert a record into Project_Emp(PM)
+                        var modelprojectEmp_PM = new Project_Emp
+                        {
+                            SEQ = _projectEmpService.NewSEQ,
+                            ProjectID = model.ProjectID,
+                            EmpID = model.PMID,
+                            BonusP = model.PM_Bonus,
+                            Duty = "PM"
+                        };
+                        _projectEmpContext.Add(modelprojectEmp_PM);
+                        _projectEmpContext.SaveChanges();
+                    }
+                }
+
+                if (model.SalesID != 0)
+                {
+                    var chkPM = _projectEmpContext.Project_Emp.Where(e => e.ProjectID == model.ProjectID && e.Duty == "Sales").FirstOrDefault();
+
+                    if (chkPM == null)
+                    {
+                        //Insert a record into Project_Emp(Sales)
+                        var modelprojectEmp_Sales = new Project_Emp
+                        {
+                            SEQ = _projectEmpService.NewSEQ,
+                            ProjectID = model.ProjectID,
+                            EmpID = model.SalesID,
+                            BonusP = model.Sales_Bonus,
+                            Duty = "Sales"
+                        };
+                        _projectEmpContext.Add(modelprojectEmp_Sales);
+                        _projectEmpContext.SaveChanges();
+                    }
+                }
+
+                if (model.FAE1ID != 0)
+                {
+                    var chkPM = _projectEmpContext.Project_Emp.Where(e => e.ProjectID == model.ProjectID && e.Duty == "FAE1").FirstOrDefault();
+
+                    if (chkPM == null)
+                    {
+                        //Insert a record into Project_Emp(FAE1)
+                        var modelprojectEmp_FAE1 = new Project_Emp
+                        {
+                            SEQ = _projectEmpService.NewSEQ,
+                            ProjectID = model.ProjectID,
+                            EmpID = model.FAE1ID,
+                            BonusP = model.FAE1_Bonus,
+                            Duty = "FAE1"
+                        };
+                        _projectEmpContext.Add(modelprojectEmp_FAE1);
+                        _projectEmpContext.SaveChanges();
+                    }
+                }
+
+                if (model.FAE2ID != 0)
+                {
+                    var chkPM = _projectEmpContext.Project_Emp.Where(e => e.ProjectID == model.ProjectID && e.Duty == "FAE2").FirstOrDefault();
+
+                    if (chkPM == null)
+                    {
+                        //Insert a record into Project_Emp(FAE2)
+                        var modelprojectEmp_FAE2 = new Project_Emp
+                        {
+                            SEQ = _projectEmpService.NewSEQ,
+                            ProjectID = model.ProjectID,
+                            EmpID = model.FAE1ID,
+                            BonusP = model.FAE1_Bonus,
+                            Duty = "FAE2"
+                        };
+                        _projectEmpContext.Add(modelprojectEmp_FAE2);
+                        _projectEmpContext.SaveChanges();
+                    }
+                }
+
+                if (model.FAE3ID != 0)
+                {
+                    var chkPM = _projectEmpContext.Project_Emp.Where(e => e.ProjectID == model.ProjectID && e.Duty == "FAE3").FirstOrDefault();
+
+                    if (chkPM == null)
+                    {
+                        //Insert a record into Project_Emp(FAE2)
+                        var modelprojectEmp_FAE3 = new Project_Emp
+                        {
+                            SEQ = _projectEmpService.NewSEQ,
+                            ProjectID = model.ProjectID,
+                            EmpID = model.FAE1ID,
+                            BonusP = model.FAE1_Bonus,
+                            Duty = "FAE3"
+                        };
+                        _projectEmpContext.Add(modelprojectEmp_FAE3);
+                        _projectEmpContext.SaveChanges();
+                    }
+                }
+                model.UploadStatus = "Success";
+            }
+            catch (Exception ex)
+            {
+                model.UploadStatus = ex.ToString();
+            }
+
+            return model;
+        }
+
+        public async Task<DinCreateViewModel> GetEditDin(string? ProjectID)
+        {
+            var model = new DinCreateViewModel();
+
+            if (!string.IsNullOrEmpty(ProjectID))
+            {
+                var modelDIn = await _projectDIDWContext.Project_DIDW.Where(e => e.ProjectID == ProjectID).FirstOrDefaultAsync();
+
+                if (modelDIn != null)
+                {
+                    model.ProjectID = modelDIn.ProjectID;
+
+                    if (!string.IsNullOrEmpty(modelDIn.DinDate) && modelDIn.DinDate.Length == 8)
+                    {
+                        model.DinDate = modelDIn.DinDate.Substring(0, 4) + "/" + modelDIn.DinDate.Substring(4, 2) + "/" + modelDIn.DinDate.Substring(6, 2);
+                    }
+
+                    var modelProjectM = await _projectMContext.ProjectM.Where(e => e.ProjectID == ProjectID && e.Status == "DIN").FirstOrDefaultAsync();
+
+                    if (modelProjectM != null)
+                    {
+                        if (!string.IsNullOrEmpty(modelProjectM.Cus_DB) && !string.IsNullOrEmpty(modelProjectM.CusID))
+                        {
+                            model.CusName = _cusVendoeService.GetvendorName(modelProjectM.Cus_DB, modelProjectM.CusID);
+                        }
+
+                        model.EndCus = modelProjectM.EndCus;
+                        model.ProApp = modelProjectM.ProApp;
+                        model.ProModel = modelProjectM.ProModel;
+                        model.EProduceYS = modelProjectM.EProduceYS;
+                    }
+
+                    var modelProjectD = await _projectDContext.ProjectD.Where(e => e.ProjectID == ProjectID && e.Stage == "DIN").FirstOrDefaultAsync();
+
+                    if (modelProjectD != null)
+                    {
+                        if (!string.IsNullOrEmpty(modelProjectD.VendorID))
+                        {
+                            model.VendorName = _cusVendoeService.GetVendorName(modelProjectD.VendorID);
+                        }
+                        model.PartNo = modelProjectD.PartNo;
+                        model.ELTR = modelProjectD.ELTR;
+                        model.EGP = modelProjectD.EGP;
+                        model.LTP = modelProjectD.ELTR * modelProjectD.EGP;
+                        model.EFirstYQty = modelProjectD.EFirstYQty;
+                        model.ESecondYQty = modelProjectD.ESecondYQty;
+                        model.EThirdYQty = modelProjectD.EThirdYQty;
+                        model.UFirstYPrice = modelProjectD.UFirstYPrice;
+                        model.USecondYPrice = modelProjectD.USecondYPrice;
+                        model.UThirdYPrice = modelProjectD.UThirdYPrice;
+                    }
+
+                    var modelProjectEmp_PM = await _projectEmpContext.Project_Emp.Where(e => e.ProjectID == ProjectID && e.Duty == "PM").FirstOrDefaultAsync();
+
+                    if (modelProjectEmp_PM != null)
+                    {
+                        model.PMID = modelProjectEmp_PM.EmpID;
+                    }
+
+                    var modelProjectEmp_Sales = await _projectEmpContext.Project_Emp.Where(e => e.ProjectID == ProjectID && e.Duty == "Sales").FirstOrDefaultAsync();
+
+                    if (modelProjectEmp_Sales != null)
+                    {
+                        model.SalesID = modelProjectEmp_Sales.EmpID;
+                    }
+
+                    var modelProjectEmp_FAE1 = await _projectEmpContext.Project_Emp.Where(e => e.ProjectID == ProjectID && e.Duty == "FAE1").FirstOrDefaultAsync();
+
+                    if (modelProjectEmp_FAE1 != null)
+                    {
+                        model.FAE1ID = modelProjectEmp_FAE1.EmpID;
+                    }
+
+                    var modelProjectEmp_FAE2 = await _projectEmpContext.Project_Emp.Where(e => e.ProjectID == ProjectID && e.Duty == "FAE2").FirstOrDefaultAsync();
+
+                    if (modelProjectEmp_FAE2 != null)
+                    {
+                        model.FAE2ID = modelProjectEmp_FAE2.EmpID;
+                    }
+
+                    var modelProjectEmp_FAE3 = await _projectEmpContext.Project_Emp.Where(e => e.ProjectID == ProjectID && e.Duty == "FAE3").FirstOrDefaultAsync();
+
+                    if (modelProjectEmp_FAE3 != null)
+                    {
+                        model.FAE3ID = modelProjectEmp_FAE3.EmpID;
+                    }
+                }
+            }
+            return model;
         }
 
         public string RejectDin(string ProjectID)
@@ -866,7 +1480,6 @@ namespace DDD_2024.Services
 
             return msg;
         }
-
         public string ConfirmDin(string ProjectID)
         {
             string msg = string.Empty;

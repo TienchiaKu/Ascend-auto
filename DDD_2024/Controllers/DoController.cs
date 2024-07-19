@@ -1,21 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using DDD_2024.Data;
 using DDD_2024.Models;
 using DDD_2024.Interfaces;
 using Microsoft.CodeAnalysis;
-using System.Net.NetworkInformation;
-using Microsoft.AspNetCore.Http.HttpResults;
 using MiniExcelLibs;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using DDD_2024.Services;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using Microsoft.CodeAnalysis.Differencing;
 
 namespace DDD_2024.Controllers
 {
@@ -30,10 +26,11 @@ namespace DDD_2024.Controllers
         private readonly ICusVendorService _cusVendoeService;
         private readonly IEmployeeService _employeeService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ICommonService _commonService;
 
         public DoController(ProjectMContext projectMContext, ProjectDContext projectDContext, DoContext doContext, ProjectDOContext projectDOContext,
             Project_DIDWContext project_DIDWContext, 
-            IDoService doService, ICusVendorService cusVendoeService, IEmployeeService employeeService, 
+            IDoService doService, ICusVendorService cusVendoeService, IEmployeeService employeeService, ICommonService commonService,
             IWebHostEnvironment webHostEnvironment)
         {
             _projectMContext = projectMContext;
@@ -44,6 +41,7 @@ namespace DDD_2024.Controllers
             _doService = doService;
             _cusVendoeService = cusVendoeService;
             _employeeService = employeeService;
+            _commonService = commonService;
 
             _webHostEnvironment = webHostEnvironment;
         }
@@ -138,7 +136,7 @@ namespace DDD_2024.Controllers
                 return NotFound();
             }
 
-            var model = await _doService.GetDoAsync(ProjectID);
+            var model = await _doService.GetEditDo(ProjectID);
 
             if (model != null)
             {
@@ -153,20 +151,19 @@ namespace DDD_2024.Controllers
         // POST: Do/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string DoID, [Bind("DoID,DOStatus,ProjectID,CusID,VendorID,PartNo,ProApp,CreateDate,ApplicantID,ApproverID,DOStatus,TradeStatus")] DoViewModel doViewModel)
+        public async Task<IActionResult> Edit(string DoID, [Bind("DoID,ProjectID,CreateDate,PartNo,TradeStatus,ApplicantID,ApproverID,DoUDate,DoUAction,DoUStatus")] DoEditViewModel model)
         {
-            if (DoID != doViewModel.DoID)
+            if (DoID != model.DoID)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
-                await _doService.EditDo(doViewModel);
-
-                return RedirectToAction(nameof(Index));
+                await _doService.EditDo(model);
+                return RedirectToAction(nameof(Edit), new { ProjectID = model.ProjectID });
             }
-            return View(doViewModel);
+            return View("Edit", model);
         }
 
         [HttpPost]
@@ -446,41 +443,38 @@ namespace DDD_2024.Controllers
             return View();
         }
 
-        public async Task<IActionResult> DoReport_Excel(DoReportFilterViewModel model)
+        //匯出Do Excel報表
+        public async Task<IActionResult> ExportDoReport(DoReportFilterViewModel model)
         {
-            var DosModel = await _doService.GetDosReport(model);
+            var ReportModel = await _doService.GetDosReport(model);
 
-            if (DosModel != null && DosModel.Count > 0)
-            {                                
+            if (ReportModel != null && ReportModel.Count > 0)
+            {
+                // 新增自定義資料
+                var status = new List<DoReportStatus_ViewModel>
+                {
+                    new DoReportStatus_ViewModel { Status = "結案", Text = "Y" },
+                    new DoReportStatus_ViewModel { Status = "結案復原", Text = "R" }
+                };
+
                 var sheets = new Dictionary<string, object>
                 {
-                    ["DO"] = DosModel
+                    ["DO"] = ReportModel,
+                    ["DoStatus"] = status
                 };
 
                 var memoryStream = new MemoryStream();
-                memoryStream.SaveAs(DosModel);
+                memoryStream.SaveAs(sheets);
                 memoryStream.Seek(0, SeekOrigin.Begin);
                 return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 {
                     FileDownloadName = "Do報表_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx"
                 };
-
-                //string path = @"D:\Do報表_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx";
-                //
-                //if (!System.IO.File.Exists(path))
-                //{
-                //    MiniExcel.SaveAs(path, sheets);
-                //
-                //    ViewBag.Message = "Excel匯出完成！";
-                //}
-
-                //return View("Index", DosModel);
             }
             else
             {
                 return Content("匯出錯誤");
             }
-
         }
 
         // GET: Do
@@ -527,19 +521,17 @@ namespace DDD_2024.Controllers
         }
 
         // GET: Do/Upload
-        public IActionResult UploadDOAS()
+        public IActionResult DoMaintain()
         {
             return View();
         }
 
         [HttpPost]
-        public IActionResult UploadDOAS(IFormFile Excelfile)
+        public IActionResult DoMaintain(IFormFile Excelfile, string colName, bool updateAction)
         {
-            //此功能在使用前參數都要改，包含ViewModel和月份都是人工定義的
-            
-            var stream = new MemoryStream();
             if (Excelfile != null)
             {
+                var stream = new MemoryStream();
                 Excelfile.CopyTo(stream);
 
                 // 讀取stream中的所有資料
@@ -548,61 +540,146 @@ namespace DDD_2024.Controllers
                 // 檢查是否有資料
                 if (streamData.Count > 0)
                 {
-                    List<DOASU_Upload_ViewModel> list_upload = new List<DOASU_Upload_ViewModel>();
+                    //檢查colName格式是否相符
+                    if(!string.IsNullOrEmpty(colName) && colName.Trim().Length != 23)
+                    {
+                        ViewData["ErrorMessage"] = "請檢查輸入Excel欄位名稱";
+                        return View();
+                    }
+
+                    List<DoMaintainModel_F> list_finish = new List<DoMaintainModel_F>();
+                    List<DoMaintainModel_U> list_update = new List<DoMaintainModel_U>();
+
+                    string yearMonth = string.Empty;
+
+                    if (!string.IsNullOrEmpty(colName) && colName.Length == 23)
+                    {
+                        yearMonth = colName.Trim().Substring(15, 7).Replace("/", "");
+                    }
 
                     for (int i = 0; i < streamData.Count; i++)
-                    {
-                        var rowData = streamData[i];
+                     {
+                         var rowData = streamData[i];
+                         var finishModel = new DoMaintainModel_F();
+                         var updateModel = new DoMaintainModel_U();
+                         bool check = false;
 
-                        var UploadViewModel = new DOASU_Upload_ViewModel();
-
-                        foreach (var cellValue in rowData)
-                        {
+                         foreach (var cellValue in rowData)
+                         {
                             if (cellValue.Key == "專案編號")
                             {
                                 if (cellValue.Value == null)
                                 {
-                                    UploadViewModel.UploadStatus += "無專案編號;\n";
+                                    check = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    finishModel.ProjectID = cellValue.Value.ToString();
+                                    updateModel.ProjectID = cellValue.Value.ToString();
+                                }
+                            }
+
+                            if (cellValue.Key == "結案")
+                            {
+                                if (cellValue.Value == null)
+                                {
                                     continue;
                                 }
                                 else
                                 {
-                                    UploadViewModel.ProjectID = cellValue.Value.ToString();
+                                    finishModel.IsFinish = cellValue.Value.ToString();
                                 }
                             }
-                            //if (cellValue.Key == "Status")
-                            //{
-                            //    if (cellValue.Value != null)
-                            //    {
-                            //        UploadViewModel.DoUStatusCurrent = cellValue.Value.ToString();
-                            //    }
-                            //}
-                            if (cellValue.Key == "Status Update-(5月更新)")
-                            {
-                                if (cellValue.Value != null)
-                                {
-                                    UploadViewModel.DoUStatus5 = cellValue.Value.ToString();
-                                }
-                            }
-                            if (cellValue.Key == "Action")
-                            {
-                                if (cellValue.Value != null)
-                                {
-                                    UploadViewModel.DoUAction = cellValue.Value.ToString();
-                                }
-                            }                         
-                        }
-                        if (string.IsNullOrEmpty(UploadViewModel.UploadStatus))
-                        {
-                            list_upload.Add(UploadViewModel);
-                        }
-                    }
-                    var model = _doService.ImportDOASU(list_upload);
 
-                    return View(model);
+                            if (cellValue.Key == "結案原因" && !string.IsNullOrEmpty(finishModel.IsFinish))
+                            {
+                                if (cellValue.Value == null)
+                                {
+                                    check = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    finishModel.FinishReason = cellValue.Value.ToString();
+                                }
+                            }
+
+                            if (cellValue.Key == colName)
+                            {
+                                updateModel.DoUDate = yearMonth;
+
+                                if (cellValue.Value == null)
+                                {
+                                    if (string.IsNullOrEmpty(finishModel.IsFinish))
+                                    {
+                                        check = true;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        continue;
+                                    }                                    
+                                }
+                                else
+                                {
+                                    updateModel.DoUStatus = cellValue.Value.ToString();
+                                }
+                            }
+
+                            //使用者勾選update Action時，才要讀取Action的值
+                            if (updateAction)
+                            {
+                                if (cellValue.Key == "Action")
+                                {
+                                    if (cellValue.Value != null)
+                                    {
+                                        updateModel.DoUAction = cellValue.Value.ToString();
+                                    }
+                                }
+                            }
+
+                            if (!check)
+                            {
+                                list_finish.Add(finishModel);
+                                list_update.Add(updateModel);
+                            }
+
+
+                        }
+                    }                   
+                    if (list_finish.Count > 0 || list_update.Count > 0)
+                    {
+                        return View(_doService.DoMaintain(list_finish, list_update));
+                    }
                 }
             }
+            else
+            {
+                ViewData["ErrorMessage"] = "請選擇Excel檔";
+                return View();
+            }
             return View(nameof(Index));
+        }
+
+        //匯出Do範本
+        [HttpPost]
+        public IActionResult DoTemplate()
+        {
+            var ReportModel = new List<DoReport_ViewModel>();
+
+            var sheets = new Dictionary<string, object>
+            {
+                ["DoTemplate"] = ReportModel
+            };
+
+            var memoryStream = new MemoryStream();
+            memoryStream.SaveAs(sheets);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = "Do範本_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx"
+            };
         }
     }
 }

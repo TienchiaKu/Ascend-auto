@@ -63,123 +63,50 @@ namespace DDD_2024.Controllers
             }
         }
 
-        // GET: DDD_Employee/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: Employee/Details/5
+        public async Task<IActionResult> Details(int EmpId)
         {
-            if (id == null || _context.employeeM == null)
-            {
-                return NotFound();
-            }
-
-            var dDD_Employee = await _context.employeeM
-                .FirstOrDefaultAsync(m => m.EmpID == id);
-            if (dDD_Employee == null)
-            {
-                return NotFound();
-            }
-            if (string.IsNullOrEmpty(dDD_Employee.OnDuty))
-            {
-                return NotFound("找不到職務資料");
-            }
-            else
-            {
-                EmployeeViewModel employeeViewModel = new EmployeeViewModel
-                {
-                    employee = dDD_Employee,
-                    OnDuty_CN = _employeeService.GetYesNoName(dDD_Employee.OnDuty)
-                };
-
-                return View(employeeViewModel);
-            }
-        }
-
-        // GET: DDD_Employee/Create
-        public IActionResult Create()
-        {
-            var model = new EmployeeM();
-
-            model.EmpID = _employeeService.NewEmployeeID                                                                                              ;
-            model.UpdateDate = DateTime.Now;
+            var model = await _employeeService.GetEmployee(EmpId);
 
             return View(model);
+        }
+
+        // GET: Employee/Create
+        public IActionResult Create()
+        {
+            return View();
         }
 
         // POST: DDD_Employee/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("EmpID,EmpName,OnDuty,Region")] EmployeeM dDD_Employee)
+        public async Task<IActionResult> Create([Bind("EmpName,Region,userPWD,OnDuty,isSales,isPM,isFAE,isRBU,Auth")] EmpCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
-                if (!string.IsNullOrEmpty(dDD_Employee.EmpName))
-                {
-                    //檢查名稱是否重複
-                    if (_employeeService.CheckEmpName(dDD_Employee.EmpName))
-                    {
-                        ModelState.AddModelError(string.Empty, "員工姓名重複");
-                    }
-                    else
-                    {
-                        dDD_Employee.UpdateDate = DateTime.Now;
-                        _context.Add(dDD_Employee);
-                        await _context.SaveChangesAsync();
-                        return RedirectToAction(nameof(Index));
-                    }
-                }               
+                TempData["Message"] = await _employeeService.CreateEmp(model);
             }
-            return View(dDD_Employee);
+            return RedirectToAction("Index");
         }
 
-        // GET: DDD_Employee/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        // GET: EmployeeM/Edit/5
+        public async Task<IActionResult> Edit(int EmpId)
         {
-            if (id == null || _context.employeeM == null)
-            {
-                return NotFound();
-            }
+            var model = await _employeeService.GetEmployee(EmpId);
 
-            var dDD_Employee = await _context.employeeM.FindAsync(id);
-            if (dDD_Employee == null)
-            {
-                return NotFound();
-            }
-
-            return View(dDD_Employee);
+            return View(model);
         }
 
         // POST: EmployeeM/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("EmpID,EmpName,OnDuty,Region")] EmployeeM dDD_Employee)
+        public async Task<IActionResult> Edit([Bind("EmpId,EmpName,Region,userPWD,OnDuty,isSales,isPM,isFAE,isRBU,Auth")] EmpEditViewModel model)
         {
-            if (id != dDD_Employee.EmpID)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
-                try
-                {
-                    dDD_Employee.UpdateDate = DateTime.Now;
-
-                    _context.Update(dDD_Employee);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!DDD_EmployeeExists(dDD_Employee.EmpID))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                TempData["Message"] = await _employeeService.EditEmployee(model);
             }
-            return View(dDD_Employee);
+            return RedirectToAction("Index");
         }
 
         // GET: EmployeeM/LogIn
@@ -222,5 +149,6 @@ namespace DDD_2024.Controllers
         {
           return (_context.employeeM?.Any(e => e.EmpID == id)).GetValueOrDefault();
         }
+
     }
 }

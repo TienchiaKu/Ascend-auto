@@ -1,11 +1,11 @@
-﻿@model DDD_2024.Models.DoReportFilterViewModel
+﻿@model DDD_2024.Models.BDoReportFilter
 @inject IHttpContextAccessor contxt;
-@inject DDD_2024.Interfaces.IDoService DoService;
+@inject DDD_2024.Interfaces.IBounsCalService bonusService;
 @inject DDD_2024.Interfaces.IEmployeeService EmployeeService;
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-<h1>Do報表匯出(Excel)</h1>
+<h1>Do預覽</h1>
 
 <div class="accordion" id="accordionConditon">
     <div class="accordion-item">
@@ -14,21 +14,13 @@
                 篩選條件 
             </button>
         </h2>
-        <form asp-action="ExportDoReport">
+        <form asp-action="PreviewDo">
             <div id="collapseConOne" class="accordion-collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConditon">
                 <div class="accordion-body">
                     <div class="row">
-                        <div class="col-md-4">
-                            <label asp-for="IsFinsih"></label>
-                            <select asp-for="IsFinsih" class="form-control" asp-items="@(DoService.GetIsFinsih())"></select>
-                        </div>
-                        <div class="col-md-4">
-                            <label asp-for="applicantID"></label>
-                            <select asp-for="applicantID" class="form-control" asp-items="@(EmployeeService.GetEmployeeNameList)"></select>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label asp-for="Region"></label>
-                            <select asp-for="Region" class="form-control" asp-items="@(DoService.GetRegion())"></select>
+                            <select asp-for="Region" class="form-control" asp-items="@(bonusService.GetRegion())"></select>
                         </div>
                     </div>
                     <div class="row">

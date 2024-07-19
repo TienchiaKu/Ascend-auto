@@ -822,15 +822,38 @@ namespace DDD_2024.Services
         {
             if(model != null)
             {
-                if(!string.IsNullOrEmpty(model.DBSource) && model.DBSource != "Auto")
+                var ori_CusVen = _cusVendorContext.CusVendor.Where(e => e.CusVenID == model.CusVenID).FirstOrDefault();
+
+                if (ori_CusVen != null) 
                 {
-                    model.IsUse = "N";
+                    //資料庫來源=Auto時
+                    if (!string.IsNullOrEmpty(model.DBSource) && model.DBSource == "Auto")
+                    {
+                        if (!string.IsNullOrEmpty(model.IsUse))
+                        {
+                            ori_CusVen.IsUse = model.IsUse;
+                        }
+
+                        //20240701_新增修改客供商名稱(僅限定Auto可以改名稱)
+                        if (!string.IsNullOrEmpty(model.CusVenName))
+                        {
+                            ori_CusVen.CusVenName = model.CusVenName;
+                        }                       
+                    }
+                    //資料庫來源!=Auto時，停用改CusVenID
+                    if (!string.IsNullOrEmpty(model.DBSource) && model.DBSource != "Auto")
+                    {
+                        if (!string.IsNullOrEmpty(model.CusVenCode))
+                        {
+                            ori_CusVen.CusVenCode = model.CusVenCode;
+                            ori_CusVen.IsUse = "N";
+                        }
+                    }
+                    ori_CusVen.UpdateDate = DateTime.Now;
+
+                    _cusVendorContext.Update(ori_CusVen);
+                    await _cusVendorContext.SaveChangesAsync();
                 }
-                
-                model.UpdateDate = DateTime.Now;
-                
-                _cusVendorContext.Update(model);
-                await _cusVendorContext.SaveChangesAsync();
             }
         }
 

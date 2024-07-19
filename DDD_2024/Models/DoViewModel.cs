@@ -22,7 +22,7 @@ namespace DDD_2024.Models
         [Display(Name = "供應商")]
         public string? VendorID { get; set; }
 
-        [StringLength(25)]
+        [StringLength(50)]
         [Display(Name = "產品代號")]
         public string? PartNo { get; set; }
 
@@ -59,7 +59,7 @@ namespace DDD_2024.Models
         [Display(Name = "覆核者")]
         public string? Approver { get; set; }
 
-        [Display(Name = "覆核者ID")]
+        [Display(Name = "覆核者")]
         public int ApproverID { get; set; }
 
         //讀取資料用
@@ -128,6 +128,7 @@ namespace DDD_2024.Models
         [Display(Name = "Action")]
         public string? DoUAction { get; set; }
 
+        [Required]
         [StringLength(500)]
         [Display(Name = "Status")]
         public string? DoUStatus { get; set; }

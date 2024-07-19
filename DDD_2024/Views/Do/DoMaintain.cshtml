@@ -1,0 +1,85 @@
+﻿@using System.ComponentModel.DataAnnotations
+@model IEnumerable<DDD_2024.Models.DoMaintainModel_Result>
+@inject IHttpContextAccessor contxt;
+
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @ViewData["ErrorMessage"]
+    </div>
+}
+
+<form id="dataForm" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="file">選擇Excel：</label>
+        <input type="file" name="Excelfile" class="form-control-file" accept=".xlsx,.xls" />
+    </div>
+    <div class="form-group">
+        <label for="columnNumber">輸入要讀取的Excel欄位名稱：</label>
+        <input type="text" name="colName" id="colName" class="form-control" placeholder="Excel的表頭欄位名稱，格式範例: Status Update_2024/07" />
+    </div>
+    <div class="form-group">
+        <label for="updateAction">是否更新Action：</label>
+        <input type="checkbox" name="updateAction" id="updateAction" value="true" />
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-dark" name="action" value="preview">匯入DoStatus</button>
+    </div>
+</form>
+
+@if (Model != null)
+{
+    <hr /> <!-- 分隔線 -->
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.ProjectID)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.UploadStatus)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => row.ProjectID)</td>
+                    <td>@Html.DisplayFor(modelItem => row.UploadStatus)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+    }
+
+    .form-control-file {
+        margin-bottom: 10px; /* 增加 input 和 button 之間的距離 */
+    }
+</style>
+
+<script>
+    document.getElementById("updatefinish").addEventListener("change", function () {
+        var colNameGroup = document.getElementById("colNameGroup");
+        var updateActionGroup = document.getElementById("updateActionGroup");
+        if (this.checked) {
+            colNameGroup.style.display = "none";
+            updateActionGroup.style.display = "none";
+        } else {
+            colNameGroup.style.display = "block";
+            updateActionGroup.style.display = "block";
+        }
+    });
+</script>

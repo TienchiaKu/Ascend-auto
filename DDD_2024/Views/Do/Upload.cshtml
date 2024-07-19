@@ -4,9 +4,15 @@
     <div class="form-group">
         <label for="file">選擇Excel：</label>
         <input type="file" name="Excelfile" class="form-control-file" accept=".xlsx,.xls" />
-        <button type="submit" class="btn btn-warning">匯入Do</button>
+        <button type="submit" class="btn btn-dark">匯入Do</button>
     </div>
 </form>
+
+<div>
+    <form asp-action="DoTemplate" method="post">
+        <button type="submit" class="btn btn-warning">下載Do範本</button>
+    </form>
+</div>
 
 @functions {
     bool AnyFieldIsNull(DoViewModel item)
@@ -73,5 +79,9 @@
 
     .lightgray-background {
         background-color: lightgray;
+    }
+
+    .form-control-file {
+        margin-bottom: 10px; /* 增加 input 和 button 之間的距離 */
     }
 </style>

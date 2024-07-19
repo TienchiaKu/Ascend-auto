@@ -120,19 +120,46 @@ namespace DDD_2024.Models
 
     public class DoBonusViewModel
     {
-        [ExcelColumn(Name ="區域")]
-        public string? Region { get; set; }
+        [ExcelColumn(Name = "區域")]
+        public string? Region_CN { get; set; }
 
         [ExcelColumn(Name = "申請人")]
-        public string? Owner { get; set; }
+        public string? Owner_CN { get; set; }
 
-        public decimal Active { get; set; }
+        [ExcelColumn(Name = "Active")]
+        public decimal Active_CN { get; set; }
 
-        public decimal New { get; set; }
+        [ExcelColumn(Name = "New")]
+        public decimal New_CN { get; set; }
+
+        [ExcelColumn(Ignore = true)]
+        public decimal Amount_CN { get; set; }
 
         [ExcelColumn(Name = "小計")]
-        public decimal Amount { get; set; }
+        public string AmountFormatted_CN => $"¥{Amount_CN:N0}";
+
+        [ExcelColumn(Name = "")]
+        public string? noted1 { get; set; }
+
+        [ExcelColumn(Name = "區域")]
+        public string? Region_TW { get; set; }
+
+        [ExcelColumn(Name = "申請人")]
+        public string? Owner_TW { get; set; }
+
+        [ExcelColumn(Name = "Active")]
+        public decimal Active_TW { get; set; }
+
+        [ExcelColumn(Name = "New")]
+        public decimal New_TW { get; set; }
+
+        [ExcelColumn(Ignore = true)]
+        public decimal Amount_TW { get; set; }
+
+        [ExcelColumn(Name = "小計")]
+        public string AmountFormatted_TW => $"NT${Amount_TW:N0}";
     }
+
 
     public class DoReportUpload
     {

@@ -128,11 +128,11 @@
         <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
             <div class="accordion-body">
                 <div class="row mb-3">
-                    <div class="col-md-2 mx-1">
+                    <div class="col-md-3 mx-1">
                         <button id="btn_check_all" class="btn btn-warning mb-2 mr-2">全選</button>
                         <button id="btn_uncheck_all" class="btn btn-warning mb-2 mr-2">取消全選</button>
                     </div>
-                    <div class="col-md-3 mx-1">
+                    <div class="col-md-4 mx-1">
                         <a asp-action="Create" class="btn btn-secondary mr-2">新增Do</a>
                         <a asp-action="Upload" class="btn btn-secondary mr-2">上傳Do</a>
                         <a asp-action="DoReport" class="btn btn-secondary mr-2">Do報表</a>
@@ -291,15 +291,5 @@
     function handleAjaxError(error) { 
         console.error('Error fetching data:', error);
     }
-
-    // 當文檔準備好後綁定事件
-    $(document).ready(function () {
-        $('#projectStatus').change(onDatabaseChange);
-        $('#applicant').change(onDatabaseChange);
-        $('input[type="checkbox"]').change(onDatabaseChange);
-
-        // 初始加載
-        onDatabaseChange();
-    });
 
 </script>

@@ -282,19 +282,19 @@ namespace DDD_2024.Controllers
         }
 
         // GET: Din/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(string projectID)
         {
-            if (id == null || _context.Project_DIDW == null)
+            if (projectID == null || _context.Project_DIDW == null)
             {
                 return NotFound();
             }
 
-            var dinViewModel = await _context.Project_DIDW.FindAsync(id);
-            if (dinViewModel == null)
+            var model = await _dinService.GetEditDin(projectID);
+            if (model == null)
             {
                 return NotFound();
             }
-            return View(dinViewModel);
+            return View(model);
         }
 
         // POST: Din/Edit/5
@@ -357,7 +357,7 @@ namespace DDD_2024.Controllers
         [HttpPost]
         public IActionResult Upload(IFormFile Excelfile)
         {
-            List<DinViewModel> list = _dinService.ImportDin(Excelfile);
+            List<DinUploadViewModel> list = _dinService.ImportDIDW(Excelfile);
 
             return View(list);
         }

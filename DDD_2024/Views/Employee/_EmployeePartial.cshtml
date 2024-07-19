@@ -1,4 +1,4 @@
-﻿@model IEnumerable<DDD_2024.Models.EmployeeViewModel>
+﻿@model IEnumerable<DDD_2024.Models.EmpIndexViewModel>
 
 <table class="table" id="tableCusVendor">
     <tbody id="tableBody">
@@ -6,17 +6,29 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.employee.EmpName)
+                    @Html.DisplayFor(modelItem => item.EmpName)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.OnDuty_CN)
+                    @Html.DisplayFor(modelItem => item.Region)
+                </td>
+                <td class="@(item.isSales ? "bg-red" : "")">
+                    @Html.DisplayFor(modelItem => item.isSales)
+                </td>
+                <td class="@(item.isPM ? "bg-red" : "")">
+                    @Html.DisplayFor(modelItem => item.isPM)
+                </td>
+                <td class="@(item.isFAE ? "bg-red" : "")">
+                    @Html.DisplayFor(modelItem => item.isFAE)
+                </td>
+                <td class="@(item.isRBU ? "bg-red" : "")">
+                    @Html.DisplayFor(modelItem => item.isRBU)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.employee.UpdateDate)
+                    @Html.DisplayFor(modelItem => item.Auth)
                 </td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.employee.EmpID" class="btn btn-dark btn-sm">編輯</a> |
-                    <a asp-action="Details" asp-route-id="@item.employee.EmpID" class="btn btn-dark btn-sm">詳細資料</a> |
+                    <a asp-action="Edit" asp-route-EmpId="@item.EmpID" class="btn btn-warning btn-sm">編輯</a> |
+                    <a asp-action="Details" asp-route-EmpId="@item.EmpID" class="btn btn-warning btn-sm">詳細資料</a>
                 </td>
             </tr>
         }

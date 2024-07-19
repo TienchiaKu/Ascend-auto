@@ -7,6 +7,7 @@ using DDD_2024.Models;
 using Microsoft.CodeAnalysis;
 using DDD_2024.Interfaces;
 using MiniExcelLibs;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Build.Evaluation;
 using DDD_2024.Services;
@@ -97,7 +98,7 @@ namespace DDD_2024.Controllers
         public async Task<IActionResult> Edit(string id)
         {
             if (id == null || _projectMContext.BonusCalViewModel == null)
-            {
+            { 
                 return NotFound();
             }
 
@@ -173,80 +174,40 @@ namespace DDD_2024.Controllers
             return View(list_PBonusVM);
         }
 
-        //public IActionResult ExportExcel_BonusbyProjects()
-        //{
-        //    var modelProjects = _bounsCalService.GetBonusbyProject();
-        //
-        //    var valuesProjects = modelProjects.Select(item => new {
-        //        ProjectID = item.ProjectID,
-        //        Status = item.Status,
-        //        ApplicantName = item.ApplicantName,
-        //        TradeStatus = item.TradeStatus,
-        //        Applicant_Bonus = item.Applicant_Bonus
-        //    }).ToArray();
-        //
-        //    var modelEmp = _bounsCalService.GetBonusbyEmployee();
-        //
-        //    var valuesEmp = modelEmp.Select(item => new {
-        //        EmployeeName = item.EmployeeName,
-        //        Bonus = item.Bonus
-        //    }).ToArray();
-        //
-        //    var sheets = new Dictionary<string, object>
-        //    {
-        //        ["byProjects"] = valuesProjects,
-        //        ["byEmployees"] = valuesEmp
-        //    };
-        //
-        //    string path = @"D:\獎金計算by專案_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx";
-        //
-        //    if (!System.IO.File.Exists(path))
-        //    {
-        //        MiniExcel.SaveAs(path, sheets);
-        //
-        //        ViewBag.Message = "Excel匯出完成！";
-        //    }      
-        //
-        //    //var memoryStream = new MemoryStream();
-        //    //memoryStream.SaveAs(values);
-        //    ////memoryStream.SaveAs(valuesTTL,true,"Sheet2");
-        //    //memoryStream.Seek(0, SeekOrigin.Begin);
-        //    //return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        //    //{
-        //    //    FileDownloadName = "獎金計算by專案_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx"
-        //    //};
-        //    return RedirectToAction("ProjectIndex");
-        //}
-
-        [HttpPost]
-        public async Task<IActionResult> PreviewDo([FromBody] string[] projectIds)
+        // GET: BonusCal/DoReport
+        public IActionResult DoReport()
         {
-            var Report = await _bounsCalService.GetDoBonus(projectIds);
+            return View();
+        }
 
-            if (Report.Item1 != null && Report.Item2 != null && Report.Item1.Count > 0 && Report.Item2.Count > 0)
+        public async Task<IActionResult> PreviewDo(BDoReportFilter model)
+        {
+            var DoReport = await _bounsCalService.GetDoReport(model);
+
+            if(DoReport != null)
             {
-                var sheets = new Dictionary<string, object>
-                {
-                    ["Do"] = Report.Item1,
-                    ["依業務計算"] = Report.Item2
-                };
+                var EmpReport = _bounsCalService.GetEmpBonus(DoReport);
 
-                //20240604 Excel改存到桌面，原方式不知為何有時無法成功匯出
-                var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                var filePath = Path.Combine(desktopPath, "Do獎金預覽_" + DateTime.Now.ToString("yyyyMMdd_HHmm") + ".xlsx");
-                
-                using (var memoryStream = new MemoryStream())
+                if(EmpReport != null)
                 {
-                    MiniExcel.SaveAs(memoryStream, sheets);
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-                
-                    using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                    var sheets = new Dictionary<string, object>
                     {
-                        memoryStream.CopyTo(fileStream);
-                    }
+                        ["Do獎金試算"] = DoReport,
+                        ["依業務計算"] = EmpReport
+                    };
+
+                    var memoryStream = new MemoryStream();
+                    memoryStream.SaveAs(sheets);
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    {
+                        FileDownloadName = "Do獎金預覽_" + DateTime.Now.ToString("yyyyMMdd_HHmm") + ".xlsx"
+                    };
                 }
-                // Returning a JSON result to indicate success
-                return Json(new { success = true });
+                else
+                {
+                    return Content("匯出錯誤");
+                }
             }
             else
             {
@@ -334,7 +295,7 @@ namespace DDD_2024.Controllers
                                     UploadModel.ProjectID = cellValue.Value;
                                 }
                             }
-                            if (cellValue.Key == "獎金/狀態更新")
+                            if (cellValue.Key == "發放獎金?")
                             {
                                 if (cellValue.Value == null)
                                 {
@@ -355,9 +316,18 @@ namespace DDD_2024.Controllers
 
                     if (model != null)
                     {
-                        var sheets = new Dictionary<string, object>
+                        // 新增自定義資料
+                        var status = new List<DoReportStatus_ViewModel>
                         {
-                            ["Do狀態更新"] = model
+                            new DoReportStatus_ViewModel { Status = "發放獎金", Text = "Y" },
+                            new DoReportStatus_ViewModel { Status = "不發放獎金", Text = "U" },
+                            new DoReportStatus_ViewModel { Status = "暫緩發放獎金", Text = "A" }
+                        };
+
+                        var sheets = new Dictionary<string, object>
+                        { 
+                            ["Do狀態更新"] = model,
+                            ["Status"] = status
                         };
 
                         var memoryStream = new MemoryStream();

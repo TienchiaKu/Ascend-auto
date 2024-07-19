@@ -1,4 +1,4 @@
-﻿@model DDD_2024.Models.EmployeeM
+﻿@model DDD_2024.Models.EmpCreateViewModel
 @inject DDD_2024.Interfaces.IEmployeeService EmployeeService
 @{
     ViewData["Title"] = "Create";
@@ -11,16 +11,18 @@
     <div class="row" style="margin-top:6px">
         <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="EmpID" class="control-label"></label>
-                <input asp-for="EmpID" class="form-control" readonly />
-                <span asp-validation-for="EmpID" class="text-danger"></span>
+                <label asp-for="EmpName" class="control-label"></label>
+                <input asp-for="EmpName" class="form-control" />
+                <span asp-validation-for="EmpName" class="text-danger"></span>
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="EmpName" class="control-label"></label>
-                <input asp-for="EmpName" class="form-control" />
-                <span asp-validation-for="EmpName" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="Region" class="control-label"></label>
+                    <select asp-for="Region" asp-items="EmployeeService.Region_selector" class="form-control"></select>
+                    <span asp-validation-for="Region" class="text-danger"></span>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
@@ -29,11 +31,9 @@
     <div class="row" style="margin-top:6px">
         <div class="col-md-4">
             <div class="form-group">
-                <div class="form-group">
-                    <label asp-for="Region" class="control-label"></label>
-                    <select asp-for="Region" asp-items="EmployeeService.GetRegion" class="form-control"></select>
-                    <span asp-validation-for="Region" class="text-danger"></span>
-                </div>
+                <label asp-for="OnDuty" class="control-label"></label>
+                <select asp-for="OnDuty" asp-items="EmployeeService.YesNo" class="form-control"></select>
+                <span asp-validation-for="OnDuty" class="text-danger"></span>
             </div>
         </div>
         <div class="col-md-4">
@@ -44,11 +44,42 @@
             </div>
         </div>
         <div class="col-md-4">
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="OnDuty" class="control-label"></label>
-                <select asp-for="OnDuty" asp-items="EmployeeService.YesNo" class="form-control"></select>
-                <span asp-validation-for="OnDuty" class="text-danger"></span>
+                <label asp-for="isSales" class="control-label"></label>
+                <select asp-for="isSales" asp-items="EmployeeService.YesNo_NotSelected" class="form-control"></select>
             </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="isPM" class="control-label"></label>
+                <select asp-for="isPM" asp-items="EmployeeService.YesNo_NotSelected" class="form-control"></select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="isFAE" class="control-label"></label>
+                <select asp-for="isFAE" asp-items="EmployeeService.YesNo_NotSelected" class="form-control"></select>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="isRBU" class="control-label"></label>
+                <select asp-for="isRBU" asp-items="EmployeeService.YesNo_NotSelected" class="form-control"></select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="Auth" class="control-label"></label>
+                <select asp-for="Auth" asp-items="EmployeeService.Auth_selector" class="form-control"></select>
+            </div>
+        </div>
+        <div class="col-md-4">
         </div>
     </div>
     <div class="row" style="margin-top:6px">

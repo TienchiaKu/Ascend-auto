@@ -1,4 +1,4 @@
-﻿@model DDD_2024.Models.DoViewModel
+﻿@model DDD_2024.Models.DoEditViewModel
 @inject IHttpContextAccessor contxt;
 @inject DDD_2024.Interfaces.IEmployeeService EmployeeService
 @inject DDD_2024.Interfaces.ICusVendorService CusVendoeService
@@ -8,7 +8,7 @@
     ViewData["Title"] = "Edit";
 }
 
-<h1>編輯</h1>
+<h1>Do編輯</h1>
 
 <form asp-action="Edit">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -17,27 +17,27 @@
             <input type="hidden" asp-for="DoID" />
         </div>
     </div>
-<div class="row" style="margin-top:6px">
-    <div class="col-md-4">
+    <div class="row" style="margin-top:6px">
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="ProjectID" class="control-label"></label>
                 <input asp-for="ProjectID" class="form-control" readonly />
             </div>
-    </div>
-    <div class="col-md-4">
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
-                <label class="control-label">申請日期</label>
+                <label asp-for="CreateDate" class="control-label"></label>
                 <input asp-for="CreateDate" class="form-control" type="date" value="@Model.CreateDate.ToString("yyyy-MM-dd")" />
                 <span asp-validation-for="CreateDate" class="text-danger"></span>
             </div>
-    </div>
-    <div class="col-md-4">
+        </div>
+        <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="CusName" class="control-label"></label>
                 <input asp-for="CusName" class="form-control" readonly />
             </div>
+        </div>
     </div>
-</div>
     <div class="row" style="margin-top:6px">
         <div class="col-md-4">
             <div class="form-group">
@@ -61,7 +61,7 @@
     <div class="row" style="margin-top:6px">
         <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="Applicant" class="control-label"></label>
+                <label asp-for="ApplicantID" class="control-label"></label>
                 <select asp-for="ApplicantID"
                         asp-items="EmployeeService.GetEmployeeNameList_Selected(Model.ApplicantID)"
                         class="form-control">
@@ -71,7 +71,7 @@
         </div>
         <div class="col-md-4">
             <div class="form-group">
-                <label asp-for="Approver" class="control-label"></label>
+                <label asp-for="ApproverID" class="control-label"></label>
                 <select asp-for="ApproverID"
                         asp-items="EmployeeService.GetEmployeeNameList_Selected(Model.ApproverID)"
                         class="form-control">
@@ -82,7 +82,7 @@
         <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="TradeStatus" class="control-label"></label>
-                <select asp-for="TradeStatus" asp-items="DoService.GetTradingStatus()" class="form-control"></select>
+                <select asp-for="TradeStatus" asp-items="DoService.GetTradingStatus(Model.TradeStatus)" class="form-control"></select>
                 <span asp-validation-for="TradeStatus" class="text-danger"></span>
             </div>
         </div>
@@ -102,40 +102,37 @@
             <div class="form-group">
                 <div class="form-group">
                     <label asp-for="DoUAction" class="control-label"></label>
-                    <textarea asp-for="DoUAction" rows="8" cols="42" readonly><</textarea>
+                    <textarea asp-for="DoUAction" rows="8" cols="42"><</textarea>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group">
                 <label asp-for="DoUStatus" class="control-label"></label>
-                <textarea asp-for="DoUStatus" rows="8" cols="42" readonly><</textarea>
+                <textarea asp-for="DoUStatus" rows="8" cols="42"><</textarea>
             </div>
         </div>
         <div class="col-md-4">
         </div>
     </div>
     <div class="row" style="margin-top:6px">
-        <div class="col-md-4">
-            <div class="form-group">
-                <input type="submit" value="確認送出" class="btn btn-secondary" />
-            </div>
-            <div class="col-md-8">
-            </div>
+        <div class="col-md-6">
+            <input type="submit" value="確認送出" class="btn btn-secondary" />
+            <a asp-action="Index" class="btn btn-secondary">返回清單</a>
+        </div>
+        <div class="col-md-6">
+
         </div>
     </div>
 </form>
 <div class="row" style="margin-top:6px">
-    <div class="col-md-3">
+    <div class="col-md-5">
         <a asp-action="DoASCreate" asp-route-DoID="@Model.DoID" class="btn btn-warning">新增Do進度</a>
         <a asp-action="DoASIndex" asp-route-DoID="@Model.DoID" class="btn btn-warning">查看Do歷史進度</a>
     </div>
-    <div class="col-md-9">
-    </div>
-</div>
+    <div class="col-md-7">
 
-<div>
-    <a asp-action="DoASIndex">返回清單</a>
+    </div>
 </div>
 
 @section Scripts {

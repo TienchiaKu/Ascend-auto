@@ -49,7 +49,7 @@ namespace DDD_2024.Controllers
             }
         }
 
-        public async Task<IActionResult> CusVendorReport_Excel()
+        public async Task<IActionResult> CusVendorReport_Excel() 
         {
             var cusModel = await _cusVendoeService.GetAllCus();
             var venModel = await _cusVendoeService.GetAllVendor();

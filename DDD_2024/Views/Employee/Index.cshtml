@@ -1,16 +1,19 @@
-﻿@model IEnumerable<DDD_2024.Models.EmployeeViewModel>
+﻿@model IEnumerable<DDD_2024.Models.EmpIndexViewModel>
 @inject DDD_2024.Interfaces.IEmployeeService EmployeeService;
-
+@inject IHttpContextAccessor contxt;
 
 @{
     ViewData["Title"] = "Index";
 }
 
-<h1>員工資料列表</h1>
+<h1>員工資料/職務/權限</h1>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">新增</a>
-</p>
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Message"]
+    </div>
+}
 
 <div class="accordion" id="accordionConditon">
     <div class="accordion-item">
@@ -33,18 +36,65 @@
         </div>
     </div>
 </div>
+<div class="accordion" id="accordionFunction">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFunOne" aria-expanded="true" aria-controls="collapseOne">
+                功能鍵
+            </button>
+        </h2>
+        <div id="collapseFunOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFunction">
+            <div class="accordion-body">
+                <div class="row mb-3">
+                    <div class="col-md-2 mx-1">
+                        <a asp-action="Create" class="btn btn-dark">新增</a>
+                    </div>
+                    <div class="col-md-10 mx-1">
+                    </div>
+                </div>
+                @if (contxt.HttpContext != null)
+                {
+                    var empName = contxt.HttpContext.Session.GetString("EmpName");
+                    if (!string.IsNullOrEmpty(empName))
+                    {
+                        <div class="row" style="margin-top: 6px">
+                            <div class="col-md-8">
+                            </div>
+                            <div class="col-md-4">
+                                <label>login User: </label>
+                                <input value="@empName" type="text" placeholder="系統使用者" readonly style="border: none;" />
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
 
 <table class="table table-striped table-bordered table-hover">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.employee.EmpName)
+                @Html.DisplayNameFor(model => model.EmpName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.OnDuty_CN)
+                @Html.DisplayNameFor(model => model.Region)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.employee)
+                @Html.DisplayNameFor(model => model.isSales)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.isPM)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.isFAE)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.isRBU)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Auth)
             </th>
             <th>功能鍵</th>
         </tr>
@@ -53,22 +103,53 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.employee.EmpName)
+                @Html.DisplayFor(modelItem => item.EmpName)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.OnDuty_CN)
+                @Html.DisplayFor(modelItem => item.Region)
+            </td>
+            <td class="@(item.isSales ? "bg-red" : "")">
+                @Html.DisplayFor(modelItem => item.isSales)
+            </td>
+            <td class="@(item.isPM ? "bg-red" : "")">
+                @Html.DisplayFor(modelItem => item.isPM)
+            </td>
+            <td class="@(item.isFAE ? "bg-red" : "")">
+                @Html.DisplayFor(modelItem => item.isFAE)
+            </td>
+            <td class="@(item.isRBU ? "bg-red" : "")">
+                @Html.DisplayFor(modelItem => item.isRBU)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.employee.UpdateDate)
+                @Html.DisplayFor(modelItem => item.Auth)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.employee.EmpID" class="btn btn-dark btn-sm">編輯</a> |
-                <a asp-action="Details" asp-route-id="@item.employee.EmpID" class="btn btn-dark btn-sm">詳細資料</a> |
+                <a asp-action="Edit" asp-route-EmpId="@item.EmpID" class="btn btn-warning btn-sm">編輯</a> |
+                <a asp-action="Details" asp-route-EmpId="@item.EmpID" class="btn btn-warning btn-sm">詳細資料</a>
             </td>
         </tr>
 }
     </tbody>
 </table>
+
+<style>
+    .bg-red {
+        background-color: #FF9797 !important;
+    }
+
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+
+    .alert-success {
+        color: #3c763d;
+        background-color: #dff0d8;
+        border-color: #d6e9c6;
+    }
+</style>
 
 <script>
     // 處理select元素的更改事件

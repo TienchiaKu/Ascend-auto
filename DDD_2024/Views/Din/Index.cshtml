@@ -1,4 +1,4 @@
-﻿@model IEnumerable<DDD_2024.Models.DinViewModel>
+﻿@model IEnumerable<DDD_2024.Models.DinIndexViewModel>
 @inject IHttpContextAccessor contxt;
 
 @{
@@ -16,7 +16,6 @@
         </h2>
         <div id="collapseConOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConditon">
             <div class="accordion-body">
-
             </div>
         </div>
     </div>
@@ -35,13 +34,10 @@
                     <div class="col-md-2">
                         <a asp-action="Create" class="btn btn-warning">新增DIn</a>
                     </div>
-                    <div class="col-md-6">
-                    </div>
                     <div class="col-md-2">
-                        <a asp-action="Upload" class="btn btn-warning">上傳Din</a>
+                        <a asp-action="Upload" class="btn btn-dark">上傳Din</a>
                     </div>
-                    <div class="col-md-2">
-
+                    <div class="col-md-8">
                     </div>
                 </div>
                 @if (contxt.HttpContext != null)
@@ -67,14 +63,11 @@
 <table class="table">
     <thead>
         <tr>
-            <th class="hidden-column">
+            <th>
                 @Html.DisplayNameFor(model => model.ProjectID)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.DinDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StatusName)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.CusName)
@@ -86,10 +79,7 @@
                 @Html.DisplayNameFor(model => model.PartNo)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ProApp)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ProModel)
+                @Html.DisplayNameFor(model => model.DinStatus)
             </th>
             <th></th>
         </tr>
@@ -97,14 +87,11 @@
     <tbody>
 @foreach (var item in Model) {
         <tr>
-            <td style="display: none;">
+            <td>
                 @Html.DisplayFor(modelItem => item.ProjectID)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.DinDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StatusName)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.CusName)
@@ -116,13 +103,10 @@
                 @Html.DisplayFor(modelItem => item.PartNo)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ProApp)
+                @Html.DisplayFor(modelItem => item.DinStatus)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ProModel)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ProjectID">編輯</a> |
+                <a asp-action="Edit" asp-route-projectID="@item.ProjectID">編輯</a> |
                 <a asp-action="Details" asp-route-ProjectID="@item.ProjectID">詳細資料</a>
             </td>
         </tr>

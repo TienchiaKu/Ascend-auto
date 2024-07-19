@@ -18,11 +18,18 @@ namespace DDD_2024.Interfaces
 
         List<SelectListItem> YesNo { get; set; }
         List<SelectListItem> YesNo_NotSelected { get; set; }
+        List<SelectListItem> Auth_selector { get; set; }
+        List<SelectListItem> Region_selector { get; set; }
         List<SelectListItem> GetEmployeeNameList { get; }
         List<SelectListItem> GetEmployeeNameList_Selected(int? EmpID);
-        List<SelectListItem> GetRegion { get; }
+        List<SelectListItem> GetPMList_Selected(int? EmpID);
+        List<SelectListItem> GetSalesList_Selected(int? EmpID);
+        List<SelectListItem> GetFAEList_Selected(int? EmpID);
 
-        Task<List<EmployeeViewModel>> GetEmployees();
-        Task<List<EmployeeViewModel>> GetEmployeesFilter(EmployeeFilterViewModel filter);
+        Task<List<EmpIndexViewModel>> GetEmployees();
+        Task<List<EmpIndexViewModel>> GetEmployeesFilter(EmployeeFilterViewModel filter);
+        Task<string> CreateEmp(EmpCreateViewModel model);
+        Task<EmpEditViewModel> GetEmployee(int EmpId);
+        Task<string> EditEmployee(EmpEditViewModel model);
     }
 }
